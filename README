@@ -1,0 +1,63 @@
+xli - an Xorg image display utility - since 1989
+
+xli packages in many linux distros are based on a 2006 version.
+
+version in this github repo has many patchs included.
+debian patches, netbsd patches, +35 other patches,
+see file CHANGES to see their descriptions.
+
+plan is to release a 1.18 version.
+
+
+xli will display several types of images under X11, or load images onto
+the X11 root window.
+xli will display images also with colormap only, pseudo-colors x11 servers,
+or even monochrome servers.
+
+github version 1.18-beta supports:
+
+  Portable Network Graphics (PNG)    (via libpng)
+  GIF Image
+  JFIF style jpeg Image             (via libjpeg)
+  WEBP Image                        (via libwebp)
+  Targa Image (TGA)
+  Windows, OS/2 RLE Image
+  Portable Bit Map (PBM, PGM, PPM)
+  PC Paintbrush Image (PCX)
+  X Pixmap
+  X Bitmap
+  X Window Dump
+  Tag Image File Format (TIFF)      (via libtiff)
+  Sun Rasterfile
+  CMU WM Raster
+  Faces Project
+  G3 FAX Image
+  FBM Image
+  Utah RLE Image
+  GEM Bit Image
+  MacPaint Image
+
+A variety of options are available to modify images prior to viewing.
+These options include clipping, dithering, depth reduction, zoom (either X
+or Y axis independently or both at once), brightening or darkening, input
+gamma correction, and image merging.  When applicable, these options are
+done automatically (eg. a color image to be displayed on a monochrome
+screen will be dithered automatically).
+
+KEYS
+<, >     Zoom
+esc, q   quit
+#, F11   fullscreen
+r, l     rotate right, left
+n, p     next/earlier image
+
+
+SUGGESTIONS AND BUG REPORTS
+
+xli has been developed in a fairly limited hardware environment, and
+not all combinations of displays and/or image formats and options have
+been tested. xli is useful to me, and maybe it will be useful to others.
+
+
+COMPILNG and INSTALLING
+see INSTALL file

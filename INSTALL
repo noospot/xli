@@ -1,0 +1,57 @@
+INSTALL
+
+
+REQUIRED BUILD DEPENDENCIES
+
+     on a debian system,
+     apt install debhelper-compat libjpeg-dev libpng-dev libx11-dev libxext-dev libexif-dev libwebp-dev libtiff-dev pkgconf zlib1g-dev
+
+     on other system in matter finding those include headers :
+     libx11 with libxext
+     libjpeg
+     libpng
+     libwebp
+     libtiff
+     libeexif
+     zlib  gz, zip
+
+     verify the command pkgconf or pkg-conf is around
+
+
+    The JPEG reader assumes the IJG JPEG library is somewhere.
+    get it from https://libjpeg.sourceforge.net/.
+
+    The PNG reader assumes PNG group's library is installed.
+    It's at http://www.libpng.org/  along with a
+    lot of other PNG stuff.  libpng-1.0.5 or later is required.
+    The PNG reader also require zlib installed.  https://www.zlib.net/
+
+
+CONFIGURE
+
+    There are a few compilation flags that one may need/want to change.
+    This can be done in the Makefile file. The defines are:
+
+	default is to use uncompress with .Z files
+	-DHAVE_GUNZIP use gunzip rather than uncompress   .gz , .Z
+	-HAVE_BUNZIP2 also use bunzip2  .bz2
+	-DNO_UNCOMPRESS if the system doesn't have uncompress or gunzip.
+
+    It maybe will matter changing some other variables to adapt to the system, as PKG_CONFIG, INSTALLDIR...
+
+
+COMPILING
+
+    The easiest way of compiling it is to use the Makefile. Simply
+    run 'make', which should build xli.
+
+
+INSTALL
+
+    to try the results:
+    ./xli   someimage
+
+    copy the binary to final location
+    cp xli  /usr/local/bin/
+
+

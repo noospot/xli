@@ -1,0 +1,518 @@
+
+
+20250129 
+
+removed direct address in manual page and source
+
+
+20250127 stdint.h  fixed width types
+byte, sbyte, strbyte  used in most files
+
+20250127 documentations edits
+
+
+patch: 730.fullscreen-wm-hints.patch
+Description: fullscreen wm hints
+ set fullscreen wm hints
+ also add code to toggle fullscreen with F11 or # keys
+ also exit program with escape key
+Last-Update: 2025-01-24
+---
+
+
+patch: 720.compact-cmap.patch
+Description: rename compact_cmap
+ rename compress_cmap as compact_cmap to avoid confusion with multiple other use of the word in the source
+Last-Update: 2025-01-20
+---
+
+patch: 710.tga-32cmap-alpha.patch
+Description: try finding solution to display 32cmap tgas
+ + multiple other fixes
+ + better tga.h descriptions
+ FIXME searching solution
+Last-Update: 2025-01-20
+---
+
+patch: 700.remove-xview-xsetbg-traces.patch
+Description: remove xview and xsetbg traces
+ remove any traces of xview and xsetbg in the archive
+Last-Update: 2025-01-20
+---
+
+patch: 690.macpaint-fixes.patch
+Description: macpaint fixes
+ avoid false positive with a stricter check on filetype
+Bug-Debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=733025
+Last-Update: 2025-01-19
+---
+
+patch: 680.drop-xlito.patch
+Description: drop xlito
+ removes xlito support
+ also removes reading trailing options in xli
+ updated manual pages
+Last-Update: 2025-01-18
+---
+
+patch: 670.drop-buildshar.patch
+Description: drop buildshar
+ remove out of place buildshar program
+Last-Update: 2025-01-18
+---
+
+patch: 660.drop-uudecode.patch
+Description: drop uudecode
+ drop uudecode options
+Last-Update: 2025-01-18
+---
+
+patch: 650.internal-errors.patch
+Description: shorter texts on errors
+ removes dramatic display on errors
+ removes email address
+Last-Update: 2025-01-17
+---
+
+patch: 640.wm-hints-title.patch
+Description: window title wm hints
+ sets _NET_WM_NAME and _NET_WM_ICON_NAME
+Bug-debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=941090 ,https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=258970
+Last-Update: 2025-01-17
+---
+
+patch: 630.textfiles-changes.patch
+Description: multiple textfiles changes
+    change README
+    adding INSTALL
+    removed some ancient file about xloadimage
+    merge changelogs into CHANGES
+Last-Update: 2025-01-15
+---
+
+patch: 620.faces-strop.patch
+Description: faces.c Protect against owerflow
+Author: unknown
+Last-Update: 2017-07-26
+---
+
+patch: 610.drop-mcidas.patch
+Description: drop mcidas support
+ i couldn't find any area files xli can display
+ anyway mcidas is an ancient software, maintained up to day
+ see https://www.ssec.wisc.edu/mcidas/
+ it could be deceiving than advertising mcidas support, since those files evolved so much
+Last-Update: 2025-01-15
+---
+
+patch: 600.makefile-build.patch
+Description: makefile changes
+  change makefile so a regular .tar.gz package can be made of xli
+  added default pkg-config
+  patch require changes to debian/rules to build the debian version
+Last-Update: 2025-01-15
+---
+
+patch: 590.fix-of-by-typo.netbsd.patch
+Description: Fix for bit depths lower than 8bpp.
+  Fix overflow caused by typo at bit depths < 8.
+  Especially packed pixel types.
+  $NetBSD: patch-send.c,v 1.1 2024/04/17 14:11:05 nat Exp $
+Author: Nathanial Sloss nat@netbsd.org
+Last-Update: 2024-04-17 16:11:05
+---
+
+patch: 580.fix-errno.netbsd.patch
+Description: Fix errno.
+  Fix errno.
+  $NetBSD: patch-ah,v 1.1 2006/01/12 00:48:36 joerg Exp $
+Author:Joerg Sonnenberger joerg@netbsd.org
+Last-Update: 2006-01-12 01:48:36
+---
+
+patch: 570.add-logo.patch
+Description: add a window manager logo symbol
+Last-Update: 2025-01-13
+---
+
+patch: 560.add_tiff.patch
+Description: add tiff support
+ early attempt at adding tiff support using libtiff.
+ only works with some tiff, since using highlevel interface.
+ doc says TIFFReadRGBAImage() converts non-8-bit images by scaling sample values. Palette, grayscale, bilevel, CMYK, and YCbCr images are converted to RGBA transparently.
+Last-Update: 2025-01-12
+---
+
+patch: 550.sunras-fixes.patch
+Description: standardise report about sunraster images
+ so it's as the others
+ also use byte in header structure
+Last-Update: 2025-01-08
+---
+
+patch: 540.compiler-warnings.patch
+Description: avoid compiler warnings
+  removing junk buflen() function in zio.c
+Last-Update: 2025-01-08
+---
+
+patch: 530.fix-options-filename-leak.patch
+Description: fix image options fullname leak
+   each time an image is loaded an image option fullname entry is alocated, with
+   this patch it also is cleared when the image is released.
+Last-Update: 2025-01-07
+---
+
+patch: 520.background-color-black.patch
+Description: change default window background color to black
+  maybe would fix debian bug #230887
+Author: rno/noospot>
+Last-Update: 2025-01-07
+---
+
+patch: 510.tga-fixes.patch
+Description: multiple tga fixes
+ detect 15bits tgas
+ display correctly 15 and 16 bits tga colors, converting them from RGB5 > RGB8
+Last-Update: 2025-01-07
+---
+
+patch: 500.filetypes-ordering.patch
+Description: reorder filetypes to detect earlier the  most usual
+  also removes pcd support
+  also changes man pages to update filetypes list and fix cpp option mention, maybe would fix debian bug #535482
+Last-Update: 2025-01-07
+---
+
+patch: 490.signedness-fixes.patch
+Description: avoid signedness compiler warnings
+Last-Update: 2025-01-07
+---
+
+patch: 410.copyright-only-in-xli.patch
+Description: copyright includes only in xli.c
+ avoid many warning with including copyright headers only in xli.c
+ since object files are not shipped anyway, it doesn't change the program
+Last-Update: 2025-01-07
+---
+
+patch: 400.png-fixes.patch
+Description: standard image ident description, multiple fixes
+ change the way a png is reported with identify so it it nearer to the other filetypes.
+ multiple smnall fixes.
+ fixing #474934
+Last-Update: 2025-01-07
+---
+
+patch: 395.fix-path-strop.patch
+Description: fix some path.c compiler warnings
+ signedness
+ strncat size should be < bufsize
+Last-Update: 2025-01-07
+---
+
+patch: 390.compile-with-wall-wextra.patch
+Description: compile with -Wall and -Wextra
+ compile with gcc on linux
+ compile with -Wall and -Wextra
+Last-Update: 2025-01-08
+---
+
+patch: 380.add_webp.patch
+Description: add webp support
+ support both lossy and lossless webp
+ FIXME maybe add animated webp support
+Last-Update: 2025-01-07
+---
+
+patch: 370.exif_rotation.patch
+Description: adding exif rotation handler (jpg only)
+ so jpg images can be displayed  with rotation
+Last-Update: 2024-12-24
+
+
+patch: 360.memcpy_instead_of_bcopy.patch
+Description: use memcpy instead of bcopy
+Last-Update: 2025-01-07
+---
+
+patch: 350.memset_instead_of_bzero_and_bfill.patch
+Description: use memset instead of bzero and bfill
+Last-Update: 2025-01-07
+---
+
+patch: 340.fix_colortable_range.patch
+Description: color table range fix in xpixmap.c
+color table range (cmax - cmin) fix, parenthesis are required otherwise
+values would be wrong.
+removes a compilation warning about values potentially bigger than maxint on machines with a 32bits os
+Last-Update: 2025-01-07
+---
+
+
+patch: 260.zoom-divby0-switchdef-fix.patch
+Description: zoom.c patch  Fixes #838187
+  avoid two division by zero
+  limits zooming with < to /6 minmax avoiding 100 shift reaching zero
+  do not even try to show image if height or width equal zero
+  initialise program scope variables
+  overall it's only a patch, it would matter redoing the zoom functionality entirely
+Bug-debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=838187
+Last-Update: 2024-09-08
+---
+
+patch: 250.path-cpp-scope.patch
+Description:  cpp scope error fix in path.c
+Last-Update: 2025-01-07
+---
+
+patch: 230.fix-buffer-overflow.patch
+Description: Buffer size and string formatting correction
+Author: Josenilson Ferreira da Silva <nilsonfsilva@hotmail.com>
+Forwarded:  not-needed
+Last-Update: 2024-08-04
+
+patch: 220.fix-tgas-with-alpha.patch
+Description: fix .tgas with alpha
+Author: Josenilson Ferreira da Silva <nilsonfsilva@hotmail.com>
+Last-Update: 2024-03-15
+
+patch: 210.fix-geometry-with-negative.patch
+Description: fix geometry with negative
+Author: Josenilson Ferreira da Silva <nilsonfsilva@hotmail.com>
+Last-Update: 2024-03-15
+
+patch: 200.fix-assertion-image.patch
+Description: implicit declaration-of function strlen
+Author: Josenilson Ferreira da Silva <nilsonfsilva@hotmail.com>
+Last-Update: 2024-03-15
+
+patch: 190.added-directive.patch
+Description: implicit declaration-of function strlen
+Author: Josenilson Ferreira da Silva <nilsonfsilva@hotmail.com>
+Last-Update: 2024-03-15
+
+patch: 180-add_GCC_hardening.patch
+Description: add GCC hardening, complementing #876248.
+Author: Joao Eriberto Mota Filho <eriberto@debian.org>
+Last-Update: 2017-11-08
+
+patch: 170-fix-spelling.patch
+Description: fix some spelling errors.
+Author: Joao Eriberto Mota Filho <eriberto@debian.org>
+Last-Update: 2017-11-02
+
+patch: 620.faces-strop.patch
+Description: faces.c Protect against owerflow
+Author: unknown
+Last-Update: 2017-07-26
+---
+
+patch: 160-disable-libjpeg-scaling.patch
+This patch changes xli to no longer try to use libjpeg's scaling
+functionality, handling zooming JPEGs like any other image type.
+
+It seems there was a regression in libjpeg's scaling functionality
+between libjpeg62 and libjpeg8, see: http://bugs.debian.org/677113
+Last-Update: 2012-07-02
+
+
+patch: 150-fix-x-resource-leak.patch
+Description: fix X resources leak. (Closes: #471121)
+Author: Alex Perry,
+        Ryan Niebur <ryanryan52@gmail.com>
+Last-Update: 2008-11-24
+
+patch: 140-manpage_fixes.patch
+Description: fix some hyphens in manpage.
+Author: Bernhard R. Link <brlink@debian.org>
+Last-Update: 2008-02-21
+
+patch: 130-zoom_auto_440768.patch
+Subject: Bug#440768: xli: -zoom auto
+From: Alan Curry <pacman@TheWorld.com>
+Date: Tue, 4 Sep 2007 01:09:05 -0400 (EDT)
+
+This patch implements the "-zoom auto" feature suggested in xli's TODO file.
+It doesn't implement the related TODO item of merging -zoom and -iscale.
+
+With -zoom auto, images smaller than 90% of the screen size are displayed
+un-zoomed. Images larger than 90% of the screen size are reduced to fit.
+
+Subject: Bug#440768: (xli -zoom auto) patch improvement
+From: Alan Curry <pacman@TheWorld.com>
+Date: Tue, 4 Sep 2007 18:53:56 -0400 (EDT)
+
+Update: the first version of the patch didn't allow the -zoom auto option to
+persist across multiple images. This version fixes that.
+
+
+patch: 120-documentzooming.patch
+Description: document < and > for zooming. (Closes: #166541)
+Author: Bernhard R. Link <brlink@debian.org>
+Last-Update: 2008-02-21
+
+patch: 110-arrow_keys.patch
+Make xli handle the arrow keys to move the image
+in the specified direction. by Bernhard R. Link in #179268
+
+patch: 100-xpm_background.patch
+Adds support for the special "None" colour in XPMs by
+replacing them with the -background color. by Bernhard R. Link in #220965
+
+patch: 090-multiple_images_merge.patch
+A bug with all merging, not only the merging
+activated by -onroot; by Bernhard R. Link #289147
+
+patch: 080-fillscreen_forall.patch
+This patch adds a -forall option, that avoids -fillscreen and
+-onroot to be be limited on the first image, and keeps -fillscreen
+over rotating images. by Bernhard R. Link in #48878
+
+patch: 060-security_fixes.patch
+CAN-2005-3178, CAN-2005-0639 ?
+
+patch: 050-read_past_bufferend_343718.patch
+#343718 ?
+
+patch: 040-8-bit_palette_support.patch
+Description: display RGB images. (Closes: #124084)
+Author: Alexandre Duret-Lutz <duret_g@lrde.epita.fr>
+Last-Update: 2001-12-15
+
+patch: 030-manpage.patch
+Misc typo fixes, removing references to links not shipped by xli due to
+conflicts with xloadimage, display a line, hyphens; #300665, #310024, #326540
+Also escape some hashes and add description for -forall option
+
+patch: 020-Debianify_Imakefile.patch
+Adjust the Imakefile for Debian needs: hppa fix, defines, install; #104720
+
+patch: 010-Zandt_ChangeLog.patch
+The ChangeLog as applied via the diff.gz, apparently dates back to James' time
+
+
+
+Fri Nov 10 21:50:45 PST 2006
+
+Fix crashes for PGM/PPM images with maxval > 255.
+Fix various uninitialized variable warnings.
+
+Sun Sep  4 21:59:17 PDT 2005
+
+Finally fix the unsigned arithmetic problem that was resulting in blank screens
+when using -fillscreen with -onroot.  Also fix some problems turned up with
+-Wmissing-prototypes.
+
+Sun Feb 27 15:16:08 PST 2005
+
+Fix a security problem in the faces loader, a security problem when
+opening compressed files, and check for integer overflows in image data
+size calculations.
+
+Add support for bzip2-compressed files.
+
+#include <assert.h> in png.c, not "assert.h" -- no idea why I did that.
+
+Sat Mar 29 16:56:37 PST 2003
+
+Use integer arithmetic in zoom calculuations instead of floating point.
+
+Remove unused varargs.h #include from rlelib.c
+
+Fix bug when merging more than two images.
+
+Mon May 21 09:43:49 PDT 2001
+
+Don't abort loading GIF87a images if the screen descriptor is non-null.
+Emit a warning message and continue.
+
+Sun Jul 30 00:11:34 PDT 2000
+
+skip past failed loads when going backwards
+
+Thu Feb 17 06:33:10 PST 2000
+
+fix problem where -geometry +0+0 gets ignored
+
+
+1998-07-19  James R. Van Zandt  <jrv@vanzandt.mv.com>
+
+	* options.c: including <stdlib.h> for atof() and atoi(), no longer
+	declaring atof().
+
+1998-07-18  James R. Van Zandt  <jrv@vanzandt.mv.com>
+
+	* sunraster.c (sunRasterLoad): Using () around assignment
+
+	* g3.c (g3_addtohash):
+
+	* xlito.c (argv): main returns int
+	including <unistd.h> for close(), fseek(), etc.
+	including <string.h> for strncmp()
+	including <stdlib.h> for atoi()
+
+	* bmp.c: using %ld for long int
+
+	* zio.c: including <stdlib.h> for free()
+
+	* xwd.c (xwdLoad): supplying visual class name for error message.
+
+	* xli.c (main): main returns int
+	including <unistd.h> for fork()
+
+	* sunraster.c (babble): line 46: using %ld for long int
+
+	* send.c (pixmapErrorTrap): line 32: using %ld for long int
+
+	* jpeg.c (d_ui_method_selection): line 184: using %ld for long ints
+
+	* path.c: including <stdlib.h>
+
+	* mcidas.c (mcidasIdent): line 91: using %ld for long ints
+	(mcidasLoad): line 149: using %ld for long ints
+
+	* mac.c (macLoad): line 187: eliminated second format in error
+	message (for which there was no variable).
+
+	* g3.c (g3_ident): initialize col1, col2, and col3
+
+	* cmuwmrast.c (cmuwmLoad): using memToVal to extract header.depth
+	value, rather than depending on %d to fetch 16 bit value.
+
+
+
+CHANGES FROM XLI 1.16
+
+    Converted source code to ANSI C prototypes.
+
+    Removed MSDOS support (Sorry!  Anyone want to add Win32 support?)
+
+    Added PNG file format loader.
+
+    Added support for MIT shared memory extension.
+
+    Rewrote JPEG file format loader to use the IJG library, to take
+    advantage of performance improvements and support progressive
+    scan JPEGs.
+
+    Added the -delete, -iscale, -focus, and -cache options.
+
+    Added interactive image fast scaling with the '<', '>' and '=' keys.
+
+    Added TODO file.  Feel free to do anything on the list, or offer
+    fixes and enhancements.
+
+
+
+HOW IS XLI RELATED TO XLOADIMAGE ?
+
+    xloadimage was maintained by Jim Frost - jimf@saber.com
+
+    xli was created by Graeme Gill from Jim Frost's xloadimage.
+
+    xli version 1.00 was based on xloadimage version 3.01.
+
+    xli was maintained by Graeme Gill - graeme@labtam.oz.au, up to
+    version 1.16.
+

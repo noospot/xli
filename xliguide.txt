@@ -1,0 +1,236 @@
+XLI(5)			      File Formats Manual			XLI(5)
+
+
+
+Guide to writing image loaders for xli
+
+       This  is a introduction on how an image load routine should be written,
+       and what resources are available for use by the writer.
+
+
+Include files
+
+       The include file xli.h is generally sufficient to make all the xli  re‐
+       sources available: ie:
+
+	    #include "xli.h"
+
+
+Identify function
+
+       The  identification  function is used to implement the -identify option
+       of xli.  It is generally of the form : 
+       int xyyzIdent( strbyte ∗fullname, strbyte *name ) { }
+
+       where xyyz is an image file type.
+
+       fullname	 is  the  name including path, while name is the short name of
+       the file that is used as a title, or to refer to the file in messages.
+
+       Return 0 if the image is NOT identified.
+
+       Return 1 if the image IS identified.
+
+       If the file is identified, print a message, something like: 
+       printf("%s is a %dx%d xyyz image with %d colors\n", name, width, height, ncolors);
+
+       Try and be quick about identifying the image - don't read the whole im‐
+       age just to identify it !
+
+       Use  printf even if something is wrong with the file.  Use perror for a
+       system error - ie. unable to open file.
+
+
+Loading the image
+
+       The load function is used to identify and load the file if it is recog‐
+       nized.  It  is  of the form: 
+       Image *xyyzLoad(strbyte ∗fullname, ImageOptions ∗ image_ops, bool verbose) { }
+
+       Identify the image as quickly as possible.
+
+       Return NULL if the image is not identified.
+
+       Otherwise Return a pointer to an image structure with the image in it.
+
+       If the image is properly identified, but there is something wrong  with
+       it  before  anything  useful  is	 read  in,  report  the	 error	 - ie.
+       fprintf( stderr, "xyyzLoad: %s - corrupted color map\n", name);
+
+       clean up (ie. release the image structure and any allocated memory) and
+       return NULL.
+
+       If  the image is properly identified, and there is something wrong with
+       it, but something useful has been read in (ie.  color  maps  etc.  have
+       been  loaded,  and part of the image is loaded), report the error using
+       fprintf (as above) and return what there is of the image.
+
+       Remember to  release  and  temporary  memory  allocated	on  returning,
+       whether the image is loaded ok, or if something goes wrong.
+
+       Remember to close the file before returning.
+
+       Remember	 to add any additional info to the image structure - ie. name,
+       gamma if known etc.
+
+       NEVER EVER exit(). There may be other image loaders and other images to
+       load.
+
+       Use printf to give verbose output on image details.
+
+       Use fprintf(stderr," ... ");  to give error warning if the file is cor‐
+       rupted.
+
+       use perror for a system error - ie. unable to open file.
+
+
+Useful info in image_ops:
+
+	      strbyte ∗name;   /∗ Short name of image ∗/
+
+
+Useful things to set in the image structure:
+
+	    strbyte ∗title;	/∗ name of image ∗/
+		RGBMap rgb;	/ RGB map of image if IRGB type ∗/
+		byte ∗data;	/∗ data, rounded to full byte for each row ∗/
+	       float gamma;	/∗ gamma of display the image is adjusted ∗/
+				     /∗ for, if known. ∗/
+
+
+Creating and destroying Image structures:
+
+       The image structure is created by a call to one of three routines:
+       
+       /∗ For a monochrome bitmap ∗/
+       Image ∗newBitImage( unsigned int width, unsigned int  height)
+
+       /∗ For a color image with a color map ∗/
+       Image ∗newRGBImage(unsigned int width, unsigned int height, unsigned int depth)
+
+       /∗ For a true color image ∗/
+       Image ∗newTrueImage(unsigned int width, unsigned int height)
+
+
+       And the image can be freed with: void freeImageData(Image ∗image)
+
+
+       Examine another image loader (ie. gif.c) to see how to set up  a	 color
+       map.
+
+
+File input resources:
+
+       A  set  of file input functions are available that automatically handle
+       compressed files, and also by default buffer  the  file	in  memory  to
+       speed  up  the detection of the image type. The following functions are
+       available: 
+       /∗ Open a file by name and return a pointer to a file descriptor. ∗/ 
+       ZFILE ∗zopen(strbyte ∗name)
+
+
+       /∗ Read some data into a buffer ∗/ 
+       int zread( ZFILE ∗zf,byte ∗ buf, int len)
+
+
+       /∗ Macro that returns a byte from the file. ∗/ 
+       byte ∗zgetc(ZFILE ∗zf)
+
+       /∗ Function that reads a string into a buffer ∗/ 
+       strbyte ∗zgets(strbyte  ∗buf, unsigned int  size,ZFILE ∗ zf)
+
+
+       /∗ Return the files EOF status ∗/ 
+       int zeof(ZFILE ∗zf)
+
+       /∗ Clear any errors (ie. EOF) ∗/ 
+       void zclearerr( ZFILE ∗zf )
+
+
+       /∗
+	 Turn off caching when an image has been identified
+	 and there is no need to re-open it. The cached part
+	 of the file is still kept, but any reads past this
+	 point are not cached.
+	∗/ 
+	void znocache(ZFILE ∗zf)
+
+
+       /∗
+	 Rewind the cached file. This won't work if the file
+	 is stdin and we have read past the cached part of
+	 the file. Return TRUE on success.
+	∗/ 
+	boolean zrewind(ZFILE ∗zf)
+
+       /∗
+	 Return a block of data back to the input stream.
+	 Useful for a load routine that does its own buffering
+	 and wants to return what is left after it has read
+	 an image. Can also be used instead of ungetc().
+	∗/ 
+	void zunread( ZFILE ∗zf, byte ∗buf,	int len)
+
+
+       /∗
+	 Close a file.
+	 The file is not actually closed until zreset is called,
+	 in case another loader wants to re-open it.
+	∗/ 
+	void zclose( ZFILE ∗zf)
+
+
+       /∗ Really close a file. Not used by imageLoad functions.	∗/ 
+	void zreset(strbyte ∗filename)
+
+
+       Some macros are provided to facilitate  reading	and  writing  elements
+       larger than a byte from/to a data buffer according to the desired endi‐
+       anness:
+
+       Big endian: 
+       #define memToVal(PTR,LEN)
+       #define valToMem(VAL,PTR,LEN)
+
+       Little Endian:
+       #define memToValLSB(PTR,LEN)
+       #define valToMemLSB(VAL,PTR,LEN)
+
+
+Memory allocation:
+
+       The built in memory allocation routines are guaranteed not to fail.
+
+       byte ∗lmalloc( unsigned int size)
+       byte ∗lcalloc( unsigned int size)
+       void lfree( byte ∗area)
+
+       Be careful not to call lfree with NULL. It may cause a fault.
+
+
+Other facilities:
+
+       /∗ Duplicate a string. Good for making up the image title etc. ∗/
+       strbyte ∗dupString(strbyte ∗s)
+
+Memory manipulation:
+
+       /∗ Copy a block of memory ∗/ 
+       memcpy( D, S, N )
+
+       /∗ Zero a block of memory ∗/ 
+       memset( P, 0, N )
+
+       /∗ Fill a block of memory with a one byte value ∗/ 
+       memset( P, V, N )
+
+
+If all else fails:
+
+       Read the source. xli.h and image.h are a good place to start.  
+       Look at one of the existing loaders ie. pcx.c .
+
+
+
+
+				 LOADER GUIDE				XLI(5)
