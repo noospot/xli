@@ -11,10 +11,10 @@ plan is to release a 1.18 version.
 
 xli will display several types of images under X11, or load images onto
 the X11 root window.
-xli will display images also with colormap only, pseudo-colors x11 servers,
+xli will display images also with pseudo-colors x11 servers,
 or even monochrome servers.
 
-github version 1.18-beta supports:
+version 1.18.0-beta supports:
 
   Portable Network Graphics (PNG)    (via libpng)
   GIF Image
