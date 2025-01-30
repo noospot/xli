@@ -10,6 +10,18 @@ see file CHANGES to see their descriptions.
 plan is to release a 1.18 version.
 
 
+changes in 1.18.0:
+
+* exif rotation with jpg images
+* webp support
+* tiff support
+* window symbol and title with standard wm hints
+* -identify results consistency, easier to reuse
+* toggle fullscreen while running with F11
+* many others changes, see changelog
+
+
+
 xli will display several types of images under X11, or load images onto
 the X11 root window.
 xli will display images also with pseudo-colors x11 servers,
