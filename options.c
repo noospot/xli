@@ -41,10 +41,9 @@ static OptionArray Options[] = {
 		"If images need brightening or darkening, use the -gamma option. "
 	},
 	{
-		"fillscreen", FILLSCREEN, NULL, "\
-Use the whole screen for displaying an image. The image will be zoomed"
-"so that it just fits the size of the screen. If -onroot is also specified,\n\
-it will be zoomed to completely fill the screen.",
+		"fillscreen", FILLSCREEN, NULL, "Use the whole screen for displaying an image. "
+		"The image will be zoomed so that it just fits the size of the screen. "
+		"If -onroot is also specified, it will be zoomed to completely fill the screen.",
 	},
 	{
 		"fit", FIT, NULL, "Force the image(s) to use the default colormap.",
@@ -91,8 +90,7 @@ it will be zoomed to completely fill the screen.",
 		"results.",
 	},
 	{
-		"path", PATH, NULL, "Display the image path and default extensions that are loaded from the"
-".xlirc file.",
+		"path", PATH, NULL, "Display the image path and default extensions loaded from the .xlirc file.",
 	},
 	{
 		"pixmap", PIXMAP, NULL, "Use a pixmap as backing store. "
@@ -172,11 +170,9 @@ it will be zoomed to completely fill the screen.",
 		"cdither", COLORDITHER, NULL, "alias, See -colordither.",
 	},
 	{
-		"colors", COLORS, "number_of_colors", "\
-Specify the maximum number of colors to be used in displaying the image.\n\
-Values of 1-32768 are acceptable although low values will not look good.\n\
-This is done automatically if the server cannot support the depth of the"
-"image.",
+		"colors", COLORS, "number_of_colors", "Specify the maximum number of colors to be used in displaying the image. "
+		"Values of 1-32768 are acceptable although low values will not look good. "
+		"Made automatically if the server cannot support the depth of the image.",
 	},
 	{
 		"dither", DITHER, NULL, "Dither the image into monochrome. "
@@ -238,7 +234,7 @@ This often works better than the -brighten option.",
 	{
 		"normalize", NORMALIZE, NULL, "Normalize the image. "
 		"Expands color coverage to fit the colormap as closely as possible. "
-		" It may have good effects on an image which is too bright or too dark.",
+		"It may have good effects on an image which is too bright or too dark.",
 	},
 	{
 		"rotate", ROTATE, "degrees", "Rotate the image by 90, 180, or 270 degrees.",
@@ -266,7 +262,7 @@ This often works better than the -brighten option.",
 		"zoom", ZOOM, NULL, "Zoom the image along both axes. "
 		"Values smaller than 100 will reduce the size of the image, "
 		"values greater than 100 will enlarge it. "
-		" See also -xzoom and -yzoom.",
+		"See also -xzoom and -yzoom.",
 	},
 	{NULL, OPT_NOTOPT, NULL, NULL}
 };
@@ -310,43 +306,25 @@ OptionId optionNumber( strbyte* arg )
 //	}
 //}
 
-static int helpOnOption( strbyte* option )
+void help( void )
 {
 	strbyte optionwithhypen[32];
 	memset(&optionwithhypen,0,32);
+	int a;
 	
-	int a, foundone;
+	printf( "xli version %s.%s.%s \n", VERSION, PATCHLEVEL, REVISION);
+	
+	a = 0;
+	while( Options[a].name ) {
+		memset(&optionwithhypen,0,32);
+		snprintf(optionwithhypen,32,"-%s",Options[a].name);
+		printf( "%12s %-21s  %-40s\n", optionwithhypen,
+			( Options[a].args ? Options[a].args : "" ),
+			Options[a].description );
 
-	if ( *option == '-' ) {
-		option++;
+		a=a+1;
 	}
-	foundone = 0;
-	for ( a = 0; Options[a].name; a++ )
-		if ( !strncmp( Options[a].name, option, strlen( option ) ) ) {
-			memset(&optionwithhypen,0,32);
-			snprintf(optionwithhypen,32,"-%s",Options[a].name);
-			printf( "%12s %-21s  %-40s\n",
-			        optionwithhypen,
-			        ( Options[a].args ? Options[a].args : "" ),
-			        Options[a].description );
-			foundone = 1;
-		}
-	if ( !foundone ) {
-		printf( "No option `%s'.\n", option );
-	}
-	return ( foundone );
-}
-
-
-/* help facility */
-void help( void )
-{
-	printf( "xli \n\n" );
-	byte i=0;
-	while (Options[i].name) {
-		helpOnOption(Options[i].name);
-		i=i+1;
-	}
+	return;
 }
 
 

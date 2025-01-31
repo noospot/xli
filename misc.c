@@ -10,7 +10,6 @@
 
 
 #include "xli.h"
-#include "patchlevel"
 #include <signal.h>
 #include <string.h>
 
@@ -52,7 +51,7 @@ void internalError( int sig )
 			printf( "\n********************************************************************************\n" );
 			printf( "An internal error (%s) has occurred. Last function was %s.\n",
 			        signalName( sig ), globals.lastfunc );
-			printf( "xli Version %s.%s\n", VERSION, PATCHLEVEL );
+			printf( "xli version %s.%s.%s \n", VERSION, PATCHLEVEL, REVISION);
 			//tellAboutDisplay(&globals.dinfo);
 			printf( "********************************************************************************\n\n" );
 			break;
@@ -71,8 +70,8 @@ information about the error is available, sorry.\n" );
 }
 
 void version( void )
-{
-	printf( "xli version %s patchlevel %s.\n", VERSION, PATCHLEVEL );
+{	
+	printf( "xli version %s.%s.%s \n", VERSION, PATCHLEVEL, REVISION);
 	//printf("based on xli version 1 patchlevel 16 by Graeme Gill.\n");
 	//printf("based on xloadimage version 3 patchlevel 01 by Jim Frost.\n");
 	//printf("Please send email to %s for bug reports.\n", AUTHOR_EMAIL);

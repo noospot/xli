@@ -16,7 +16,6 @@
 
 #include "xli.h"
 #include "copyright.h"
-#include "patchlevel"
 #include <signal.h>
 #include <string.h>
 
