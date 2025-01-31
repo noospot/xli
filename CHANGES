@@ -1,11 +1,20 @@
 
+20250130 
+conditionned with a define loading gamma values from files
+rle and png are doing. 
+remove abitrary gamma values set in jpeg.
+initialise with default instead off zero.
+env. vars & command line can set gamma .
+if wanting the xli<=1.17 method, change FILE_GAMMA 1 in xli.h
 
 20250129 
-
 removed direct address in manual page and source
+avoid padding of structures with reordering or adding reserved vars
+callbacks strict prototypes
+types cohesion
 
-
-20250127 stdint.h  fixed width types
+20250127 
+stdint.h  fixed width types
 byte, sbyte, strbyte  used in most files
 
 20250127 documentations edits
@@ -14,8 +23,8 @@ byte, sbyte, strbyte  used in most files
 patch: 730.fullscreen-wm-hints.patch
 Description: fullscreen wm hints
  set fullscreen wm hints
- also add code to toggle fullscreen with F11 or # keys
- also exit program with escape key
+ toggle fullscreen with F11 or # keys
+ exit program with escape key
 Last-Update: 2025-01-24
 ---
 
