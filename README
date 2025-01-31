@@ -29,25 +29,25 @@ or even monochrome servers.
 
 version 1.18.0-beta supports:
 
-  Portable Network Graphics (PNG)    (via libpng)
+  Portable Network Graphics (PNG)
   GIF Image
-  JFIF style jpeg Image             (via libjpeg)
-  WEBP Image                        (via libwebp)
+  JFIF style jpeg Image
+  WEBP Image
   Targa Image (TGA)
-  Windows, OS/2 RLE Image
-  Portable Bit Map (PBM, PGM, PPM)
+  Windows, OS/2 RLE Image (early BMP)
+  Portable Bit Map (PNM, PBM, PGM, PPM)
   PC Paintbrush Image (PCX)
-  X Pixmap
-  X Bitmap
-  X Window Dump
-  Tag Image File Format (TIFF)      (via libtiff)
-  Sun Rasterfile
+  X Pixmap XPM
+  X Bitmap XBM
+  X Window Dump XWD
+  Tag Image File Format (TIFF)
+  Sun Rasterfile RAS
   CMU WM Raster
-  Faces Project
+  Facesaver Project (FS)
   G3 FAX Image
   FBM Image
-  Utah RLE Image
-  GEM Bit Image
+  Utah RLE Image (RLE)
+  GEM Image (IMG)
   MacPaint Image
 
 A variety of options are available to modify images prior to viewing.

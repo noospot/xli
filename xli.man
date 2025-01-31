@@ -498,25 +498,26 @@ system\-wide file if a personal configuration file exists.
 \fIxli\fR currently supports the following image types:
 .sp
 .nf
+
   Portable Network Graphics (PNG)
   GIF Image
   JFIF style jpeg Image
-  WEBP Image (TGA)
-  Targa Image
-  Windows, OS/2 RLE Image
-  Portable Bit Map (PBM, PGM, PPM)
-  PC Paintbrush Image
-  X Pixmap (XPM)
-  X Bitmap (XBM)
-  X Window Dump
+  WEBP Image
+  Targa Image (TGA)
+  Windows, OS/2 RLE Image (early BMP)
+  Portable Bit Map (PNM, PBM, PGM, PPM)
+  PC Paintbrush Image (PCX)
+  X Pixmap XPM
+  X Bitmap XBM
+  X Window Dump XWD
   Tag Image File Format (TIFF)
-  Sun Rasterfile
+  Sun Rasterfile RAS
   CMU WM Raster
-  Faces Project
+  Facesaver Project (FS)
   G3 FAX Image
   FBM Image
-  Utah RLE Image
-  GEM Bit Image
+  Utah RLE Image (RLE)
+  GEM Image (IMG)
   MacPaint Image
 
 .fi
