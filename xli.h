@@ -309,7 +309,7 @@ byte* lrealloc( byte* old, unsigned int size );
 void lfree( byte* area );
 
 /* options.c */
-void help( strbyte* option );
+void help( void );
 int doGeneralOption( OptionId opid, strbyte** argv, ImageOptions* persist_ops,
                      ImageOptions* image_ops );
 int doLocalOption( OptionId opid, strbyte** argv, bool setpersist,

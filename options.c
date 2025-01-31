@@ -22,315 +22,251 @@ static OptionArray Options[] = {
 	/* general options */
 
 	{
-		"debug", DBUG, NULL, "\
-Turn on synchronous mode for debugging. Dump core on error",
+		"debug", DBUG, NULL, "Turn on synchronous mode for debugging. Dump core on error",
 	},
 	{
-		"dumpcore", DUMPCORE, NULL, "\
-Dump core immediately on error signal",
+		"dumpcore", DUMPCORE, NULL, "Dump core immediately on error signal",
 	},
 	{
-		"default", DEFAULT, NULL, "\
-Set the root background to the default pattern and colors.",
+		"default", DEFAULT, NULL, "Set the root background to the default pattern and colors.",
 	},
 	{
-		"delay", DELAY, "seconds", "\
-Set the automatic advance delay for all images.",
+		"delay", DELAY, "seconds", "Set the automatic advance delay for all images.",
 	},
 	{
-		"display", DISPLAY, NULL, "\
-Indicate the X display to use.",
+		"display", DISPLAY, NULL, "Indicate the X display to use.",
 	},
 	{
-		"dispgamma", DISPLAYGAMMA, "value", "\
-Specify the gamma of the display. The default value is 2.2\n\
-A value of between 1.6 and 2.8 is reasonable.\n\
-If images need brightening or darkening, use the -gamma option"
+		"dispgamma", DISPLAYGAMMA, "value", "Specify the gamma of the display. Default value is 2.2."
+		"If images need brightening or darkening, use the -gamma option. "
 	},
 	{
 		"fillscreen", FILLSCREEN, NULL, "\
-Use the whole screen for displaying an image. The image will be zoomed\n\
-so that it just fits the size of the screen. If -onroot is also specified,\n\
+Use the whole screen for displaying an image. The image will be zoomed"
+"so that it just fits the size of the screen. If -onroot is also specified,\n\
 it will be zoomed to completely fill the screen.",
 	},
 	{
-		"fit", FIT, NULL, "\
-Force the image(s) to use the default colormap.",
+		"fit", FIT, NULL, "Force the image(s) to use the default colormap.",
 	},
 	{
-		"forall", FORALL, NULL, "\
-Avoid fillscreen and onroot handling the first image specially.\n",
+		"forall", FORALL, NULL, "Let option fillscreen and onroot to affect all images.",
 	},
 	{
-		"fork", FORK, NULL, "\
-Background automatically.  Turns on -quiet.",
+		"fork", FORK, NULL, "Background automatically.  Turns on -quiet.",
 	},
 	{
-		"fullscreen", FULLSCREEN, NULL, "\
-Use the whole screen for displaying an image. The image will be surrounded by\n\
-a border if it is smaller than the screen. If -onroot is also specified,\n\
-the image will be zoomed so that it just fits the size of the screen.",
+		"fullscreen", FULLSCREEN, NULL, 
+		"Use the whole screen for displaying an image. The image will be surrounded by "
+		"a border if it is smaller than the screen. If -onroot is also specified, "
+		"the image will be zoomed so that it just fits the size of the screen.",
 	},
 	{
-		"geometry", GEOMETRY, "window_geometry", "\
-Specify the size of the display window.  Ignored if -fullscreen or -fillscreeni\n\
-is given. If used in conjunction with -onroot, this defines the size of the base\n\
-image.",
+		"geometry", GEOMETRY, "window_geometry", 
+		"Specify the size of the display window.  Ignored if -fullscreen or -fillscreen is given. "
+		"If used in conjunction with -onroot, defines the size of the base image.",
 	},
 	{
-		"goto", GOTO, "image_name", "\
-When the end of the list of images is reached, go to the first image in the list\n\
-with the target name.",
+		"goto", GOTO, "image_name", "When the end of the list of images is reached, go to image_name.",
 	},
 	{
-		"help", HELP, "[option ...]", "\
-Give help on a particular option or series of options.  If no option is\n\
-supplied, a list of available options is given.",
+		"help", HELP, NULL, "print help ",
 	},
 	{
-		"identify", IDENTIFY, NULL, "\
-Identify images rather than displaying them.",
+		"identify", IDENTIFY, NULL, "Identify images rather than displaying them.",
 	},
 	{
-		"install", INSTALL, NULL, "\
-Force colormap installation.  This option is useful for naive window managers\n\
-which do not know how to handle colormap installation, but should be avoided\n\
-unless necessary.",
+		"install", INSTALL, NULL, "Force colormap installation.  Useful with window managers"
+		"unable to handle colormap installation, but should be avoided"
+		"unless necessary.",
 	},
 	{
-		"list", LIST, NULL, "\
-List the images along the image path.  Use `xli -path' to see the\n\
-current image path.",
+		"list", LIST, NULL, "List the images along the image path.  also see '-path' ",
 	},
 	{
-		"onroot", ONROOT, NULL, "\
-Place the image on the root window.  If used in conjunction with -fullscreen,\n\
-the image will be zoomed to just fit. If used with -fillscreen, the image will\n\
-be zoomed to completely fill the screen. -border, -at, and -center also affect the\n\
-results.",
+		"onroot", ONROOT, NULL, 
+		"Place the image on the root window.  If used in conjunction with -fullscreen, "
+		"the image will be zoomed to just fit. If used with -fillscreen, the image will "
+		"be zoomed to completely fill the screen. -border, -at, and -center also affect the"
+		"results.",
 	},
 	{
-		"path", PATH, NULL, "\
-Display the image path and default extensions that are loaded from the\n\
-.xlirc file.",
+		"path", PATH, NULL, "Display the image path and default extensions that are loaded from the"
+".xlirc file.",
 	},
 	{
-		"pixmap", PIXMAP, NULL, "\
-Force the use of a pixmap as backing store.  This may improve performance but\n\
-may not work on memory-limited servers.",
+		"pixmap", PIXMAP, NULL, "Use a pixmap as backing store. "
+		"May improve performance but may not work on memory-limited servers.",
 	},
 	{
-		"private", PRIVATE, NULL, "\
-Force the use of a private colormap.  This happens automatically if a visual\n\
-other than the default is used.  This is the opposite of -fit.",
+		"private", PRIVATE, NULL, "Use  a private colormap. "
+		"Happens automatically if a visual other than the default is used. "
+		"is the opposite of -fit.",
 	},
 	{
-		"quiet", QUIET, NULL, "\
-Turn off verbose mode.  This is the default if using -onroot or -windowid.",
+		"quiet", QUIET, NULL, "Turn off verbose mode. "
+		"Default if using -onroot or -windowid.",
 	},
 	{
-		"supported", SUPPORTED, NULL, "\
-Give a list of the supported image types.",
+		"supported", SUPPORTED, NULL, "Print a list of supported image types.",
 	},
 	{
-		"verbose", VERBOSE, NULL, "\
-Turn on verbose mode.  This is the default if using -view.",
+		"verbose", VERBOSE, NULL, "Turn on verbose mode. Default if using -view.",
 	},
 	{
-		"version", VER_NUM, NULL, "\
-Show the version number of this version of xli.",
+		"version", VER_NUM, NULL, "Show xli version number.",
 	},
 	{
-		"view", VIEW, NULL, "\
-View an image in a window.  This is the default.",
+		"view", VIEW, NULL, "View an image in a window. Default behavior.",
 	},
 	{
-		"visual", VISUAL, NULL, "\
-Force the use of a particular visual to display an image.  Normally xli\n\
-will attempt to pick a visual which is reasonable for the supplied image.",
+		"visual", VISUAL, NULL, "Force the use of a particular visual to display an image. "
+		"Normally xli will attempt to pick a visual which is reasonable for the supplied image.",
 	},
 	{
-		"windowid", WINDOWID, "window_id", "\
-Set the background of a particular window.  This is similar to -onroot and\n\
-is useful for servers which use an untagged virtual root.  The window ID\n\
-should be supplied as a hexadecimal number, eg 0x40003.",
+		"windowid", WINDOWID, "window_id", "Display the image in an existing particular window. "
+		"Similar to -onroot and is useful for servers which use an untagged virtual root. "
+		"The window ID should be supplied as a hexadecimal number, eg 0x40003.",
 	},
 	{
-		"cache", CACHE, NULL, "\
-Force caching of entire input, useful for interactively twiddling images\n\
-loaded from the standard input.",
+		"cache", CACHE, NULL, "Cache entire input, useful for interactively twiddling images"
+		"loaded from the standard input.",
 	},
 	{
-		"delete", DELETE, NULL, "\
-Enable deleting images with the 'x' key.",
+		"delete", DELETE, NULL, "Enable deleting images with the 'x' key.",
 	},
 	{
-		"focus", FOCUS, NULL, "\
-Take keyboard focus when viewing in window.",
+		"focus", FOCUS, NULL, "Take keyboard focus when viewing in window.",
 	},
 
 	/* image options */
 
 	{
-		"at", AT, NULL, "\
-Load the image onto the base image (if using -merge) or the root window (if\n\
-using -onroot) at a specific location.",
+		"at", AT, NULL, "Load the image onto the base image (if using -merge) or the root window (if"
+"using -onroot) at a specific location.",
 	},
 	{
-		"background", BACKGROUND, "color", "\
-Set the background pixel color for a monochrome image.  See -foreground and\n\
--invert.",
+		"background", BACKGROUND, "color", "Set the background pixel color for a monochrome image. " 
+		"See also -foreground and -invert.",
 	},
 	{
-		"border", BORDER, "color", "\
-Set the color used for the border around centered, placed or clipped images.",
+		"border", BORDER, "color", "Set the color used for the border around centered, placed or clipped images.",
 	},
 	{
-		"brighten", BRIGHT, "percentage", "\
-Brighten or darken the image by a percentage.  Values greater than 100 will\n\
-brighten the image, values smaller than 100 will darken it.\n\
-See also the -gamma option.",
+		"brighten", BRIGHT, "percentage", "Brighten or darken the image by a percentage. "
+		"Values greater than 100 will brighten the image, values smaller than 100 will darken it. "
+		"See also the -gamma option.",
 	},
 	{
-		"center", CENTER, NULL, "\
-Center the image on the base image (if using -merge) or the root window (if\n\
-using -onroot).",
+		"center", CENTER, NULL, "Center the image on the base image (if using -merge) "
+		"or the root window (if using -onroot).",
 	},
 	{
-		"clip", CLIP, "X,Y,W,H", "\
-Clip out the rectangle specified by X,Y,W,H and use that as the image.",
+		"clip", CLIP, "X,Y,W,H", "Clip out the rectangle specified by X,Y,W,H and use that as the image.",
 	},
 	{
-		"colordither", COLORDITHER, NULL, "\
-Dither the image if the number of colors is reduced. This will be slower,\n\
-but will give a better looking result when 256 colors or less are used.",
+		"colordither", COLORDITHER, NULL, "Dither the image if the number of colors is reduced."
+		"It will be slower, but will give a better looking result when 256 colors or less are used.",
 	},
 	{
-		"cdither", COLORDITHER, NULL, "\
-See -colordither.",
+		"cdither", COLORDITHER, NULL, "alias, See -colordither.",
 	},
 	{
 		"colors", COLORS, "number_of_colors", "\
 Specify the maximum number of colors to be used in displaying the image.\n\
 Values of 1-32768 are acceptable although low values will not look good.\n\
-This is done automatically if the server cannot support the depth of the\n\
-image.",
+This is done automatically if the server cannot support the depth of the"
+"image.",
 	},
 	{
-		"dither", DITHER, NULL, "\
-Dither the image into monochrome.  This happens automatically if sent to\n\
-a monochrome display.",
+		"dither", DITHER, NULL, "Dither the image into monochrome. "
+		"Happens automatically if sent to a monochrome display.",
 	},
 	{
-		"expand", EXPAND, NULL, "\
-Expand the image to TrueColor depth if it is not already of this depth.",
+		"expand", EXPAND, NULL, "Expand the image to TrueColor depth.",
 	},
 	{
-		"foreground", FOREGROUND, "color", "\
-Set the foreground pixel color for a monochrome image.  See -background and\n\
--invert.",
+		"foreground", FOREGROUND, "color", "Set the foreground pixel color for a monochrome image. "
+		"See -background and -invert.",
 	},
 	{
 		"gamma", GAMMA, "value", "\
-Specify the gamma of the display the image was intended to be displayed\n\
-on. Images seem to come in two flavors: 1) linear color images, produced by\n\
-ray tracers, scanners etc. These sort of images generally look too dark when\n\
-displayed directly to a CRT display. 2) Images that have been processed to\n\
-look right on a typical CRT display without any sort of processing. These\n\
-images have been 'gamma corrected'. By default, xli assumes that\n\
-images have been gamma corrected and need no other processing.\n\
-If a linear image is displayed, it will look too dark and a gamma value of\n\
-1.0 should be specified, so that xli can correct the image for the\n\
-CRT display device.\n\
-Some formats (RLE) allow the image gamma to be embedded as a comment in the\n\
-file itself, and the -gamma option allows overriding of the file comment.\n\
-In general, values smaller than 2.2 will lighten the image, and values\n\
-greater than 2.2 will darken the image.\n\
+Specify the gamma of the display the image was intended to be displayed"
+"on.  By default, xli assumes that"
+"images have been gamma corrected and need no other processing.\n\
+the -gamma option allows overriding of the default value.\n\
+Some filetypes could store a gamma value, it will be ignored by xli as a default.\n\
+In general, values smaller than 2.2 will lighten the image, and values"
+"greater than 2.2 will darken the image.\n\
 This often works better than the -brighten option.",
 	},
 	{
-		"gray", GRAY, NULL, "\
-Convert a color image to grayscale.  Also called -grey.",
+		"gray", GRAY, NULL, "Convert a color image to grayscale.  Also called -grey.",
 	},
 	{
-		"grey", GRAY, NULL, "\
-See -gray.",
+		"grey", GRAY, NULL, "Alias, see -gray.",
 	},
 	{
-		"halftone", HALFTONE, NULL, "\
-Dither the image into monochrome using a halftone dither.  This preserves\n\
-image detail but blows the image up by sixteen times.",
+		"halftone", HALFTONE, NULL, "Dither the image into monochrome using a halftone dither. "
+		"Keeps image detail yet grows the image up by sixteen times.",
 	},
 	{
-		"idelay", IDELAY, NULL, "\
-Set the automatic advance delay for this image.  This overrides -delay\n\
-temporarily.",
+		"idelay", IDELAY, NULL, "Set the automatic advance delay for this image. "
+		"This overrides -delay temporarily.",
 	},
 	{
-		"invert", INVERT, NULL, "\
-Invert a monochrome image.  This is the same as specifying `-foreground black'\n\
-and `-background white'.",
+		"invert", INVERT, NULL, "Invert colors of a monochrome image.",
 	},
 	{
-		"iscale", ISCALE, "scale factor", "\
-Scale the image using a fast, image-dependent method, if available.\n\
-Positive values make the image smaller, negative values larger.\n\
-Specifying `auto' will fast-scale the image to fit on the screen.",
+		"iscale", ISCALE, "scale factor", 
+		"Scale the image using a fast, image-dependent method, if available. "
+		"Positive values make the image smaller, negative values larger. "
+		"Specifying `auto' will fast-scale the image to fit on the screen.",
 	},
 	{
-		"merge", MERGE, NULL, "\
-Merge this image onto the previous image.  When used in conjunction with\n\
--at, -center, and -clip collages can be generated.",
+		"merge", MERGE, NULL, "Merge this image onto the previous image. "
+		" When used in conjunction with -at, -center, and -clip collages can be generated.",
 	},
 	{
-		"name", NAME, NULL, "\
-Specify that the next argument is to be the name of an image.  This is\n\
-useful for loading images whose names look to be options.",
+		"name", NAME, NULL, "Specify that the next argument is to be the name of an image."
+		"Useful for loading images whose names look to be options.",
 	},
 	{
-		"newoptions", NEWOPTIONS, NULL, "\
-Clear the options which propagate to all following images.  This is useful\n\
-for turning off image processing options which were specified for previous\n\
-images.",
+		"newoptions", NEWOPTIONS, NULL, "Clear the options which propagate to all following images. "
+		"Turn off image processing options which were specified for previous images.",
 	},
 	{
-		"normalize", NORMALIZE, NULL, "\
-Normalize the image.  This expands color coverage to fit the colormap as\n\
-closely as possible.  It may have good effects on an image which is too\n\
-bright or too dark.",
+		"normalize", NORMALIZE, NULL, "Normalize the image. "
+		"Expands color coverage to fit the colormap as closely as possible. "
+		" It may have good effects on an image which is too bright or too dark.",
 	},
 	{
-		"rotate", ROTATE, "degrees", "\
-Rotate the image by 90, 180, or 270 degrees.",
+		"rotate", ROTATE, "degrees", "Rotate the image by 90, 180, or 270 degrees.",
 	},
 	{
-		"smooth", SMOOTH, NULL, "\
-Perform a smoothing convolution on the image.  This is useful for making\n\
-a zoomed image look less blocky.  Multiple -smooth arguments will run\n\
-the smoother multiple times.  This option can be quite slow on large images.",
+		"smooth", SMOOTH, NULL, "Perform a smoothing convolution on the image. "
+		"Useful for making a zoomed image look less blocky. "
+		"Multiple -smooth arguments will run the smoother multiple times. "
+		"Can be quite slow on large images.",
 	},
 	{
-		"title", TITLE, "window_title", "\
-Set the title of the window used to display the image.",
+		"title", TITLE, "window_title", "Set the title of the window used to display the image.",
 	},
 	{
-		"xpm", XPM, "{ m | g4 | g | c }", "\
-Select the preferred xpm colour mapping:\n\
-(m = mono, g4 = 4 level gray, g = gray, c = color ).",
+		"xpm", XPM, "{ m | g4 | g | c }", "Select the preferred xpm colour mapping: "
+		"(m = mono, g4 = 4 level gray, g = gray, c = color ).",
 	},
 	{
-		"xzoom", XZOOM, "percentage", "\
-Zoom the image along the X axis by a percentage.  See -zoom.",
+		"xzoom", XZOOM, "percentage", "Zoom the image along the X axis by a percentage. See -zoom.",
 	},
 	{
-		"yzoom", YZOOM, "percentage", "\
-Zoom the image along the X axis by a percentage.  See -zoom.",
+		"yzoom", YZOOM, "percentage", "Zoom the image along the X axis by a percentage.  See -zoom.",
 	},
 	{
-		"zoom", ZOOM, NULL, "\
-Zoom the image along both axes. Values smaller than 100 will reduce the\n\
-size of the image, values greater than 100 will enlarge it.  See also\n\
--xzoom and -yzoom.",
+		"zoom", ZOOM, NULL, "Zoom the image along both axes. "
+		"Values smaller than 100 will reduce the size of the image, "
+		"values greater than 100 will enlarge it. "
+		" See also -xzoom and -yzoom.",
 	},
 	{NULL, OPT_NOTOPT, NULL, NULL}
 };
@@ -357,22 +293,22 @@ OptionId optionNumber( strbyte* arg )
 	return ( OPT_BADOPT );
 }
 
-static void listOptions( void )
-{
-	int a, width;
-
-	printf( "\nThe options are:\n\n" );
-
-	width = 0;
-	for ( a = 0; Options[a].name; a++ ) {
-		width += strlen( Options[a].name ) + 2;
-		if ( width > 78 ) {
-			printf( "\n" );
-			width = strlen( Options[a].name ) + 2;
-		}
-		printf( "%s%s", Options[a].name, ( Options[a + 1].name ? ", " : "\n\n" ) );
-	}
-}
+//static void listOptions( void )
+//{
+//	int a, width;
+//
+//	printf( "\nThe options are:\n\n" );
+//
+//	width = 0;
+//	for ( a = 0; Options[a].name; a++ ) {
+//		width += strlen( Options[a].name ) + 2;
+//		if ( width > 78 ) {
+//			printf( "\n" );
+//			width = strlen( Options[a].name ) + 2;
+//		}
+//		printf( "%s%s", Options[a].name, ( Options[a + 1].name ? ", " : "\n\n" ) );
+//	}
+//}
 
 static int helpOnOption( strbyte* option )
 {
@@ -384,8 +320,8 @@ static int helpOnOption( strbyte* option )
 	foundone = 0;
 	for ( a = 0; Options[a].name; a++ )
 		if ( !strncmp( Options[a].name, option, strlen( option ) ) ) {
-			printf( "Option: %s\nUsage: xli -%s %s\nDescription:\n%s\n\n",
-			        Options[a].name, Options[a].name,
+			printf( "-%s %s\t\t\t%s\n\n",
+			        Options[a].name,
 			        ( Options[a].args ? Options[a].args : "" ),
 			        Options[a].description );
 			foundone = 1;
@@ -396,69 +332,15 @@ static int helpOnOption( strbyte* option )
 	return ( foundone );
 }
 
-static void literalMindedUser( strbyte* s )
+
+/* help facility */
+void help( void )
 {
-	printf( "The quotes around %s are unnecessary.\n", s );
-}
-
-void help( strbyte* option )
-{
-	strbyte buf[BUFSIZ];
-
-	/* batch help facility
-	 */
-
-	if ( option ) {
-		if ( !helpOnOption( option ) ) {
-			listOptions();
-		}
-		printf( "\
-Type `xli -help [option ...]' to get help on a particular option or\n\
-`xli -help' to enter the interactive help facility.\n\n" );
-		return;
-	}
-	/* interactive help facility
-	 */
-
-	printf( "\nxli Interactive Help Facility\n\n" );
-	printf( "\
-Type `?' for a list of options, or `.' or `quit' to leave the interactive\n\
-help facility.\n" );
-	for ( ;; ) {
-		printf( "help> " );
-		buf[BUFSIZ - 1] = '\0';
-		if ( fgets( buf, BUFSIZ - 1, stdin ) == NULL ) {
-			break;      /* EOF */
-		}
-		while ( buf[strlen( buf ) - 1] == '\n' ) {
-			buf[strlen( buf ) - 1] = '\0';
-		}
-
-		/* help keywords
-		 */
-
-		if ( !strcmp( buf, "" ) ) {
-			printf( "Type `?' for a list of options\n" );
-			continue;
-		}
-		if ( !strcmp( buf, "?" ) );
-		else if ( !strcmp( buf, "quit" ) || !strcmp( buf, "." ) ) {
-			exit( 0 );
-		} else if ( !strcmp( buf, "`?'" ) ) {
-			literalMindedUser( "the question mark" );
-		} else if ( !strcmp( buf, "`quit'" ) ) {
-			literalMindedUser( "quit" );
-			exit( 0 );
-		} else if ( !strcmp( buf, "`.'" ) ) {
-			literalMindedUser( "the period" );
-			exit( 0 );
-		} else if ( helpOnOption( buf ) ) {
-			continue;
-		}
-		listOptions();
-		printf( "\
-Get this list again by typing `?' at the `help>' prompt, or leave\n\
-the interactive help facility with `.' or `quit'.\n" );
+	printf( "xli \n\n" );
+	byte i=0;
+	while (Options[i].name) {
+		helpOnOption(Options[i].name);
+		i=i+1;
 	}
 }
 
@@ -551,13 +433,7 @@ int doGeneralOption( OptionId opid, strbyte** argv, ImageOptions* persist_ops,
 			break;
 
 		case HELP:
-			if ( argv[++a] )
-				do {
-					help( argv[a++] );
-				} while ( argv[a] );
-			else {
-				help( NULL );
-			}
+			help();
 			exit( 0 );
 
 		case IDENTIFY:
