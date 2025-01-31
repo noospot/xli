@@ -12,7 +12,7 @@ REQUIRED BUILD DEPENDENCIES
      libpng
      libwebp
      libtiff
-     libeexif
+     libexif
      zlib  gz, zip
 
      verify the command pkgconf or pkg-conf is around
@@ -53,5 +53,5 @@ INSTALL
 
     copy the binary to final location
     cp xli  /usr/local/bin/
-
+	
 

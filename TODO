@@ -1,4 +1,6 @@
 
+add test suites
+
 make MIT-SHM and or mmap  conditional for systems that don't have it
 
 document -delete, -iscale, -focus, -cache
@@ -13,18 +15,24 @@ fix crash on interactive zoom with -clip set
 
 use Xrender x11 extension to send rgba image directly to x11 instead of converting them to rgb
 
+
 use <stdint.h> and change the code toward c99 like fixed length types
+
 
 fix paletted 32 tga
 
+
 improve bmp handling
 
-convert interactive --help to a regular gnu-like  --help
+
 
 keep requested/window background color while merging alpha
 
 
-try doing gamma is adjusted if and only if required with the command line options
+could be doing file gamma loaded if and only if required with the command line options.
 
 
 implement 2colors and cmaped versions of mirror_horizontal() and mirror_vertical() 
+
+
+do test suites
