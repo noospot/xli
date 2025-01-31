@@ -163,7 +163,7 @@ static OptionArray Options[] = {
 		"clip", CLIP, "X,Y,W,H", "Clip out the rectangle specified by X,Y,W,H and use that as the image.",
 	},
 	{
-		"colordither", COLORDITHER, NULL, "Dither the image if the number of colors is reduced."
+		"colordither", COLORDITHER, NULL, "Dither the image if the number of colors is reduced. "
 		"It will be slower, but will give a better looking result when 256 colors or less are used.",
 	},
 	{
@@ -264,6 +264,8 @@ This often works better than the -brighten option.",
 		"values greater than 100 will enlarge it. "
 		"See also -xzoom and -yzoom.",
 	},
+	
+	
 	{NULL, OPT_NOTOPT, NULL, NULL}
 };
 
@@ -310,20 +312,40 @@ void help( void )
 {
 	strbyte optionwithhypen[32];
 	memset(&optionwithhypen,0,32);
-	int a;
+	OptionId i;
 	
 	printf( "xli version %s.%s.%s \n", VERSION, PATCHLEVEL, REVISION);
-	
-	a = 0;
-	while( Options[a].name ) {
-		memset(&optionwithhypen,0,32);
-		snprintf(optionwithhypen,32,"-%s",Options[a].name);
-		printf( "%12s %-21s  %-40s\n", optionwithhypen,
-			( Options[a].args ? Options[a].args : "" ),
-			Options[a].description );
-
-		a=a+1;
+	printf( "xli [GENERAL_OPTIONS]  [[LOCAL_OPTIONS] FILE ...]\n" );
+	printf( "\n");
+	printf( "general options:\n");
+	printf( "=========================\n");
+	i = GENERAL_OPTIONS_START;
+	while( Options[i].name && i<GENERAL_OPTIONS_END ) {
+		if ( Options[i].name ) {
+			memset(&optionwithhypen,0,32);
+			snprintf(optionwithhypen,32,"-%s",Options[i].name);
+			printf( "%12s %-21s  %-40s\n", optionwithhypen,
+				( Options[i].args ? Options[i].args : "" ),
+				Options[i].description );
+		}
+		i=i+1;
 	}
+	printf( "\n");
+	printf( "local options:\n");
+	printf( "=========================\n");
+	i = LOCAL_OPTIONS_START;
+	while( Options[i].name && i<LOCAL_OPTIONS_END ) {
+		if ( Options[i].name ) {
+			memset(&optionwithhypen,0,32);
+			snprintf(optionwithhypen,32,"-%s",Options[i].name);
+			printf( "%12s %-21s  %-40s\n", optionwithhypen,
+			( Options[i].args ? Options[i].args : "" ),
+			Options[i].description );
+		}
+		i=i+1;
+	}	
+	printf( "\n");
+
 	return;
 }
 

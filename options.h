@@ -80,6 +80,7 @@ typedef enum option_id {
 	HALFTONE,
 	IDELAY,
 	INVERT,
+	ISCALE,
 	MERGE,
 	NEWOPTIONS,
 	NORMALIZE,
@@ -90,8 +91,7 @@ typedef enum option_id {
 	XZOOM,
 	YZOOM,
 	ZOOM,
-	ISCALE,
-
+	
 	LOCAL_OPTIONS_END	/* marker */
 
 } OptionId;
