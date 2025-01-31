@@ -300,15 +300,16 @@ void help( void )
 {
 	strbyte optionwithhypen[32];
 	memset(&optionwithhypen,0,32);
-	OptionId i;
+	byte i;
 	
-	printf( "xli version %s.%s.%s Copyright (c) 1989-2025 the xli developers\n", VERSION, PATCHLEVEL, REVISION);
-	printf( "usage: xli [GENERAL OPTIONS]  {[LOCAL OPTIONS] FILE}...\n" );
+	version();
+	//printf( "xli version %s.%s.%s Copyright (c) 1989-2025 the xli developers\n", VERSION, PATCHLEVEL, REVISION);
+	printf( "usage: xli [general options]  {[image options] FILE}...\n" );
 	printf( "\n");
 	printf( "General options:\n");
-	i = GENERAL_OPTIONS_START;
-	while( Options[i].name && i<GENERAL_OPTIONS_END ) {
-		if ( Options[i].name ) {
+	i = 0;
+	while( Options[i].name  ) {
+		if ( Options[i].option_id>GENERAL_OPTIONS_START && Options[i].option_id<GENERAL_OPTIONS_END ) {
 			memset(&optionwithhypen,0,32);
 			snprintf(optionwithhypen,32,"-%s",Options[i].name);
 			printf( "%12s %-21s  %-40s\n", optionwithhypen,
@@ -319,9 +320,9 @@ void help( void )
 	}
 	printf( "\n");
 	printf( "Local options:\n");
-	i = LOCAL_OPTIONS_START;
-	while( Options[i].name && i<LOCAL_OPTIONS_END ) {
-		if ( Options[i].name ) {
+	i = 0;
+	while( Options[i].name ) {
+		if (Options[i].option_id>LOCAL_OPTIONS_START && Options[i].option_id<LOCAL_OPTIONS_END  ) {
 			memset(&optionwithhypen,0,32);
 			snprintf(optionwithhypen,32,"-%s",Options[i].name);
 			printf( "%12s %-21s  %-40s\n", optionwithhypen,

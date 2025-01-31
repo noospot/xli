@@ -71,20 +71,14 @@ information about the error is available, sorry.\n" );
 
 void version( void )
 {	
-	printf( "xli version %s.%s.%s \n", VERSION, PATCHLEVEL, REVISION);
-	//printf("based on xli version 1 patchlevel 16 by Graeme Gill.\n");
-	//printf("based on xloadimage version 3 patchlevel 01 by Jim Frost.\n");
-	//printf("Please send email to %s for bug reports.\n", AUTHOR_EMAIL);
+	printf( "xli version %s.%s.%s  Copyright (c) 1989-2025 xli developers\n", VERSION, PATCHLEVEL, REVISION);
 }
 
 void usage( strbyte* name )
 {
 	version();
-	printf( "\nUsage: %s [global options] {[image options] image_name ...}\n\n",
-	        tail( name ) );
-	printf( "\
-Type `%s -help [option ...]' for information on a particular option, or\n\
-`%s -help' to enter the interactive help facility.\n", tail( name ), tail( name ) );
+	printf( "Usage: %s [general options] {[image options] FILE ...}\n", tail( name ) );
+	printf( "Type `%s -help' for information on options.\n", tail( name ) );
 	exit( 1 );
 }
 
