@@ -70,7 +70,7 @@ it will be zoomed to completely fill the screen.",
 		"goto", GOTO, "image_name", "When the end of the list of images is reached, go to image_name.",
 	},
 	{
-		"help", HELP, NULL, "print help ",
+		"help", HELP, NULL, "Print help ",
 	},
 	{
 		"identify", IDENTIFY, NULL, "Identify images rather than displaying them.",
@@ -312,6 +312,9 @@ OptionId optionNumber( strbyte* arg )
 
 static int helpOnOption( strbyte* option )
 {
+	strbyte optionwithhypen[32];
+	memset(&optionwithhypen,0,32);
+	
 	int a, foundone;
 
 	if ( *option == '-' ) {
@@ -320,8 +323,10 @@ static int helpOnOption( strbyte* option )
 	foundone = 0;
 	for ( a = 0; Options[a].name; a++ )
 		if ( !strncmp( Options[a].name, option, strlen( option ) ) ) {
-			printf( "-%s %s\t\t\t%s\n\n",
-			        Options[a].name,
+			memset(&optionwithhypen,0,32);
+			snprintf(optionwithhypen,32,"-%s",Options[a].name);
+			printf( "%12s %-21s  %-40s\n",
+			        optionwithhypen,
 			        ( Options[a].args ? Options[a].args : "" ),
 			        Options[a].description );
 			foundone = 1;
