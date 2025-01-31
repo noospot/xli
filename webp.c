@@ -244,7 +244,7 @@ int info_about_webp( strbyte* filename_with_path, bool verbose )
 		byte webp_animated=0;
 		byte has_alpha=0;
 		f = ( fgetc( file )  );
-		if ( ( f>>6 & 0x3 )!=0 ) {;} // MUST be 0. Readers MUST ignore this field.
+		if ( ( f>>6 & 0x3 )!=0 ) {;} // MUST be 0. Readers MUST ignore field.
 		if ( ( f>>5 & 0x1 ) ) {;} // has icc
 		if ( ( f>>4 & 0x1 ) ) {
 			has_alpha=1;
@@ -254,10 +254,10 @@ int info_about_webp( strbyte* filename_with_path, bool verbose )
 		if ( ( f>>1 & 0x1 ) ) {
 			webp_animated=1;
 		}
-		if ( ( f & 0x1 )!=0 ) {;} // MUST be 0. Readers MUST ignore this field.
-		f = ( fgetc( file )  ); // MUST be 0. Readers MUST ignore this field.
-		f = ( fgetc( file )  ); // MUST be 0. Readers MUST ignore this field.
-		f = ( fgetc( file )  ); // MUST be 0. Readers MUST ignore this field.
+		if ( ( f & 0x1 )!=0 ) {;} // MUST be 0. Readers MUST ignore field.
+		f = ( fgetc( file )  ); // MUST be 0. Readers MUST ignore field.
+		f = ( fgetc( file )  ); // MUST be 0. Readers MUST ignore field.
+		f = ( fgetc( file )  ); // MUST be 0. Readers MUST ignore field.
 
 		// 24bits canvas width
 		unsigned int webp_width = 1;

@@ -156,7 +156,7 @@ static OptionArray Options[] = {
 		"See also the -gamma option.",
 	},
 	{
-		"center", CENTER, NULL, "Center the image on the base image (if using -merge) "
+		"center", CENTER, NULL, "Center the image, on the base image (if using -merge) "
 		"or the root window (if using -onroot).",
 	},
 	{
@@ -171,12 +171,10 @@ static OptionArray Options[] = {
 	},
 	{
 		"colors", COLORS, "number_of_colors", "Specify the maximum number of colors to be used in displaying the image. "
-		"Values of 1-32768 are acceptable although low values will not look good. "
-		"Made automatically if the server cannot support the depth of the image.",
+		"Values of 1-32768 are acceptable. ",
 	},
 	{
-		"dither", DITHER, NULL, "Dither the image into monochrome. "
-		"Happens automatically if sent to a monochrome display.",
+		"dither", DITHER, NULL, "Dither the image into monochrome. ",
 	},
 	{
 		"expand", EXPAND, NULL, "Expand the image to TrueColor depth.",
@@ -186,15 +184,7 @@ static OptionArray Options[] = {
 		"See -background and -invert.",
 	},
 	{
-		"gamma", GAMMA, "value", "\
-Specify the gamma of the display the image was intended to be displayed"
-"on.  By default, xli assumes that"
-"images have been gamma corrected and need no other processing.\n\
-the -gamma option allows overriding of the default value.\n\
-Some filetypes could store a gamma value, it will be ignored by xli as a default.\n\
-In general, values smaller than 2.2 will lighten the image, and values"
-"greater than 2.2 will darken the image.\n\
-This often works better than the -brighten option.",
+		"gamma", GAMMA, "value", "Specify the gamma of the display the image was intended to be displayed on.",
 	},
 	{
 		"gray", GRAY, NULL, "Convert a color image to grayscale.  Also called -grey.",
@@ -207,8 +197,8 @@ This often works better than the -brighten option.",
 		"Keeps image detail yet grows the image up by sixteen times.",
 	},
 	{
-		"idelay", IDELAY, NULL, "Set the automatic advance delay for this image. "
-		"This overrides -delay temporarily.",
+		"idelay", IDELAY, NULL, "Set image automatic advance delay, as seconds. "
+		"Overrides -delay temporarily.",
 	},
 	{
 		"invert", INVERT, NULL, "Invert colors of a monochrome image.",
@@ -220,7 +210,7 @@ This often works better than the -brighten option.",
 		"Specifying `auto' will fast-scale the image to fit on the screen.",
 	},
 	{
-		"merge", MERGE, NULL, "Merge this image onto the previous image. "
+		"merge", MERGE, NULL, "Merge image onto the previous image. "
 		" When used in conjunction with -at, -center, and -clip collages can be generated.",
 	},
 	{
@@ -233,8 +223,7 @@ This often works better than the -brighten option.",
 	},
 	{
 		"normalize", NORMALIZE, NULL, "Normalize the image. "
-		"Expands color coverage to fit the colormap as closely as possible. "
-		"It may have good effects on an image which is too bright or too dark.",
+		"Expands color coverage to fit the colormap as closely as possible. ",
 	},
 	{
 		"rotate", ROTATE, "degrees", "Rotate the image by 90, 180, or 270 degrees.",
@@ -242,8 +231,7 @@ This often works better than the -brighten option.",
 	{
 		"smooth", SMOOTH, NULL, "Perform a smoothing convolution on the image. "
 		"Useful for making a zoomed image look less blocky. "
-		"Multiple -smooth arguments will run the smoother multiple times. "
-		"Can be quite slow on large images.",
+		"Multiple -smooth arguments will run the smoother multiple times. ",
 	},
 	{
 		"title", TITLE, "window_title", "Set the title of the window used to display the image.",
@@ -314,11 +302,10 @@ void help( void )
 	memset(&optionwithhypen,0,32);
 	OptionId i;
 	
-	printf( "xli version %s.%s.%s \n", VERSION, PATCHLEVEL, REVISION);
-	printf( "xli [GENERAL_OPTIONS]  [[LOCAL_OPTIONS] FILE ...]\n" );
+	printf( "xli version %s.%s.%s Copyright (c) 1989-2025 the xli developers\n", VERSION, PATCHLEVEL, REVISION);
+	printf( "usage: xli [GENERAL OPTIONS]  {[LOCAL OPTIONS] FILE}...\n" );
 	printf( "\n");
-	printf( "general options:\n");
-	printf( "=========================\n");
+	printf( "General options:\n");
 	i = GENERAL_OPTIONS_START;
 	while( Options[i].name && i<GENERAL_OPTIONS_END ) {
 		if ( Options[i].name ) {
@@ -331,8 +318,7 @@ void help( void )
 		i=i+1;
 	}
 	printf( "\n");
-	printf( "local options:\n");
-	printf( "=========================\n");
+	printf( "Local options:\n");
 	i = LOCAL_OPTIONS_START;
 	while( Options[i].name && i<LOCAL_OPTIONS_END ) {
 		if ( Options[i].name ) {
@@ -345,7 +331,10 @@ void help( void )
 		i=i+1;
 	}	
 	printf( "\n");
-
+	
+	printf( "See xli manual page for detailed description of the options.\n");
+	printf( "\n");
+	
 	return;
 }
 
@@ -500,7 +489,7 @@ int doGeneralOption( OptionId opid, strbyte** argv, ImageOptions* persist_ops,
 				usage( globals.argv0 );
 				/* NOTREACHED */
 			}
-			globals.onroot = TRUE;	/* this means "on special root" */
+			globals.onroot = TRUE;	/* means "on special root" */
 			globals.fit = TRUE;	/* assume -fit */
 			break;
 

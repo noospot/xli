@@ -14,9 +14,9 @@
 #include "tga.h"
 
 /* Read the header of the file, and */
-/* Return TRUE if this looks like a tga file */
+/* Return TRUE if it looks like a tga file */
 /* Note that since Targa files don't have a magic number, */
-/* we have to be pickey about this. */
+/* we have to be pickey about it. */
 static bool
 read_tgaHeader( ZFILE* zf, tgaHeader* hp, strbyte* name )
 {

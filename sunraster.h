@@ -1,9 +1,8 @@
 /* sunraster.h
  *
- * header for Sun rasterfiles.  
+ * header for Sun rasterfiles,
+ * used to improve portability and to avoid distribution problems.
  * if having SunOS, a better description is /usr/include/rasterfile.h
- * this is used instead to improve portability and to avoid distribution 
- * problems.
  *
  * Copyright 1989 Jim Frost.  See included file "copyright.h" for complete
  * copyright information.
@@ -26,7 +25,7 @@ struct rheader {
  * the image.  each row of the image is rounded to 2 bytes.
  */
 
-#define RMAGICNUMBER 0x59a66a95 /* magic number of this file type */
+#define RMAGICNUMBER 0x59a66a95 /* sunraster files magic number */
 
 /* these are the possible file formats
  */

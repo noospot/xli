@@ -99,8 +99,8 @@ typedef enum option_id {
 typedef struct option_array {
 	strbyte* name;		/* name minus preceeding '-' */
 	OptionId option_id;
-	strbyte* args;		/* arguments this option uses or NULL if none */
-	strbyte* description;	/* description of this option */
+	strbyte* args;		/* arguments the option uses or NULL if none */
+	strbyte* description;	/* option description */
 } OptionArray;
 
 OptionId optionNumber( strbyte* arg );	/* options.c */
