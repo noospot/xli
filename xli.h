@@ -9,7 +9,7 @@
 	#define SYSV			/* SYSV is out System V flag */
 #endif
 
-#include "patchlevel"
+#include "patchlevel.h"
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -22,9 +22,7 @@ LIBS= -lX11 -lm -lXext -lexif -lwebp -ltiff `$(PKG_CONFIG) --libs libpng` `$(PKG
 CFLAGS+= -Wall -Wextra -fstack-protector-strong -O1 -DSYSPATHFILE=\"$(SYSPATHFILE)\" $(OPTIONALFLAGS) $(EXTRAFLAGS)
 GCCFLAGS= -fstrength-reduce -finline-functions
 
-MISC= Makefile.std Imakefile README ABOUTGAMMA \
-      README.orig xli.man xli.txt xliguide.man \
-      patchlevel release
+MISC= Makefile.std README ABOUTGAMMA CHANGES TODO INSTALL xli.man xliguide.txt 
 
 BINMISC= chkgamma.jpg
 

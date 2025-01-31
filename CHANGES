@@ -1,4 +1,12 @@
 
+
+20250131
+changed -help so it's nearer to the usual -help (not interactive)
+cleaning -help printout
+added revision to version number in patchlevel
+renamed patchlevel patchlevel.h
+
+
 20250130 
 conditionned with a define loading gamma values from files
 rle and png are doing. 

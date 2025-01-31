@@ -16,8 +16,8 @@ from standard input.
 .PP
 If the destination display cannot support the number of colors in the
 image, the image will be dithered (monochrome destination) or have its
-colormap reduced (color destination) as appropriate.  This can also be
-done forcibly with the \fI\-halftone\fR, \fI\-dither\fR, and
+colormap reduced (color destination) as appropriate.  It can also be
+dithered with the \fI\-halftone\fR, \fI\-dither\fR, and
 \fI\-colors\fR options.
 .PP
 A variety of image manipulations can be specified, including gamma
@@ -194,14 +194,13 @@ Causes \fIxli\fR to be talkative, telling what kind of image it's playing
 with and any special processing that it has to do.
 .TP
 \-version
-Print the version number and patchlevel of this version of
-\fIxli\fR.
+Print \fIxli\fR version number.
 .TP
 \-view
-View image(s) in a window.  This is the opposite of \fI\-onroot\fR.
+View image(s) in a window.  The opposite of \fI\-onroot\fR.
 .TP
 \-visual \fIvisual_name\fR
-Force the use of a specific visual type to display an image.  Normally
+Use a specific visual type to display an image.  Normally
 \fIxli\fR tries to pick the best available image for a
 particular image type.  The available visual types are:  DirectColor,
 TrueColor, PseudoColor, StaticColor, GrayScale, and StaticGray.
@@ -220,7 +219,7 @@ the next image, and continue until overridden or canceled with
 \fI\-newoptions.\fR
 .TP
 \-border \fIcolor\fR
-This sets the background portion of the window or clipped image which is
+Sets the background portion of the window or clipped image which is
 not covered by any images to be \fIcolor\fR.
 .TP
 \-brighten \fIpercentage\fR
