@@ -58,11 +58,11 @@ to be displayed on a monochrome screen will be dithered automatically).
 
 while displaying the image, some keys can change the way it is displayed:
 <, >     Zoom
-esc, q   quit
-#, F11   fullscreen
 r, l     rotate right, left
 n, p     next/earlier image
 5, 6     decrease, increase brightness
+#, F11   fullscreen
+esc, q   quit
 
 
 SUGGESTIONS AND BUG REPORTS
