@@ -11,7 +11,6 @@ plan is to release a 1.18 version.
 
 
 changes in 1.18.0:
-
 * exif rotation with jpg images
 * webp support
 * tiff support
@@ -21,14 +20,13 @@ changes in 1.18.0:
 * many others changes, see changelog
 
 
-
 xli will display several types of images under X11, or load images onto
 the X11 root window.
-xli will display images also with pseudo-colors x11 servers,
-or even monochrome servers.
+xli will display images also with pseudo-colors x11 servers display,
+or even monochrome servers displays.
+
 
 version 1.18.0-beta supports:
-
   Portable Network Graphics (PNG)
   GIF Image
   JFIF style jpeg Image
@@ -50,19 +48,21 @@ version 1.18.0-beta supports:
   GEM Image (IMG)
   MacPaint Image
 
-A variety of options are available to modify images prior to viewing.
-These options include clipping, dithering, depth reduction, zoom (either X
-or Y axis independently or both at once), brightening or darkening, input
-gamma correction, and image merging.  When applicable, these options are
-done automatically (eg. a color image to be displayed on a monochrome
-screen will be dithered automatically).
 
-KEYS
+A variety of options are available to modify images prior to viewing:
+clipping, dithering, depth reduction, zoom (X, Y axis or both), 
+brightening or darkening, input gamma correction, and image merging.  
+When applicable, these options are done automatically (eg. a color image 
+to be displayed on a monochrome screen will be dithered automatically).
+
+
+while displaying the image, some keys can change the way it is displayed:
 <, >     Zoom
 esc, q   quit
 #, F11   fullscreen
 r, l     rotate right, left
 n, p     next/earlier image
+5, 6     decrease, increase brightness
 
 
 SUGGESTIONS AND BUG REPORTS
