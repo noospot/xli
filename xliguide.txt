@@ -225,6 +225,13 @@ Memory manipulation:
        memset( P, V, N )
 
 
+style:
+
+       xli source code style and indentation was made with 'astyle' command:
+       astyle --style=1tbs --add-one-line-braces --indent=tab=6 --attach-extern-c --indent-switches --attach-closing-while --indent-preproc-block --min-conditional-indent=1 -D --align-pointer=type  *.c *.h
+
+
+
 If all else fails:
 
        Read the source. xli.h and image.h are a good place to start.  

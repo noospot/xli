@@ -26,7 +26,8 @@ stdint.h  fixed width types
 byte, sbyte, strbyte  used in most files
 
 20250127 documentations edits
-
+entire source code style and indentation normalised with astyle command:
+astyle --style=1tbs --add-one-line-braces --indent=tab=6 --attach-extern-c --indent-switches --attach-closing-while --indent-preproc-block --min-conditional-indent=1 -D --align-pointer=type  *.c *.h
 
 patch: 730.fullscreen-wm-hints.patch
 Description: fullscreen wm hints
