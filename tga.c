@@ -13,12 +13,30 @@
 #include "imagetypes.h"
 #include "tga.h"
 
+// apply alpha to a single register R, G or B
+static inline byte tga_reg_applyalpha( byte colorreg, byte alpha )
+{
+	if( alpha==0x00 ) {
+		return 0x00;
+	}
+	if( alpha==0xFF ) {
+		return colorreg;
+	}
+	double tmp= ( double )( ( double )colorreg*( double )alpha )/255.0;
+	if ( tmp<0.0 ) {
+		tmp=0.0;
+	}
+	if ( tmp>255.0 ) {
+		tmp=255.0;
+	}
+	return ( byte )round( tmp );
+}
+
 /* Read the header of the file, and */
 /* Return TRUE if it looks like a tga file */
 /* Note that since Targa files don't have a magic number, */
 /* we have to be pickey about it. */
-static bool
-read_tgaHeader( ZFILE* zf, tgaHeader* hp, strbyte* name )
+static bool read_tgaHeader( ZFILE* zf, tgaHeader* hp, strbyte* name )
 {
 	byte buf[18];
 
@@ -207,6 +225,7 @@ Image* tgaLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 			depth=24;
 		}
 		// don't know hdr.PixelSize is arg instead of depth
+		// new cmap dest image
 		image= newRGBImage( hdr.Width, hdr.Height, hdr.PixelSize );
 		image->title= dupString( hdr.name );
 		for( i = 0; i < hdr.Index; i++ ) {	/* init bottom of colormap */
@@ -272,6 +291,7 @@ Image* tgaLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 					//printf("rgba: %02X%02X%02X%02X -> ",buf[0],buf[1],buf[2],buf[3]);
 					//printf("image rgb: %02X%02X%02X\n",image->rgb.red[i],image->rgb.green[i],image->rgb.blue[i]);
 				}
+				
 				break;
 		}
 		for( ; i < used; i++ ) {	/* init rest of colormap */
@@ -332,7 +352,9 @@ Image* tgaLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		eoi = image->data + span;
 		data = image->data + ( nopix * image->pixlen ) + span;
 	}
-	//printf("Now read in the image data, image depth %i\n ",image->depth);
+		
+	
+	//printf("image pixlen %i\n ",image->pixlen);
 	/* Now read in the image data */
 	rd_count = wr_count = 0;
 	if ( !hdr.RLE ) {	/* If not rle, all are literal */
@@ -342,8 +364,8 @@ Image* tgaLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		byte buf[6];	/* 0, 1 for pseudo, 2, 3, 4 for BGR, 5 alpha */
 
 		if ( data == eoi ) {	/* adjust for possible retrace */
-			data += vretrace;
-			eoi += span;
+			data = data + vretrace;
+			eoi = eoi + span;
 		}
 
 		/* Do another line of pixels */
@@ -355,36 +377,38 @@ Image* tgaLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 				}
 				if( buf[0] & 0x80 ) {
 					/* repeat count */
-					wr_count = ( unsigned int )buf[0] - 127;	/* no. */
-					rd_count = 1;	/* need to read pixel to repeat */
+					wr_count = ( unsigned int )buf[0] - 0x80 +1;	
+					rd_count = 1;	/* need to read 1 pixel to repeat */
 				} else {	/* number of literal pixels */
-					wr_count =
-					      rd_count = buf[0] + 1;
+					wr_count = rd_count = ( unsigned int )buf[0] + 1;
 				}
 			}
 			if( rd_count != 0 ) {
 				/* read a pixel and decode into RGB */
 				switch ( hdr.PixelSize ) {
-					case 8:	/* Pseudo or Gray */
+					case 8:	/* source Pseudo or Gray */
 						if( zread( zf, buf, 1 ) != 1 ) {
 							goto data_short;
 						}
 						break;
-					case 15:	/* 15 bits of RGB */
-					case 16:	/* 16 bits of RGB  */
+					case 15:	/* source 15 bits of RGB */
+					case 16:	/* source 16 bits of RGB  */
+						// FIXME find if pseudo or true
+						// get source in buf 0, 1
 						if( zread( zf, buf, 2 ) != 2 ) {
 							goto data_short;
 						}
+						// convert as rgb into buf 2,3,4
 						buf[2] = ( buf[0] & 0x1F ) <<3  ;		/* B */
 						buf[3] = ( ( ( buf[1] & 0x03 ) << 3 ) + ( ( unsigned )( buf[0] & 0xE0 ) >> 5 ) ) <<3 ;	/* G */
 						buf[4] = ( ( unsigned )( buf[1] & 0x7C ) >> 2 ) <<3;	/* R */
 						break;
-					case 24:	/* 8 bits of B G R */
+					case 24:	/* source 8 bits of B G R */
 						if( zread( zf, &buf[2], 3 ) != 3 ) {
 							goto data_short;
 						}
 						break;
-					case 32:	/* 8 bits of B G R + alpha */
+					case 32:	/* source 8 bits of B G R + alpha */
 						if( zread( zf, &buf[2], 4 ) != 4 ) {
 							goto data_short;
 						}
@@ -396,27 +420,43 @@ Image* tgaLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 				case 1:					/* 8 bit pseudo or gray */
 					*data++ = buf[0];
 					break;
-				case 2:					/* 16 bit pseudo */
+				case 2:					/* 16 bit  */
+					// FIXME find if pseudo or true
 					*data++ = buf[1];	/* tga is little endian, */
 					*data++ = buf[0];	/* xli is big endian */
 					break;
 				case 3:					/* True color */
-					if ( hdr.AttBits == 8 &&
-					      hdr.PixelSize == 32 ) {
+					if ( hdr.AttBits == 8 && hdr.PixelSize == 32 ) {
 						/* apply alpha channel */
-						buf[4] = buf[4] * buf[5] / 255;
-						buf[3] = buf[3] * buf[5] / 255;
-						buf[2] = buf[2] * buf[5] / 255;
-					}
+						buf[4] = buf[4] * buf[5] / 255; // R
+						buf[3] = buf[3] * buf[5] / 255;  // G 
+						buf[2] = buf[2] * buf[5] / 255;  // B
+					} 
+					
 					*data++ = buf[4];	/* R */
 					*data++ = buf[3];	/* G */
 					*data++ = buf[2];	/* B */
+					
 					break;
 			}
 			wr_count--;
 		}
+		//if (data==eoi) printf("adjust\n");
 	}
 	zclose( zf );
+	
+	//printf("max:%i\n",image->width*image->height*(hdr.PixelSize/8) );
+	//unsigned int i=0;
+	//while (i<10316  ) {
+	//	if (i%(hdr.PixelSize/8)==0)
+	//		printf(" ");
+	//	if (i%(image->width*(hdr.PixelSize/8))==0)
+	//		printf("\n");
+	//	printf("%02X",image->data[i]);
+	//	//  code here
+	//	i=i+1;
+	//}
+	
 	return image;
 
 data_short:
