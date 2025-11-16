@@ -7,8 +7,6 @@ debian patches, netbsd patches, +35 other patches,
 and also local changes.
 see file CHANGES to see their descriptions.
 
-plan is to release a 1.18 version.
-
 
 changes in 1.18.0:
 * exif rotation with jpg images
