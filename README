@@ -13,7 +13,7 @@ changes in 1.18.0:
 * webp support
 * tiff support
 * window symbol and title with standard wm hints
-* -identify results consistency, easier to reuse
+* cli option '-identify' results consistency, easier to reuse
 * toggle fullscreen while running with F11
 * many others changes, see changelog
 
