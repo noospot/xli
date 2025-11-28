@@ -15,6 +15,8 @@
 #include <unistd.h>
 #include <sys/file.h>
 #include <ctype.h>
+#include <stdio.h>
+#include <dirent.h>
 #ifndef VMS
 	#include <pwd.h>
 #endif
