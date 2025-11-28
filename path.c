@@ -244,26 +244,42 @@ int findImage( strbyte* name, strbyte* fullname )
 }
 
 
-/* list images along our path */
+// list images along our path
 void listImages( void )
 {
-	unsigned int a;
-	strbyte buf[BUFSIZ];
+    unsigned int a;
+    DIR *dir;
+    struct dirent *ent;
 
-	if ( !NumPaths ) {
-		printf( "No image path\n" );
-		return;
-	}
-	for ( a = 0; a < NumPaths; a++ ) {
-		printf( "%s:\n", Paths[a] );
-		fflush( stdout );
-		sprintf( buf, "ls %s", Paths[a] );
-		if ( system( buf ) < 0 ) {
-			perror( "ls" );
-			return;
-		}
-	}
-	return;
+    if ( NumPaths == 0 ) {
+        printf( "No image path\n" );
+        return;
+    }
+
+    for ( a = 0; a < NumPaths; a++ ) {
+        printf( "%s:\n", Paths[a] );
+
+        dir = opendir( Paths[a] );
+        if ( !dir ) {
+            printf( "%s: %s\n", Paths[a], strerror( errno ) );
+            continue;                   // go to next path instead of aborting
+        }
+
+        errno = 0;
+        while ( (ent = readdir( dir )) != NULL ) {
+            if ( strcmp( ent->d_name, "." ) == 0 ||
+                 strcmp( ent->d_name, ".." ) == 0 )
+                continue;
+
+            printf( "%s\n", ent->d_name );
+        }
+
+        if ( errno != 0 )
+            printf( "readdir %s: %s\n", Paths[a], strerror( errno ) );
+
+        closedir( dir );
+        printf( "\n" );                  // blank line between directories
+    }
 }
 
 
