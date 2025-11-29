@@ -1,6 +1,6 @@
-xli (1.18.0beta1+20251129) unstable; urgency=medium
+xli (1.18.0beta2) unstable; urgency=medium
 
-  * fixed directory listing in path.c listImages()
+  * fixed directory listing in path.c listImages() 
   
  -- rno <rno@nomsg.io>  Sat, 29 Nov 2025 15:56:07 +0100
 
