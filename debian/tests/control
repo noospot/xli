@@ -1,0 +1,2 @@
+Test-Command: xli 2>&1 | grep -i usage
+Depends: @, xauth

@@ -1,0 +1,16 @@
+image/png; /usr/bin/xli -quiet %s; test=test -n "$DISPLAY"; description=PNG Image; nametemplate=%s.png; priority=3
+image/x-ms-bmp; /usr/bin/xli -quiet %s; test=test -n "$DISPLAY"; description=BMP Image; nametemplate=%s.bmp; priority=3
+image/x-cmu-raster; /usr/bin/xli -quiet %s; test=test -n "$DISPLAY"; description=CMU-RasterFile Image; nametemplate=%s.ras; priority=3
+image/g3fax; /usr/bin/xli -quiet %s; test=test -n "$DISPLAY"; description=G3-FAX Image; nametemplate=%s.g3; priority=3
+image/gif; /usr/bin/xli -quiet %s; test=test -n "$DISPLAY"; description=GIF Image; nametemplate=%s.gif; priority=3
+image/jpeg; /usr/bin/xli -quiet %s; test=test -n "$DISPLAY"; description=JPEG Image; nametemplate=%s.jpg; priority=3
+image/targa; /usr/bin/xli -quiet %s; test=test -n "$DISPLAY"; description=TARGA Image; nametemplate=%s.tga; priority=3
+image/x-portable-bitmap; /usr/bin/xli -quiet %s; test=test -n "$DISPLAY"; description=PBM Image; nametemplate=%s.pbm; priority=3
+image/x-portable-graymap; /usr/bin/xli -quiet %s; test=test -n "$DISPLAY"; description=PGM Image; nametemplate=%s.pgm; priority=3
+image/x-portable-pixmap; /usr/bin/xli -quiet %s; test=test -n "$DISPLAY"; description=PPM Image; nametemplate=%s.ppm; priority=3
+image/x-rgb; /usr/bin/xli -quiet %s; test=test -n "$DISPLAY"; description=RGB Image; nametemplate=%s.rgb; priority=3
+image/x-xbitmap; /usr/bin/xli -quiet %s; test=test -n "$DISPLAY"; description=XBM Image; nametemplate=%s.xbm; priority=3
+image/x-xpixmap; /usr/bin/xli -quiet %s; test=test -n "$DISPLAY"; description=XPM Image; nametemplate=%s.xpm; priority=3
+image/webp; /usr/bin/xli -quiet %s; test=test -n "$DISPLAY"; description=WBEP Image; nametemplate=%s.webp; priority=3
+image/tiff; /usr/bin/xli -quiet %s; test=test -n "$DISPLAY"; description=TIFF Image; nametemplate=%s.tiff; priority=3
+image/x-macpaint; /usr/bin/xli -quiet %s; test=test -n "$DISPLAY"; description=MACPAINT Image; nametemplate=%s.mac; priority=3

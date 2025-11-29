@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export PKG_CONFIG ?= $(DEB_HOST_GNU_TYPE)-pkg-config
+
+%:
+	dh $@
+
+override_dh_auto_clean:
+	dh_auto_clean --buildsystem=makefile -- 
+
+override_dh_auto_build:
+	dh_auto_build --buildsystem=makefile -- all

@@ -1,0 +1,9 @@
+34d5c272f7bfe22dba567b6fc38db73b  usr/bin/xli
+47e31b1e7e44504a911530dc4c4ab9be  usr/lib/mime/packages/xli
+d3e4216522a228a39235246263728a11  usr/share/doc/xli/README
+d93c9f2caac96b34f97433aa2454ce13  usr/share/doc/xli/README.Debian.gz
+b161d452a8342b71c92a69f1144b6a67  usr/share/doc/xli/changelog.gz
+c741dbe184a470617e0d3a288800549b  usr/share/doc/xli/copyright
+c18db35491767c75772c472dfaa65973  usr/share/doc/xli/examples/chkgamma.jpg
+5041a81e8a76621acfe189877e1d35f6  usr/share/lintian/overrides/xli
+86bb2538635c763079d4cb5edddb880b  usr/share/man/man1/xli.1.gz

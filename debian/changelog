@@ -1,0 +1,613 @@
+xli (1.18.0beta1+20251129) unstable; urgency=medium
+
+  * fixed directory listing in path.c listImages()
+  
+ -- rno <rno@nomsg.io>  Sat, 29 Nov 2025 15:56:07 +0100
+
+xli (1.18.0beta1+20250131) unstable; urgency=medium
+
+  * xli-1.18.0beta1+20250131 test
+  * nearer to standard  -help command line option 
+  * native package
+  
+ -- rno <rno@nomsg.io>  Thu, 30 Jan 2025 21:29:14 +0100
+
+xli (1.18.0beta0+20250130-rno23) unstable; urgency=medium
+
+  * xli-1.18.0beta0+20250130-rno23 test
+  
+ -- rno <rno@nomsg.io>  Thu, 30 Jan 2025 21:29:14 +0100
+
+xli (1.18.0beta0+20250130-rno23) unstable; urgency=medium
+
+  * xli-1.18.0beta0+20250130-rno23 test
+  
+ -- rno <rno@nomsg.io>  Thu, 30 Jan 2025 21:28:19 +0100
+
+xli (1.18.0beta0+20250130-rno23) unstable; urgency=medium
+
+  * xli-1.18.0beta0+20250130-rno23 test
+  
+ -- rno <rno@nomsg.io>  Thu, 30 Jan 2025 18:12:16 +0100
+
+xli (1.18.0beta0+20250129-rno23) unstable; urgency=medium
+
+  * xli-1.18.0beta0+20250129-rno23 test
+  
+ -- rno <rno@nomsg.io>  Wed, 29 Jan 2025 21:47:32 +0100
+
+xli (1.18.0beta0+20250128-rno23) unstable; urgency=medium
+
+  * xli-1.18.0beta0+20250128-rno23 test
+  
+ -- rno <rno@nomsg.io>  Tue, 28 Jan 2025 15:20:12 +0100
+
+xli (1.18.0beta0+20250128-rno23) unstable; urgency=medium
+
+  * xli-1.18.0beta0+20250128-rno23 test
+  
+ -- rno <rno@nomsg.io>  Tue, 28 Jan 2025 15:17:35 +0100
+
+xli (1.18.0beta0+20250128-rno23) unstable; urgency=medium
+
+  * xli-1.18.0beta0+20250128-rno23 test
+  
+ -- rno <rno@nomsg.io>  Tue, 28 Jan 2025 15:13:20 +0100
+
+xli (1.18.0beta0+20250128-rno23) unstable; urgency=medium
+
+  * xli-1.18.0beta0+20250128-rno23 test
+  
+ -- rno <rno@nomsg.io>  Tue, 28 Jan 2025 15:00:42 +0100
+
+xli (1.17.0+20061110-rno22) unstable; urgency=medium
+
+  * 740.toward-1.18-beta.1.patch
+  * 750.indent-with-astyle.patch
+  * 760.types.patch
+  
+ -- rno <rno@nomsg.io>  Sun, 26 Jan 2025 22:51:20 +0100
+
+xli (1.17.0+20061110-rno21) unstable; urgency=medium
+
+  * added missing mimetypes in debian/mime
+  * 700.remove-xview-xsetbg-traces.patch
+  * 710.tga-32cmap-alpha.patch FIXME not finalised
+  * 720.compact-cmap.patch
+  * 730.fullscreen-wm-hints.patch
+  
+ -- rno <rno@nomsg.io>  Sun, 19 Jan 2025 19:19:19 +0100
+
+xli (1.17.0+20061110-rno20) unstable; urgency=medium
+
+  * 640.wm-hints-title.patch
+  * 650.internal-errors.patch
+  * 660.drop-uudecode.patch
+  * 670.drop-buildshar.patch
+  * 680.drop-xlito.patch
+  * update (a few only) debian/README.Debian
+  * 690.macpaint-fixes.patch
+  
+ -- rno <rno@nomsg.io>  Sat, 18 Jan 2025 18:18:18 +0100
+
+xli (1.17.0+20061110-rno19) unstable; urgency=medium
+
+  * 580.fix-errno.netbsd.patch
+  * 590.fix-of-by-typo.netbsd.patch
+  * 600.makefile-build.patch
+  * 610.drop-mcidas.patch
+  * 620.faces-strop.patch
+  * 630.textfiles-changes.patch
+  
+ -- rno <rno@nomsg.io>  Wed, 15 Jan 2025 12:12:12 +0100
+ 
+xli (1.17.0+20061110-rno18) unstable; urgency=medium
+
+  * 560.add_tiff.patch
+  * 570.add-logo.patch
+  
+ -- rno <rno@nomsg.io>  Mon, 13 Jan 2025 13:13:13 +0100
+
+xli (1.17.0+20061110-rno17) unstable; urgency=medium
+
+  * 390.compile-with-wall-wextra.patch
+  * 395.fix-path-strop.patch
+  * 400.png-fixes.patch
+  * 410.copyright-only-in-xli.patch
+  * 490.signedness-fixes.patch
+  * 500.filetypes-ordering.patch
+  * 510.tga-fixes.patch
+  * 520.background-color-black.patch
+  * 530.fix-options-filename-leak.patch
+  * 540.compiler-warnings.patch
+  * 550.sunras-fixes.patch
+  * improved webp handling
+  
+ -- rno <rno@nomsg.io>  Wed, 08 Jan 2025 19:23:05 +0100
+
+xli (1.17.0+20061110-rno16) unstable; urgency=medium
+
+  * added webp filetype depends on libwebp
+  * 380.add_webp.patch
+
+ -- rno <rno@nomsg.io>  Wed, 01 Jan 2025 22:40:30 +0100
+
+xli (1.17.0+20061110-rno15) unstable; urgency=medium
+
+  * bullseye backport
+  * 250.path-cpp-scope.patch
+  * 260.zoom-divby0-switchdef-fix.patch
+  * 300.ignore-gamma.patch FIXME not finalised
+  * 340.fix_colortable_range.patch
+  * 350.memset_instead_of_bzero_and_bfill.patch
+  * 360.memcpy_instead_of_bcopy.patch
+  * 370.exif_rotation.patch 
+
+ -- rno <rno@nomsg.io>  Tue, 24 Dec 2024 13:33:01 +0100
+
+xli (1.17.0+20061110-10) unstable; urgency=medium
+
+  * d/control: Bumped Standards-Version to 4.7.0
+  * d/patches/230.fix-buffer-overflow.patch:
+      - Fixed buffering and string formatting (Closes: #1075667)
+
+ -- Josenilson Ferreira da Silva <nilsonfsilva@hotmail.com>  Sun, 04 Aug 2024 22:52:34 -0300
+
+xli (1.17.0+20061110-9) unstable; urgency=medium
+
+  * debian/control:
+     - Bumped Standards-Version to 4.6.2
+     - Update dependency name
+  * debian/patches:
+    - 190.added-directive.patch: fix function strlen (Closes: #1065796 #1066296)
+    - 200.fix-assertion-image.patch: fix pngLoad assertion (Closes: #628878)
+      Thanks Bernhard R.Link <brlink@debian.org>
+      Bug report and offer the patch
+    - 210.fix-geometry-with-negative.patch: fix function (Closes: #663938)
+      Thanks Alan Curry <pacman@kosh.dhis.org>
+      Bug report and offer the patch
+    - 220.fix-tgas-with-alpha.patch: fix how xli handles tags (Closes: #135408)
+      Thanks Andrew Moise <moise@elmerinteractive.com>
+      Bug report and offer the patch
+
+ -- Josenilson Ferreira da Silva <nilsonfsilva@hotmail.com>  Sun, 04 Aug 2024 22:01:13 -0300
+
+xli (1.17.0+20061110-8) unstable; urgency=medium
+
+  * New Maintainer. (Closes: #856304)
+  * d/control:
+     - Bumped DH level in Build-Depends field to 13.
+     - Bumped Standards-Version to 4.6.1.
+     - Updated Maintainer field with my name and email.
+  * d/copyright:
+     - Include name new maintainer.
+  *  d/rules:
+     - Removal line: export DEB_LDFLAGS_MAINT_APPEND = Wl,--as-needed.
+  * d/source:
+     - Removal file: include-binaries
+  * d/tests:
+     - Removal file lua.jpg
+  * d/tests/control:
+     - Removal line: Test-Command xvfb-run -a xli debian/tests/lua.jpg &.
+  * d/watch:
+     - Include message "Package not maintained by upstream".
+
+ -- Josenilson Ferreira da Silva <nilsonfsilva@hotmail.com>  Wed, 29 Jun 2022 20:45:44 -0300
+
+xli (1.17.0+20061110-7) unstable; urgency=medium
+
+  * QA upload.
+  * Remove non-existing Homepage (Closes: #700774).
+  * d/copyright: Use public-domain according to standard.
+
+ -- Bastian Germann <bage@debian.org>  Sun, 05 Jun 2022 15:17:05 +0200
+
+xli (1.17.0+20061110-6) unstable; urgency=medium
+
+  * QA upload.
+  * Using new DH level format. Consequently:
+      - debian/compat: removed.
+      - debian/control: changed from 'debhelper' to 'debhelper-compat' in
+        Build-Depends field and bumped level to 12.
+  * debian/control:
+      - Added 'Rules-Requires-Root: no' to source stanza.
+      - Bumped Standards-Version to 4.5.0.
+      - Changed VCS fields to use Salsa.
+  * debian/copyright: updated packaging copyright years.
+  * debian/mime: removed all single quotes around %s.
+  * debian/salsa-ci.yml: added to provide CI tests for Salsa.
+  * debian/source/include-binaries: created to control the file
+    debian/tests/lua.jpg.
+  * debian/tests/*: added to perform trivial tests.
+
+ -- Joao Eriberto Mota Filho <eriberto@debian.org>  Sat, 04 Apr 2020 01:04:50 -0300
+
+xli (1.17.0+20061110-5) unstable; urgency=medium
+
+  * QA upload.
+  * Set Debian QA Group as maintainer. (see #856304)
+  * Migrations:
+      - debian/copyright to 1.0 format.
+      - debian/rules to simplified format.
+      - DebSrc to 3.0 format.
+      - DH level to 10.
+  * Run wrap-and-sort.
+  * debian/control:
+      - Added pkg-config to Build-Depends field and removed xutils-dev. Thanks
+        to Helmut Grohne <helmut@subdivi.de>.
+      - Added the ${misc:Depends} variable to Depends field.
+      - Bumped Standards-Version to 4.1.1.
+      - Removed no longer needed build dependency quilt.
+      - Updated VCS fields.
+  * debian/lintian-overrides: added ignore some false positives.
+  * debian/manpages: created to install the manpages.
+  * debian/patches:
+      - Renamed all patches to add a leading number and a .patch suffix.
+      - Added headers to following patches:
+          ~ 040-8-bit_palette_support.patch
+          ~ 120-documentzooming.patch
+          ~ 140-manpage_fixes.patch
+          ~ 150-fix-x-resource-leak.patch
+      - New patches:
+          ~ 170-fix-spelling.patch to fix some spelling errors in final binary.
+          ~ 180-add_GCC_hardening.patch to make Makefile.std fully compliant
+            with the hardening provided by GCC. This patch complements #876248.
+  * debian/README.debian: renamed to debian/README.Debian.
+  * debian/rules: dropping xmkmf, to be removed from Debian. Thanks to Helmut
+    Grohne <helmut@subdivi.de>. (Closes: #876248)
+  * debian/watch:
+      - Added a fake site to explain about the current status of the original
+        upstream homepage.
+      - Bumped to version 4.
+
+ -- Joao Eriberto Mota Filho <eriberto@debian.org>  Wed, 08 Nov 2017 13:50:07 -0200
+
+xli (1.17.0+20061110-4) unstable; urgency=low
+
+  * Update my email address in Maintainer field
+  * Add disable-libjpeg-scaling patch to disable using libjpeg for
+    scaling, which broke after upgrading from libjpeg62 to libjpeg8
+    (Closes: #677113)
+  * Add Vcs-* fields, maintaining the package within collab-maint
+  * Use dpkg-buildflags in debian/rules to enable hardening
+
+ -- Ryan Niebur <ryan@debian.org>  Mon, 02 Jul 2012 14:37:10 -0700
+
+xli (1.17.0+20061110-3.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * debian/control: Update Build-Depends:
+    - libjpeg62-dev -> libjpeg-dev (Closes: #647108)
+    - libpng12-dev -> libpng-dev (Closes: #662561)
+
+ -- Bill Allombert <ballombe@debian.org>  Tue, 05 Jun 2012 22:37:27 +0200
+
+xli (1.17.0+20061110-3) unstable; urgency=low
+
+  * New maintainer (Closes: 431760)
+  * Fix X resources leak (Closes: 471121)
+    Thanks to Alex Perry, who made the patch for xloadimage that fixes
+    this. All I did was ported his changes over to xli. Thanks to Tim
+    Connors for testing.
+
+ -- Ryan Niebur <ryanryan52@gmail.com>  Mon, 24 Nov 2008 01:27:55 -0800
+
+xli (1.17.0+20061110-2) unstable; urgency=low
+
+  * QA upload
+  * incorporate "-zoom auto" patch from Alan Curry (Closes: 440768)
+  * document < and > for zooming (Closes: 166541)
+  * move Homepage pseudo-header to proper header
+  * bump Standards-Version to 3.7.3
+  * set debhelper compatibility to 5
+
+ -- Bernhard R. Link <brlink@debian.org>  Thu, 21 Feb 2008 16:01:44 +0100
+
+xli (1.17.0+20061110-1) unstable; urgency=low
+
+  * QA upload
+
+  [ Florian Ernst ]
+  * New upstream snapshot, released on 20061110, which incorporates many
+    of the patches already previously applied
+  * quilt'ify package
+  * debian/control: add link to Homepage
+  * MIME entries now point to /usr/bin/xli (Closes: #366066, #387347, thanks
+    Matthias Urlichs and Glyn Kennington), also adding -quiet (Closes: #433191)
+  * List all copyright holders and licenses (Closes: #433212)
+  * Standards-Version 3.7.2
+  * New patches applied to upstream from Debian BTS:
+    * Fix FTBFS on GNU/kFreeBSD (Closes: #396935, thanks to Petr Salinger and
+      Cyril Brulebois)
+    * -fillscreen now carries over to >1 image (Closes: #48878, #389198)
+    * -onroot with multiple images doesn't SEGV anymore (Closes: #289147)
+    * Don't complain about "None" pixmap color (Closes: #220965)
+    * Enable arrow keys (Closes: #179268)
+
+  [ Bernhard R. Link ]
+  * modified changelog and control to reflect Florian Erns no longer wants to
+    adopt it and shortened it a bit.
+  * modified debian/rules to look more like I like it
+  * change build-dependency xutils -> xutils-dev
+  * modify manpage to escape hashes and document the new -forall option
+  * choose other fix to #396935, as that also quiets many compiler warnings
+
+ -- Bernhard R. Link <brlink@debian.org>  Sun, 29 Jul 2007 16:13:23 +0200
+
+xli (1.17.0-22) unstable; urgency=low
+
+  * Install to /usr, instead of /usr/X11R6. (closes: #362311)
+
+ -- Graham Wilson <graham@debian.org>  Sat, 22 Apr 2006 05:14:56 +0000
+
+xli (1.17.0-21) unstable; urgency=low
+
+  * Add CVE number to the last changelog entry.
+  * Fix an error in zio.c where data was read past the end of a buffer
+    when reading files shorter than 128 bytes with no newlines.
+    (closes: #343718)
+
+  * In pbm.c in isPBM, out of bounds checks were always true due to the
+    limited range of the types. Use signed ints instead of unsigned ints
+    to fix this.
+
+  * Also in pbm.c, check that the value of maxval is correctly read from
+    the file if we expect it to be.
+
+ -- Graham Wilson <graham@debian.org>  Fri, 30 Dec 2005 23:08:13 +0000
+
+xli (1.17.0-20) unstable; urgency=low
+
+  * Apply patch from the security team. I don't believe that xli is
+    specifically vulnerable; however the extra bounds checks are useful
+    nonetheless. Addresses (as much as it could) CAN-2005-3178.
+
+ -- Graham Wilson <graham@debian.org>  Thu, 13 Oct 2005 16:38:43 +0000
+
+xli (1.17.0-19) unstable; urgency=low
+
+  * Man page cleanup. Thanks to all who submitted patches. (closes: #300665,
+    #310024, #326540)
+  * Clarify the synopsis. (closes: #299945)
+  * Build depend on libpng12-dev, rather than libpng2-dev, since the latter is
+    going to be dropped.
+  * Update standards version. No changes.
+
+ -- Graham Wilson <graham@debian.org>  Mon, 05 Sep 2005 20:59:31 +0000
+
+xli (1.17.0-18) unstable; urgency=high
+
+  * Properly quote shell meta-characters when uncompressing files.
+    Addresses CAN-2005-0638.
+  * Enable on-the-fly decompression using gunzip.
+  * Add CVE numbers to the previous changelog entry.
+
+ -- Graham Wilson <graham@debian.org>  Sun, 20 Mar 2005 23:00:33 +0000
+
+xli (1.17.0-17) unstable; urgency=high
+
+  * Fix some old and new security bugs. (closes: #298039)
+
+  * In face.c, use strncat instead of strcat, which won't overflow the image
+    name buffer in case the first and last names are too long. Addresses
+    CAN-2001-0775.
+
+  * In new.c, check that new*Image functions don't overflow when determining
+    how much memory to allocate for images. Addresses CAN-2005-0639.
+
+  * Use upstream's code to avoid an overflow in buildIndex, rather than the
+    code I wrote to fix #274310.
+
+ -- Graham Wilson <graham@debian.org>  Tue, 08 Mar 2005 06:04:31 +0000
+
+xli (1.17.0-16) unstable; urgency=low
+
+  * Always create indexes for zooming from 0 to new_width - 1. Thanks to
+    Sebastian Rasmussen for pointing this out. (closes: #274310)
+
+ -- Graham Wilson <graham@debian.org>  Sun, 31 Oct 2004 00:39:01 +0000
+
+xli (1.17.0-15) unstable; urgency=low
+
+  * New maintainer. Thanks James.
+  * Update the URL in the copyright file.
+  * Update the watch file.
+  * Rewrite the rules file to use debhelper.
+  * Don't create installation directories that we don't need.
+  * Update the standards version. No changes needed.
+  * Update build dependencies:
+    - xlibs-dev -> libx11-dev, libxext-dev
+    - remove duplicate xutils build dependency
+
+ -- Graham Wilson <graham@debian.org>  Thu, 16 Sep 2004 20:44:42 +0000
+
+xli (1.17.0-14) unstable; urgency=low
+
+  * debian/control: update to policy 3.5.9
+  * rlelib.c: Don't #include varargs.h (which was not being used anyway)
+    (Closes:bug#196321)
+
+ -- James R. Van Zandt <jrv@debian.org>  Fri, 13 Jun 2003 13:21:39 -0400
+
+xli (1.17.0-13) unstable; urgency=low
+
+  * debian/control: depend on xlibs-dev instead of old xlib6g-dev (Closes:
+    170159)
+
+ -- James R. Van Zandt <jrv@debian.org>  Tue, 26 Nov 2002 21:24:57 -0500
+
+xli (1.17.0-12) unstable; urgency=low
+
+  * xli.1: really eliminate mention of xsetbg and xview since they are not
+    packaged (closes:Bug#164732)
+
+ -- James R. Van Zandt <jrv@debian.org>  Mon, 28 Oct 2002 21:20:03 -0500
+
+xli (1.17.0-11) unstable; urgency=low
+
+  * xli.1: eliminate mention of xsetbg and xview since they are not
+    packaged (closes:Bug#99597)
+
+ -- James R. Van Zandt <jrv@debian.org>  Sat, 30 Mar 2002 17:41:57 -0500
+
+xli (1.17.0-10) unstable; urgency=low
+
+  * pcx.c: display RGB images (thanks to Alexandre Duret-Lutz
+    <duret_g@lrde.epita.fr>) (closes:Bug#124084)
+
+ -- James R. Van Zandt <jrv@debian.org>  Sat, 22 Dec 2001 09:51:44 -0500
+
+xli (1.17.0-9) unstable; urgency=low
+
+  * Remove xview and xsetbg from the name line in the xli man page, and
+    add a note that the programs are not included. (closes:bug#99597)
+
+ -- James R. Van Zandt <jrv@debian.org>  Sun,  5 Aug 2001 18:43:37 -0400
+
+xli (1.17.0-8) unstable; urgency=low
+
+  * Imakefile: delete compiler switches conditioned on HPArchitecture,
+    which are (1) being triggered inappropriately for hppa, and (2)
+    apparently invalid syntax for gcc. (Closes:Bug#104720)
+  * new maintainer email
+
+ -- James R. Van Zandt <jrv@debian.org>  Wed, 18 Jul 2001 20:40:31 -0400
+
+xli (1.17.0-7) unstable; urgency=low
+
+  * compress.c: fix spelling of "improvement".
+  * debian/control: new maintainer email
+
+ -- James R. Van Zandt <jrv@debian.org>  Mon,  9 Jul 2001 21:39:40 -0400
+
+xli (1.17.0-6) unstable; urgency=low
+
+  * debian/control: build-depend also on xutils (Closes:bug#93692)
+
+ -- James R. Van Zandt <jrv@vanzandt.mv.com>  Mon, 28 May 2001 21:33:39 -0400
+
+xli (1.17.0-5) unstable; urgency=low
+
+  * debian/control: more build-dependencies (Closes:bug#93692)
+
+ -- James R. Van Zandt <jrv@vanzandt.mv.com>  Sun, 13 May 2001 18:02:39 -0400
+
+xli (1.17.0-4) unstable; urgency=low
+
+  * debian/control: move Build-Depends line to source section. Policy
+    version 3.5.2.
+  * debian/rules: Honor DEB_BUILD_OPTIONS.
+
+ -- James R. Van Zandt <jrv@vanzandt.mv.com>  Sat, 31 Mar 2001 09:50:49 -0500
+
+xli (1.17.0-3) unstable; urgency=low
+
+  * Don't define bcopy and bzero with macros when system headers declare
+    them as functions (Thanks to Paul Slootman <paul@debian.org>,
+    Closes:Bug#81859)
+
+ -- James R. Van Zandt <jrv@vanzandt.mv.com>  Sun, 14 Jan 2001 15:30:18 -0500
+
+xli (1.17.0-2) unstable; urgency=low
+
+  * Correct MIME types: image/bmp -> image/x-ms-bmp and image/cmu-raster
+    -> image/x-cmu-raster (Closes:#72837)
+  * Imakefile: omit creation of xview and xsetbg links, since those
+    files would overlap files from xloadimage
+  * Recompile with libpng2 1.0.8 (Closes:#75271,#72715)
+
+ -- James R. Van Zandt <jrv@vanzandt.mv.com>  Mon, 30 Oct 2000 22:54:11 -0500
+
+xli (1.17.0-1) unstable; urgency=low
+
+  * New upstream version: handles progressive JPEGs.
+  * Build-Depends on debmake.
+
+ -- James R. Van Zandt <jrv@vanzandt.mv.com>  Sun, 13 Feb 2000 07:46:36 -0500
+
+xli (1.16-12) frozen unstable; urgency=low
+
+  * recompile with new libpng, so it won't segfault on a png file
+    (closes:#53284)
+
+ -- James R. Van Zandt <jrv@vanzandt.mv.com>  Sat, 15 Jan 2000 18:35:01 -0500
+
+xli (1.16-11) unstable; urgency=low
+
+  * manage compatibility symlink /usr/doc/xli
+
+ -- James R. Van Zandt <jrv@vanzandt.mv.com>  Sun, 24 Oct 1999 11:44:16 -0400
+
+xli (1.16-10) unstable; urgency=low
+
+  * Link against glibc2.1
+  * Update to FHS
+
+ -- James R. Van Zandt <jrv@vanzandt.mv.com>  Thu,  2 Sep 1999 21:17:16 -0400
+
+xli (1.16-9) unstable; urgency=low
+
+  * Add PNG support to package description.  Remove cruft from source package.
+
+ -- James R. Van Zandt <jrv@vanzandt.mv.com>  Sun, 20 Jun 1999 13:06:52 -0400
+
+Xli (1.16-8) unstable; urgency=low
+
+  * Add support for Portable Network Graphics courtesy of patches by
+    Smarasderagd (http://www.reptiles.org/~smar/)
+  * Omit declaration of index() in misc.c (Bug#39159)
+
+ -- James R. Van Zandt <jrv@vanzandt.mv.com>  Mon, 31 May 1999 17:01:34 -0400
+
+xli (1.16-7) unstable; urgency=low
+
+  * Don't depend on execution order of increments within an expression in
+    send.c - fix courtesy of ka@socrates.hr.lucent.com (Kenneth Almquist).
+
+ -- James R. Van Zandt <jrv@vanzandt.mv.com>  Tue,  4 May 1999 20:49:49 -0400
+
+xli (1.16-6) unstable; urgency=low
+
+  * Install MIME entry in correct directory.
+
+ -- James R. Van Zandt <jrv@vanzandt.mv.com>  Wed, 31 Mar 1999 17:49:26 -0500
+
+xli (1.16-5) unstable; urgency=low
+
+  * Register as a MIME viewer in /etc/mailcap.
+
+ -- James R. Van Zandt <jrv@vanzandt.mv.com>  Sat,  6 Feb 1999 10:18:54 -0500
+
+xli (1.16-4) frozen unstable; urgency=low
+
+  * Recompilation to remove dependency on libc6 2.0.7u
+
+ -- James R. Van Zandt <jrv@vanzandt.mv.com>  Wed,  9 Dec 1998 22:08:35 -0500
+
+xli (1.16-3) frozen unstable; urgency=low
+
+  * Use /usr/X11R6/lib instead of /usr/lib/X11 to avoid file overlap
+    (Bug#25873)
+
+ -- James R. Van Zandt <jrv@vanzandt.mv.com>  Sat, 28 Nov 1998 21:12:05 -0500
+
+xli (1.16-2) unstable; urgency=low
+
+  * Incorporated Paul Slootman's patches for the alpha.
+
+ -- James R. Van Zandt <jrv@vanzandt.mv.com>  Mon, 31 Aug 1998 22:03:11 -0400
+
+xli (1.16-1.1) unstable; urgency=low
+
+  * non-maintainer upload (binary-only) for Alpha
+  * fixed ddxli.h so that it knows to include string.h on linux
+  * couple of casts to unsigned long added to shut egcs up about pointer/int
+    conversion between different sizes. Now compiles without any warnings!
+
+ -- Paul Slootman <paul@debian.org>  Mon, 31 Aug 1998 23:04:52 +0200
+
+xli (1.16-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- James R. Van Zandt <jrv@vanzandt.mv.com>  Sun, 12 Jul 1998 21:54:22 -0400
