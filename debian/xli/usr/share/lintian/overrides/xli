@@ -1,3 +1,0 @@
-# False positives:
-xli: spelling-error-in-readme-debian R R (duplicate word) R [usr/share/doc/xli/README.Debian.gz]
-xli: spelling-error-in-readme-debian RW RW (duplicate word) RW [usr/share/doc/xli/README.Debian.gz]
