@@ -3,6 +3,8 @@ INSTALL
 
 REQUIRED BUILD DEPENDENCIES
 
+	xli was tested to build on i386 and amd64 system, it could build with other arch.
+
      on a debian system,
      apt install debhelper-compat libjpeg-dev libpng-dev libx11-dev libxext-dev libexif-dev libwebp-dev libtiff-dev pkgconf zlib1g-dev
 
@@ -55,3 +57,14 @@ INSTALL
     cp xli  /usr/local/bin/
 	
 
+DEBIAN PACKAGE
+
+    to build a debian package:
+	in the xli/ directory, run
+    dpkg-buildpackage -rfakeroot -D -b -uc
+
+	the result is in upper dir
+	cd ..
+
+	install with
+	dpkg -i xli_version_arch.deb
