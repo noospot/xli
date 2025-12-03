@@ -114,7 +114,7 @@ Image* pngLoad( strbyte* fullname, ImageOptions* opt, bool verbose )
 	ZFILE* zfp;
 	png_struct* png;
 	png_info* info;
-	Image* image = ( Image* ) 0;
+	Image* volatile image = ( Image* ) 0;
 	volatile int orig_depth = 0;
 	byte** row = ( byte** ) 0;
 	jmp_buf jmpbuf;
@@ -314,7 +314,7 @@ Image* pngLoad( strbyte* fullname, ImageOptions* opt, bool verbose )
 		png_time* tp;
 
 		png_get_tIME( png, info, &tp );
-		printf( "png tIME chunk Modification time: %d/%d/%d %02d:%02d:%02d UTC",
+		printf( "png tIME chunk Modification time: %d/%d/%d %02d:%02d:%02d UTC\n",
 		        tp->year, tp->month, tp->day,
 		        tp->hour, tp->minute, tp->second );
 	}
@@ -328,7 +328,7 @@ Image* pngLoad( strbyte* fullname, ImageOptions* opt, bool verbose )
 		num_text = png_get_text( png, info, &text, ( int* ) 0 );
 		for ( i = 0; i < num_text; ++i ) {
 			if ( verbose ) {
-				printf( "\n%s: %s\n", text[i].key, text[i].text );
+				printf( "%s: %s\n", text[i].key, text[i].text );
 			}
 			if ( !strcmp( text[i].key, TITLE_KEYWORD ) ) {
 				title = text[i].text;
