@@ -274,7 +274,8 @@ buildmap( struct sv_globals* globals, int minmap, double gamma )
 	if ( globals->sv_ncmap == 0 ) {	/* make identity map */
 		nmap = ( minmap < globals->sv_ncolors ) ? globals->sv_ncolors : minmap;
 		cmap = ( rle_pixel** )lcalloc( ( nmap +1 ) * sizeof( rle_pixel* ) );
-		cmap[0] = ( rle_pixel* )( nmap +1 );
+		//cmap[0] = ( rle_pixel* )( nmap +1 );
+		*( uint64_t * )&( cmap[0] ) = ( uint64_t )( nmap + 1 );
 		cmap++;	/* keep size in cmap[-1] */
 		cmap[0] = ( rle_pixel* )lmalloc( 256 * sizeof( rle_pixel ) );
 		for ( i = 0; i < 256; i++ ) {
@@ -298,7 +299,8 @@ buildmap( struct sv_globals* globals, int minmap, double gamma )
 			nmap = ( minmap < globals->sv_ncolors ) ?
 			       globals->sv_ncolors : minmap;
 			cmap = ( rle_pixel** )lcalloc( ( nmap+1 ) * sizeof( rle_pixel* ) );
-			cmap[0] = ( rle_pixel* )( nmap+1 );
+			//cmap[0] = ( rle_pixel* )( nmap+1 );
+			*( uint64_t * )&( cmap[0] ) = ( uint64_t )( nmap + 1 );
 			cmap++;	/* keep size in cmap[-1] */
 			cmap[0] = ( rle_pixel* )lmalloc( maplen * sizeof( rle_pixel ) );
 			for ( i = 0; i < maplen; i++ )
@@ -314,7 +316,8 @@ buildmap( struct sv_globals* globals, int minmap, double gamma )
 		} else if ( globals->sv_ncolors <= globals->sv_ncmap ) {
 			nmap = ( minmap < globals->sv_ncmap ) ? globals->sv_ncmap : minmap;
 			cmap = ( rle_pixel** )lcalloc( ( nmap+1 ) * sizeof( rle_pixel* ) );
-			cmap[0] = ( rle_pixel* )( nmap+1 );
+			//cmap[0] = ( rle_pixel* )( nmap+1 );
+			*( uint64_t * )&( cmap[0] ) = ( uint64_t )( nmap + 1 );
 			cmap++;	/* keep size in cmap[-1] */
 			for ( j = 0; j < globals->sv_ncmap; j++ ) {
 				cmap[j] = ( rle_pixel* )lmalloc( maplen * sizeof( rle_pixel ) );
@@ -333,7 +336,8 @@ buildmap( struct sv_globals* globals, int minmap, double gamma )
 			nmap = ( minmap < globals->sv_ncolors ) ?
 			       globals->sv_ncolors : minmap;
 			cmap = ( rle_pixel** )lcalloc( ( nmap+1 ) * sizeof( rle_pixel* ) );
-			cmap[0] = ( rle_pixel* )( nmap+1 );
+			//cmap[0] = ( rle_pixel* )( nmap+1 );
+			*( uint64_t * )&( cmap[0] ) = ( uint64_t )( nmap + 1 );
 			cmap++;	/* keep size in cmap[-1] */
 			for ( j = 0; j < globals->sv_ncmap; j++ ) {
 				cmap[j] = ( rle_pixel* )lmalloc( maplen * sizeof( rle_pixel ) );
@@ -369,10 +373,10 @@ buildmap( struct sv_globals* globals, int minmap, double gamma )
 /* Free up the memory used in the cmap */
 void freemap( rle_pixel** cmap )
 {
-	int i,j;
+	int64_t i,j;
 
 	if( cmap != NULL ) {	/* be carefull */
-		j = ( int )cmap[-1]-1;	/* recover size of cmap */
+		j = ( uint64_t )cmap[-1]-1;	/* recover size of cmap */
 		for( i=j-1; i>=0; i-- )
 			if( cmap[i] != NULL && ( i == 0 || cmap[i] != cmap[0] ) ) {
 				lfree( ( byte* )cmap[i] );      /* free all its elements */
