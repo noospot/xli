@@ -2,7 +2,7 @@ xli - an Xorg image viewer utility - since 1989
 
 xli packages in many linux distros are based on a 2006 version.
 
-version 1.18.0 beta has many patchs included, with multiple origins:
+version 1.18.0 has many patchs included, with multiple origins:
 debian patches, netbsd patches, +35 other patches,
 and also local changes.
 see file CHANGES to see their descriptions.
@@ -14,17 +14,17 @@ changes in 1.18.0:
 * tiff support
 * window symbol and title with standard wm hints
 * cli option '-identify' results consistency, easier to reuse
-* toggle fullscreen while running with F11
-* many others changes, see changelog
+* toggle fullscreen, while running, with F11
+* many others changes, see the file CHANGES
 
 
 xli will display several types of images under X11, or load images onto
-the X11 root window.
-xli will display images also with pseudo-colors x11 servers display,
+an X11 root window.
+xli displays images also with pseudo-colors x11 servers display,
 or even monochrome servers displays.
 
 
-version 1.18.0-beta supports:
+version 1.18.0 supports:
   Portable Network Graphics (PNG)
   GIF Image
   JFIF style jpeg Image
@@ -72,3 +72,7 @@ been tested. xli is useful to me, and maybe it will be useful to others.
 
 COMPILNG and INSTALLING
 see INSTALL file
+
+
+© 1989-2025 the xli developers
+
