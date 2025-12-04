@@ -373,10 +373,10 @@ buildmap( struct sv_globals* globals, int minmap, double gamma )
 /* Free up the memory used in the cmap */
 void freemap( rle_pixel** cmap )
 {
-	int64_t i,j;
+	int i,j;
 
 	if( cmap != NULL ) {	/* be carefull */
-		j = ( uint64_t )cmap[-1]-1;	/* recover size of cmap */
+		j = ( byte )cmap[-1]-1;	/* recover size of cmap */
 		for( i=j-1; i>=0; i-- )
 			if( cmap[i] != NULL && ( i == 0 || cmap[i] != cmap[0] ) ) {
 				lfree( ( byte* )cmap[i] );      /* free all its elements */
