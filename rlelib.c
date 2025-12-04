@@ -376,7 +376,7 @@ void freemap( rle_pixel** cmap )
 	int i,j;
 
 	if( cmap != NULL ) {	/* be carefull */
-		j = ( byte )cmap[-1]-1;	/* recover size of cmap */
+		j = ( byte )(cmap[-1]-1);	/* recover size of cmap */
 		for( i=j-1; i>=0; i-- )
 			if( cmap[i] != NULL && ( i == 0 || cmap[i] != cmap[0] ) ) {
 				lfree( ( byte* )cmap[i] );      /* free all its elements */
