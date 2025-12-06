@@ -1,3 +1,10 @@
+
+20251206
+manually applied a recent netbsd patch
+fixed png.c compiler warnings setjump() require volatile type
+fixed rlelib.c compiler warnings,  casting related
+
+
 20251129
 fixed listImages() function so it works without a shell
 added debian dir so a debian package can be build
@@ -14,7 +21,7 @@ renamed patchlevel patchlevel.h
 conditionned with a define loading gamma values from files
 rle and png are doing. 
 remove abitrary gamma values set in jpeg.
-initialise with default instead off zero.
+initialise with default instead of zero.
 env. vars & command line can set gamma .
 if wanting the xli<=1.17 method, change FILE_GAMMA 1 in xli.h
 
