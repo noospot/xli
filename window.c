@@ -25,7 +25,7 @@
 	#include <stropts.h>
 	#include <poll.h>
 #endif
-#ifdef _AIX
+#if defined(_AIX) || defined(__NetBSD__)
 	#include <sys/select.h>
 #endif
 
@@ -224,7 +224,7 @@ static void cleanUpImage( Display* disp, int scrn, Cursor cursor, Pixmap pixmap,
 static void setViewportColormap( Display* disp, int scrn, Visual* visual )
 {
 	XSetWindowAttributes swa;
-	static int cmap_atom = None;
+	static Atom cmap_atom = None;
 	Window cmap_windows[2];
 
 	if ( cmap_atom == None ) {
