@@ -8,25 +8,17 @@ REQUIRED BUILD DEPENDENCIES
      on a debian system,
      apt install debhelper-compat libjpeg-dev libpng-dev libx11-dev libxext-dev libexif-dev libwebp-dev libtiff-dev pkgconf zlib1g-dev
 
-     on other system in matter finding those include headers :
-     libx11 with libxext
-     libjpeg
-     libpng
-     libwebp
-     libtiff
-     libexif
-     zlib  gz, zip
+     on other system in could matter finding those include headers :
+     libx11 with libxext       https://www.x.org/wiki/
+     libjpeg                   https://libjpeg.sourceforge.net/
+     libpng                    http://www.libpng.org/
+     libwebp                   https://developers.google.com/speed/webp
+     libtiff                   https://gitlab.com/libtiff/libtiff
+     libexif                   https://libexif.github.io/
+     zlib  gz, zip             https://www.zlib.net/
 
      verify the command pkgconf or pkg-conf is around
 
-
-    The JPEG reader assumes the IJG JPEG library is somewhere.
-    get it from https://libjpeg.sourceforge.net/.
-
-    The PNG reader assumes PNG group's library is installed.
-    It's at http://www.libpng.org/  along with a
-    lot of other PNG stuff.  libpng-1.0.5 or later is required.
-    The PNG reader also require zlib installed.  https://www.zlib.net/
 
 
 CONFIGURE
