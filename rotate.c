@@ -189,10 +189,39 @@ void mirror_vertical( Image* image, int width, int height )
 {
 	switch ( image->type ) {
 		case IBITMAP:
-			printf( "rotate: mirror_vertical Unsupported image type IBITMAP\n" );
+			{
+				int linelen = ( width + 7 ) / 8;
+				byte* line = ( byte* )lmalloc( linelen );
+				for ( int y = 0; y < height; y++ ) {
+					byte* sp = image->data + ( y * linelen );
+					memset( line, 0, linelen );
+					for ( int x = 0; x < width; x++ ) {
+						if ( sp[x / 8] & ( 0x80 >> ( x % 8 ) ) ) {
+							int dx = width - 1 - x;
+							line[dx / 8] |= ( 0x80 >> ( dx % 8 ) );
+						}
+					}
+					memcpy( sp, line, linelen );
+				}
+				lfree( line );
+			}
 			break;
 		case IRGB:
-			printf( "rotate: mirror_vertical Unsupported image type IRGB\n" );
+			{
+				int pixlen = image->pixlen;
+				byte* pix = ( byte* )lmalloc( pixlen );
+				for ( int y = 0; y < height; y++ ) {
+					byte* line = image->data + ( y * width * pixlen );
+					for ( int x = 0; x < width / 2; x++ ) {
+						byte* p1 = line + ( x * pixlen );
+						byte* p2 = line + ( ( width - 1 - x ) * pixlen );
+						memcpy( pix, p1, pixlen );
+						memcpy( p1, p2, pixlen );
+						memcpy( p2, pix, pixlen );
+					}
+				}
+				lfree( pix );
+			}
 			break;
 		case ITRUE:
 
@@ -224,10 +253,32 @@ void mirror_horizontal( Image* image, int width, int height )
 {
 	switch ( image->type ) {
 		case IBITMAP:
-			printf( "rotate: mirror_horizontal Unsupported image type IBITMAP\n" );
+			{
+				int linelen = ( width + 7 ) / 8;
+				byte* line = ( byte* )lmalloc( linelen );
+				for ( int y = 0; y < height / 2; y++ ) {
+					byte* l1 = image->data + ( y * linelen );
+					byte* l2 = image->data + ( ( height - 1 - y ) * linelen );
+					memcpy( line, l1, linelen );
+					memcpy( l1, l2, linelen );
+					memcpy( l2, line, linelen );
+				}
+				lfree( line );
+			}
 			break;
 		case IRGB:
-			printf( "rotate: mirror_horizontal Unsupported image type IRGB\n" );
+			{
+				int linelen = width * image->pixlen;
+				byte* line = ( byte* )lmalloc( linelen );
+				for ( int y = 0; y < height / 2; y++ ) {
+					byte* l1 = image->data + ( y * linelen );
+					byte* l2 = image->data + ( ( height - 1 - y ) * linelen );
+					memcpy( line, l1, linelen );
+					memcpy( l1, l2, linelen );
+					memcpy( l2, line, linelen );
+				}
+				lfree( line );
+			}
 			break;
 		case ITRUE:
 			for ( int row = 0; row < height / 2; row++ ) {

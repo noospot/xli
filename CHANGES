@@ -1,6 +1,7 @@
 20251223
 changed legacy index/rindex string functions as standard strchr/strrchr.
 removed intermediary pixels array in send.c imageToXImage()
+2colors and cmaped versions of mirror_horizontal() and mirror_vertical() 
 
 
 20251206
