@@ -23,7 +23,7 @@ fix paletted 32 tga
 
 improve bmp handling
 
-
+add ways to trigger the mirror function, keys, cli arg...
 
 keep requested/window background color while merging alpha
 
