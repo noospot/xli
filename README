@@ -52,7 +52,7 @@ clipping, dithering, depth reduction, zoom (X, Y axis or both),
 brightening or darkening, input gamma correction, and image merging.  
 When applicable, these options are done automatically (eg. a color image 
 to be displayed on a monochrome screen will be dithered automatically).
-
+see xli manual page
 
 while displaying the image, some keys can change the way it is displayed:
 <, >     Zoom
