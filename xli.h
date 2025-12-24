@@ -234,7 +234,6 @@ void initLEHexTable( void );
 void initBEHexTable( void );
 /* ascii hex number to integer (string, length) */
 int hstoi( strbyte* s, int n );
-strbyte* xlistrstr( strbyte* s1, strbyte* s2 );
 
 /* path.c */
 strbyte* expandPath( strbyte* p );
