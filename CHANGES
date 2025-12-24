@@ -4,6 +4,7 @@ removed intermediary pixels array in send.c imageToXImage()
 2colors and cmaped versions of mirror_horizontal() and mirror_vertical() 
 changed legacy  xlistrstr, bzero, index, as standard functions
 condition lib dependencies use with vars like HAS_...
+build a debian package with 'make debian'
 
 
 20251206
