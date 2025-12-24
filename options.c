@@ -128,7 +128,7 @@ static OptionArray Options[] = {
 	},
 	{
 		"cache", CACHE, NULL, "Cache entire input, useful for interactively twiddling images"
-		"loaded from the standard input.",
+		" loaded by standard input.",
 	},
 	{
 		"delete", DELETE, NULL, "Enable deleting images with the 'x' key.",
