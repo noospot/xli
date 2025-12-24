@@ -70,10 +70,19 @@ They may be specified anywhere on the command line.
 Set the root background to the default root weave.  This is the same
 as \fIxsetroot\fR with no arguments.
 .TP
+\-cache
+Cache the entire image in memory.  This is useful if reading
+from stdin and wanting to perform operations that require multiple passes
+over the image (like zooming or refreshing).
+.TP
 \-debug
 Talk to the X server in synchronous mode.  This is useful for
 debugging.  If an X error is seen while in this mode, a core will be
 dumped.
+.TP
+\-delete
+Enable deletion of the current image file by pressing the 'x' key
+while viewing.  This is useful for curating collections of images.
 .TP
 \-dumpcore
 Signals will not be trapped, and instead a coredump will occur.
@@ -112,6 +121,11 @@ Force image to use the default visual and colormap.  This is useful if
 not wanting technicolor effects when the colormap focus is inside
 the image window, but it may reduce the quality of the displayed
 image.  This is on by default if \-onroot or \-windowid is specified.
+.TP
+\-focus
+Set the window to be transient for the window ID specified in the
+\fIWINDOWID\fR environment variable.  This is useful when xli is
+invoked by another application and should take keyboard focus.
 .TP
 \-forall
 Apply \-fillscreen and \-fullscreen options to all images and not just
@@ -371,6 +385,13 @@ longer to process and will be less accurate.
 Inverts a monochrome image.  This is shorthand for \fI\-foreground
 white \-background black\fR.
 .TP
+\-iscale \fIscale_factor\fR
+Scale the image using a fast, image-dependent method, if available
+(e.g. JPEG DCT scaling).
+Positive values make the image smaller (1=1/2, 2=1/4, 3=1/8 etc.),
+negative values make it larger (\-1=2x, \-2=4x, etc.).
+Specifying \fIauto\fR will attempt to fast-scale the image to fit on the screen.
+.TP
 \-merge
 Merge this image onto the base image after local processing.  The base
 image is considered to be the first image specified or the last image
@@ -598,4 +619,3 @@ the best possible (zooming before dithering, for instance) or to
 increase speed (zooming downward before compressing, for instance).
 .PP
 Display Gamma should setable in the ~/.xlirc file.
-
