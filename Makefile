@@ -6,11 +6,11 @@
 # -DHAVE_BUNZIP2 if having bzip2 and wanting to handle .bz2 files
 # -DNO_UNCOMPRESS if system doesn't have uncompress
 
-HAS_JPEG ?= 1
-HAS_PNG  ?= 1
-HAS_TIFF ?= 1
-HAS_WEBP ?= 1
-HAS_EXIF ?= 1
+HAS_JPEG = 1
+HAS_PNG  = 1
+HAS_TIFF = 1
+HAS_WEBP = 1
+HAS_EXIF = 1
 
 
 MISC_DEFINES=
