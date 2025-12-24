@@ -31,16 +31,20 @@ REQUIRED BUILD DEPENDENCIES
 
 CONFIGURE
 
-    There are a few compilation flags that one may need/want to change.
-    This can be done in the Makefile file. The defines are:
+    There are a few compilation flags in the Makefile file one may need/want to change.
+          
+    defines are:
 
-	default is to use uncompress with .Z files
+	default is to use uncompress with .gz && .Z files
 	-DHAVE_GUNZIP use gunzip rather than uncompress   .gz , .Z
 	-HAVE_BUNZIP2 also use bunzip2  .bz2
 	-DNO_UNCOMPRESS if the system doesn't have uncompress or gunzip.
 
-    It maybe will matter changing some other variables to adapt to the system, as PKG_CONFIG, INSTALLDIR...
+    if some dependencies are missing, those variables can be commented/unset:
+    HAS_JPEG HAS_PNG HAS_TIFF HAS_WEBP HAS_EXIF 
 
+    It maybe will matter changing some other variables to adapt to the system, as PKG_CONFIG, INSTALLDIR...
+  
 
 COMPILING
 

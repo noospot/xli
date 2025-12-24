@@ -276,7 +276,9 @@ void compact_cmap( Image* image, unsigned int verbose );
 Image* dither( Image* cimage, unsigned int verbose );
 
 /* exif.c */
+#ifdef HAS_EXIF
 Image* exif_rotation( Image* image, const strbyte* file );
+#endif
 
 /* fill.c */
 void fill( Image* image, unsigned int fx, unsigned int fy, unsigned int fw, unsigned int fh, Pixel pixval );

@@ -1,5 +1,5 @@
 //
-//
+// libexif rotation function
 //
 //
 //

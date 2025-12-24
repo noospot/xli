@@ -301,7 +301,9 @@ Image* jpegLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	zclose( zfp );
 	lfree( ( byte* ) rows );
 	rows = 0;
+#ifdef HAS_EXIF
 	image=exif_rotation( image, fullname );
+#endif
 	return image;
 }
 

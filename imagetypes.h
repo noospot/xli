@@ -11,7 +11,9 @@ Image* facesLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose );
 Image* pbmLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose );
 Image* sunRasterLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose );
 Image* gifLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose );
+#ifdef HAS_JPEG
 Image* jpegLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose );
+#endif
 Image* rleLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose );
 Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose );
 
@@ -26,15 +28,23 @@ Image* macLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose );
 Image* cmuwmLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose );
 
 Image* tgaLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose );
+#ifdef HAS_PNG
 Image* pngLoad( strbyte* fullname, ImageOptions* opt, bool verbose );
+#endif
+#ifdef HAS_WEBP
 Image* webpLoad( strbyte* filename_with_path, ImageOptions* image_ops, bool verbose );
+#endif
+#ifdef HAS_TIFF
 Image* tiffLoad( strbyte* filename_with_path, ImageOptions* image_ops, bool verbose );
+#endif
 
 int facesIdent( strbyte* fullname, strbyte* name );
 int pbmIdent( strbyte* fullname, strbyte* name );
 int sunRasterIdent( strbyte* fullname, strbyte* name );
 int gifIdent( strbyte* fullname, strbyte* name );
+#ifdef HAS_JPEG
 int jpegIdent( strbyte* fullname, strbyte* name );
+#endif
 int rleIdent( strbyte* fullname, strbyte* name );
 int bmpIdent( strbyte* fullname, strbyte* name );
 
@@ -49,6 +59,12 @@ int macIdent( strbyte* fullname, strbyte* name );
 int cmuwmIdent( strbyte* fullname, strbyte* name );
 
 int tgaIdent( strbyte* fullname, strbyte* name );
+#ifdef HAS_PNG
 int pngIdent( strbyte* fullname, strbyte* name );
+#endif
+#ifdef HAS_WEBP
 int webpIdent( strbyte* filename_with_path, strbyte* name );
+#endif
+#ifdef HAS_TIFF
 int tiffIdent( strbyte* filename_with_path, strbyte* name );
+#endif

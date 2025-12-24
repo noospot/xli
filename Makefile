@@ -6,6 +6,13 @@
 # -DHAVE_BUNZIP2 if having bzip2 and wanting to handle .bz2 files
 # -DNO_UNCOMPRESS if system doesn't have uncompress
 
+HAS_JPEG ?= 1
+HAS_PNG  ?= 1
+HAS_TIFF ?= 1
+HAS_WEBP ?= 1
+HAS_EXIF ?= 1
+
+
 MISC_DEFINES=
 PKG_CONFIG=pkg-config
 SYSPATHFILE=/usr/lib/X11/xlirc
@@ -18,7 +25,43 @@ CP= cp
 LN= ln -s
 RM= rm -f
 MV= mv -f
-LIBS= -lX11 -lm -lXext -lexif -lwebp -ltiff `$(PKG_CONFIG) --libs libpng` `$(PKG_CONFIG) --libs libjpeg`
+LIBS= -lX11 -lm -lXext
+
+ifeq ($(HAS_JPEG),1)
+	CPPFLAGS += -DHAS_JPEG `$(PKG_CONFIG) --cflags libjpeg`
+	LIBS     += `$(PKG_CONFIG) --libs libjpeg`
+	OPT_SRCS += jpeg.c
+	OPT_OBJS += jpeg.o
+endif
+
+ifeq ($(HAS_PNG),1)
+	CPPFLAGS += -DHAS_PNG `$(PKG_CONFIG) --cflags libpng`
+	LIBS     += `$(PKG_CONFIG) --libs libpng`
+	OPT_SRCS += png.c
+	OPT_OBJS += png.o
+endif
+
+ifeq ($(HAS_TIFF),1)
+	CPPFLAGS += -DHAS_TIFF
+	LIBS     += -ltiff
+	OPT_SRCS += tiff.c
+	OPT_OBJS += tiff.o
+endif
+
+ifeq ($(HAS_WEBP),1)
+	CPPFLAGS += -DHAS_WEBP
+	LIBS     += -lwebp
+	OPT_SRCS += webp.c
+	OPT_OBJS += webp.o
+endif
+
+ifeq ($(HAS_EXIF),1)
+	CPPFLAGS += -DHAS_EXIF
+	LIBS     += -lexif
+	OPT_SRCS += exif.c
+	OPT_OBJS += exif.o
+endif
+
 CFLAGS+= -Wall -Wextra -fstack-protector-strong -O1 -DSYSPATHFILE=\"$(SYSPATHFILE)\" $(OPTIONALFLAGS) $(EXTRAFLAGS)
 GCCFLAGS= -fstrength-reduce -finline-functions
 
@@ -34,18 +77,16 @@ INCS= cmuwmrast.h copyright.h fbm.h g3.h gif.h image.h imagetypes.h \
 SRCS1= bright.c clip.c cmuwmrast.c compact.c dither.c faces.c fbm.c \
        fill.c  g3.c gif.c halftone.c imagetypes.c img.c mac.c  \
        merge.c misc.c new.c options.c path.c pbm.c pcx.c \
-       reduce.c jpeg.c rle.c rlelib.c root.c rotate.c send.c smooth.c \
-       sunraster.c $(OPTIONALSFILES) value.c window.c xbitmap.c xli.c \
-       xpixmap.c xwd.c zio.c zoom.c ddxli.c tga.c bmp.c png.c \
-       exif.c webp.c tiff.c
+       reduce.c rle.c rlelib.c root.c rotate.c send.c smooth.c \
+       sunraster.c value.c window.c xbitmap.c xli.c \
+       xpixmap.c xwd.c zio.c zoom.c ddxli.c tga.c bmp.c $(OPT_SRCS)
 
 OBJS1= bright.o clip.o cmuwmrast.o compact.o dither.o faces.o fbm.o \
        fill.o  g3.o gif.o halftone.o imagetypes.o img.o mac.o  \
        merge.o misc.o new.o options.o path.o pbm.o pcx.o \
-       reduce.o jpeg.o rle.o rlelib.o root.o rotate.o send.o smooth.o \
-       sunraster.o $(OPTIONALOFILES) value.o window.o xbitmap.o xli.o \
-       xpixmap.o xwd.o zio.o zoom.o ddxli.o tga.o bmp.o png.o \
-       exif.o webp.o tiff.o
+       reduce.o rle.o rlelib.o root.o rotate.o send.o smooth.o \
+       sunraster.o value.o window.o xbitmap.o xli.o \
+       xpixmap.o xwd.o zio.o zoom.o ddxli.o tga.o bmp.o $(OPT_OBJS)
 
 
 ALLTXT= $(MISC) $(INCS) $(SRCS1)
@@ -73,7 +114,7 @@ sysv-gcc:
 
 
 xli: $(OBJS1)
-	$(GCC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o xli $(OBJS1) $(LIBS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o xli $(OBJS1) $(LIBS)
 
 all:: xli
 
@@ -81,7 +122,7 @@ all:: xli
 #	$(GCC) -c $(CFLAGS) $(CPPFLAGS) $*.c
 
 clean::
-	rm -f *.o *~ xli *.tar *.tar.gz
+	$(RM) *.o *~ xli *.tar *.tar.gz
 
 .PHONY: debian
 debian:

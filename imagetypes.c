@@ -23,10 +23,16 @@ static struct {
 	Image* ( *loader ) ( strbyte*, ImageOptions*, bool );
 	strbyte* name;
 } ImageTypes[] = {
+#ifdef HAS_PNG
 	{pngIdent,	pngLoad,	"Portable Network Graphics (PNG)"},
+#endif
 	{gifIdent,	gifLoad,	"GIF Image"},
+#ifdef HAS_JPEG
 	{jpegIdent,	jpegLoad,	"JFIF style jpeg Image"},
+#endif
+#ifdef HAS_WEBP
 	{webpIdent,	webpLoad,	"WEBP Image"},
+#endif
 	{tgaIdent,	tgaLoad,	"Targa Image (TGA)"},
 	{bmpIdent,	bmpLoad,	"Windows, OS/2 RLE Image (early BMP)"},
 	{pbmIdent,	pbmLoad,	"Portable Bit Map (PNM, PBM, PGM, PPM)"},
@@ -34,7 +40,9 @@ static struct {
 	{xpixmapIdent,	xpixmapLoad,	"X Pixmap XPM"},
 	{xbitmapIdent,	xbitmapLoad,	"X Bitmap XBM"},
 	{xwdIdent,	xwdLoad,	"X Window Dump XWD"},
+#ifdef HAS_TIFF
 	{tiffIdent,	tiffLoad,	"Tag Image File Format (TIFF)"},
+#endif
 	{sunRasterIdent, sunRasterLoad,	"Sun Rasterfile RAS"},
 	{cmuwmIdent,	cmuwmLoad,	"CMU WM Raster"},
 	{facesIdent,	facesLoad,	"Facesaver Project (FS)"},
