@@ -3,7 +3,6 @@ add test suites
 
 make MIT-SHM and or mmap  conditional for systems that don't have it
 
-document -delete, -iscale, -focus, -cache
 
 and NEVER MIND tweaking send.c for performance.  I mean, really, WHO ON
 EARTH CARES?  Except me, I mean.
@@ -30,9 +29,6 @@ keep requested/window background color while merging alpha
 
 
 could be doing file gamma loaded if and only if required with the command line options.
-
-
-implement 2colors and cmaped versions of mirror_horizontal() and mirror_vertical() 
 
 
 do test suites
