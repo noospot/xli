@@ -637,8 +637,10 @@ strbyte imageInWindow( DisplayInfo* dinfo, Image* image, ImageOptions* options, 
 			                 ( byte* ) &delete_atom, 1 );
 		}
 		if ( globals.focus ) {
-			XSetTransientForHint( disp, ViewportWin,
-			                      atoi( getenv( "WINDOWID" ) ) );
+			strbyte* wid = getenv( "WINDOWID" );
+			if ( wid )
+				XSetTransientForHint( disp, ViewportWin,
+				                      atoi( wid ) );
 		}
 		paint = 0;
 	} else {
