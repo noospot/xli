@@ -531,7 +531,7 @@ Image* xpixmapLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		cmax=1;
 	}
 	clookup = ( int* ) lmalloc( sizeof( int ) * ( cmax - cmin ) );
-	bzero( clookup, sizeof( int ) * ( cmax - cmin ) );
+	memset( clookup, 0, sizeof( int ) * ( cmax - cmin ) );
 	for ( a = 0; a < ncolors; a++ ) {
 		int val;
 		for ( b = 0, val = 0; b < cpp; b++ ) {

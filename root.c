@@ -173,7 +173,7 @@ void imageOnRoot( DisplayInfo* dinfo, Image* image, ImageOptions* options )
 
 		for ( s = ServerVendor( disp ); *s; s++ )
 			if ( !strncmp( s, "DECWINDOWS", 10 ) &&
-			      !xlistrstr( s, "OSF/1" ) ) {
+			      !strstr( s, "OSF/1" ) ) {
 				root = getDECRootWindow( disp, root );
 			}
 

@@ -283,24 +283,6 @@ Image* processImage( DisplayInfo* dinfo, Image* iimage, ImageOptions* options )
 	return ( image );
 }
 
-/* A dumb version that should work reliably
- * search for "s2" in "s1"
- */
-strbyte* xlistrstr( strbyte* s1, strbyte* s2 )
-{
-	int n;
-	strbyte* p;
-
-	for ( n = strlen( s2 ), p = s1;; p++ ) {
-		if ( !( p = index( p, *s2 ) ) ) {
-			return ( strbyte* ) 0;
-		}
-		if ( !strncmp( p, s2, n ) ) {
-			return p;
-		}
-	}
-}
-
 
 /* An ascii to hex table */
 
@@ -441,4 +423,3 @@ int hstoi( strbyte* s, int n )
 	}
 	return value;
 }
-
