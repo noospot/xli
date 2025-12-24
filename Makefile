@@ -83,6 +83,9 @@ all:: xli
 clean::
 	rm -f *.o *~ xli *.tar *.tar.gz
 
+debian:
+	dpkg-buildpackage -rfakeroot -D -b -uc
+
 $(SYSPATHFILE):
 	@echo "*** Creating default $(SYSPATHFILE) since none found."
 	@echo "*** See the xli manual page for details on the contents"
