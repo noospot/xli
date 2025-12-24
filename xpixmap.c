@@ -124,7 +124,7 @@ static bool isXpixmap( ZFILE* zf, unsigned int* w, unsigned int* h, unsigned int
 				}
 				return ( FALSE );
 			}
-			if ( !( p = rindex( what, '_' ) ) ) {
+			if ( !( p = strrchr( what, '_' ) ) ) {
 				p = what;
 			} else {
 				p++;
@@ -147,11 +147,11 @@ static bool isXpixmap( ZFILE* zf, unsigned int* w, unsigned int* h, unsigned int
 					continue;
 				}
 				*( --p ) = '\0';
-				if ( !( p = rindex( what, '_' ) ) || ( p == what ) || strcmp( ++p, "per" ) ) {
+				if ( !( p = strrchr( what, '_' ) ) || ( p == what ) || strcmp( ++p, "per" ) ) {
 					continue;
 				}
 				*( --p ) = '\0';
-				if ( !( p = rindex( what, '_' ) ) ) {
+				if ( !( p = strrchr( what, '_' ) ) ) {
 					p = what;
 				}
 				if ( strcmp( ++p, "char" ) ) {
@@ -160,7 +160,7 @@ static bool isXpixmap( ZFILE* zf, unsigned int* w, unsigned int* h, unsigned int
 				*cpp = value;
 			}
 		} else if ( ( sscanf( buf, "static char * %s", what ) == 1 ) &&
-		            ( p = rindex( what, '_' ) ) && ( !strcmp( p + 1, "colors[]" ) || !strcmp( p + 1, "mono[]" ) ) ) {
+		            ( p = strrchr( what, '_' ) ) && ( !strcmp( p + 1, "colors[]" ) || !strcmp( p + 1, "mono[]" ) ) ) {
 			zunread( zf, ( const byte* )buf, strlen( buf ) );	/* stuff it back so we can read it again */
 			break;
 		} else if ( ( sscanf( buf, "/* %s C */", what ) == 1 ) &&
@@ -233,7 +233,7 @@ static bool isXpixmap( ZFILE* zf, unsigned int* w, unsigned int* h, unsigned int
 			}
 			return FALSE;
 		}
-	} else if ( ( p = rindex( what, '_' ) ) ) {
+	} else if ( ( p = strrchr( what, '_' ) ) ) {
 		/* get the name in the image if there is one */
 		*p = '\0';
 		*imagetitle = dupString( what );
@@ -339,7 +339,7 @@ Image* xpixmapLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 					return NULL;
 				}
 				if ( ( sscanf( buf, "static char * %s", what ) == 1 ) &&
-				      ( p = rindex( what, '_' ) ) && ( !strcmp( p + 1, "colors[]" )
+				      ( p = strrchr( what, '_' ) ) && ( !strcmp( p + 1, "colors[]" )
 				                                       || !strcmp( p + 1, "mono[]" )
 				                                       || !strcmp( p + 1, "pixels[]" ) ) ) {
 					if ( !strcmp( p + 1, "pixels[]" ) ) {

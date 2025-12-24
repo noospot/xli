@@ -266,7 +266,7 @@ static strbyte* iconName( strbyte* s )
 	}
 	buf[BUFSIZ - 1] = '\0';
 	strncpy( buf, s, BUFSIZ - 1 );
-	t = index( buf, ' ' );	/* strip off stuff following 1st word.  this strips */
+	t = strchr( buf, ' ' );	/* strip off stuff following 1st word.  this strips */
 	if ( t ) {		/* info added by processing functions too. */
 		*t = '\0';
 	}
@@ -274,13 +274,13 @@ static strbyte* iconName( strbyte* s )
 	/* strip off leading path.  if not using unix-style paths, one might
 	 * want to change this.
 	 */
-	if ( ( t = rindex( buf, '/' ) ) ) {
+	if ( ( t = strrchr( buf, '/' ) ) ) {
 		for ( s = buf, t++; *t; s++, t++ ) {
 			*s = *t;
 		}
 		*s = '\0';
 	}
-	t = index( buf, '.' );	/* look for an extension and strip it off */
+	t = strchr( buf, '.' );	/* look for an extension and strip it off */
 	if ( t ) {
 		*t = '\0';
 	}

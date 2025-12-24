@@ -14,17 +14,7 @@
 #include <sys/shm.h>
 #include <X11/extensions/XShm.h>
 
-#if defined(SYSV) || defined(VMS)
-	#include <string.h>
-	#ifndef index			/* some SysV's do this */
-		#define index strchr
-	#endif
-	#ifndef rindex
-		#define rindex strrchr
-	#endif
-#else				/* !SYSV && !VMS */
-	#include <strings.h>
-#endif				/* !SYSV && !VMS */
+#include <string.h>
 
 #ifdef VMS
 	#define R_OK 4
@@ -33,7 +23,7 @@
 
 /* xli specific data types */
 
-typedef unsigned long Pixel;	        /* what X thinks a pixel is */
+typedef unsigned long Pixel;	    /* what X thinks a pixel is */
 typedef unsigned short Intensity;	/* what X thinks an RGB intensity is */
 
 /* Display device dependent Information structure */

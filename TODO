@@ -9,8 +9,8 @@ and NEVER MIND tweaking send.c for performance.  I mean, really, WHO ON
 EARTH CARES?  Except me, I mean.
 
 make fast image scaling a subfeature of -zoom, eliminate -iscale
-zooming does really weird things. fix zooming.
 fix crash on interactive zoom with -clip set
+zooming does really weird things. fix zooming.
 
 
 use Xrender x11 extension to send rgba image directly to x11 instead of converting them to rgb

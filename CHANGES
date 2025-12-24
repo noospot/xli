@@ -1,3 +1,7 @@
+20251223
+changed legacy index/rindex string functions as standard strchr/strrchr.
+removed intermediary pixels array in send.c imageToXImage()
+
 
 20251206
 manually applied a recent netbsd patch

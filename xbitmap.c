@@ -83,7 +83,7 @@ static bool isXbitmap( ZFILE* zf, unsigned int* w, unsigned int* h, int* v10p, s
 		 */
 
 		if ( sscanf( line,"#define %s %d", name_and_type, &value ) == 2 ) {
-			if ( !( type = rindex( name_and_type, '_' ) ) ) {
+			if ( !( type = strrchr( name_and_type, '_' ) ) ) {
 				type = name_and_type;
 			} else {
 				type++;
@@ -118,7 +118,7 @@ static bool isXbitmap( ZFILE* zf, unsigned int* w, unsigned int* h, int* v10p, s
 	/* get title of bitmap if any
 	 */
 
-	if ( ( type = rindex( name_and_type, '_' ) ) && !strcmp( "bits[]", type + 1 ) ) {
+	if ( ( type = strrchr( name_and_type, '_' ) ) && !strcmp( "bits[]", type + 1 ) ) {
 		*type= '\0';
 		*title= dupString( name_and_type );
 	}
@@ -239,4 +239,3 @@ int xbitmapIdent( strbyte* fullname, strbyte* name )
 	zclose( zf );
 	return 1;
 }
-
