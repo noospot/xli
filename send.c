@@ -655,46 +655,55 @@ retry: /* this tag is used when retrying because we couldn't get a fit */
 				case DirectColor:
 				case TrueColor: {
 					byte* data, *dst, *src;
-					Pixel* pixels, *p;
+					Pixel p;
 
 					createImage( xii, image, visual, ddepth, ZPixmap );
-					pixels = ( Pixel* ) lmalloc( image->width * sizeof( Pixel ) );
 
 					src = image->data;
 					data = ( byte* )xii->ximage->data;
-					for ( y = image->height; y--; ) {
-						for ( p = pixels, x = image->width; x--; src += image->pixlen, ++p ) {
-							*p = memToVal( src, image->pixlen );
-						}
-						if ( IRGB == image->type ) {
-							for ( p = pixels, x = image->width; x--; ++p ) {
-								*p = RGB_TO_TRUE( image->rgb.red[*p], image->rgb.green[*p],
-								                  image->rgb.blue[*p] );
+					if ( MSBFirst == xii->ximage->byte_order ) {
+						for ( y = image->height; y--; ) {
+							dst = data;
+							for ( x = 0; x < image->width; x++ ) {
+								p = memToVal( src, image->pixlen );
+								src += image->pixlen;
+								if ( IRGB == image->type ) {
+									p = RGB_TO_TRUE( image->rgb.red[p], image->rgb.green[p],
+									                  image->rgb.blue[p] );
+								}
+								if ( dogamma ) {
+									p = RGB_TO_TRUE( GAMMA8( TRUE_RED( p ) ) << 8,
+									                  GAMMA8( TRUE_GREEN( p ) ) << 8, GAMMA8( TRUE_BLUE( p ) ) << 8 );
+								}
+								p = redvalue[TRUE_RED( p )] | greenvalue[TRUE_GREEN( p )] |
+								     bluevalue[TRUE_BLUE( p )];
+								valToMem( p, dst, dpixlen );
+								dst += dpixlen;
 							}
+							data += xii->ximage->bytes_per_line;
 						}
-						if ( dogamma ) {
-							for ( p = pixels, x = image->width; x--; ++p ) {
-								*p = RGB_TO_TRUE( GAMMA8( TRUE_RED( *p ) ) << 8,
-								                  GAMMA8( TRUE_GREEN( *p ) ) << 8, GAMMA8( TRUE_BLUE( *p ) ) << 8 );
+					} else {
+						for ( y = image->height; y--; ) {
+							dst = data;
+							for ( x = 0; x < image->width; x++ ) {
+								p = memToVal( src, image->pixlen );
+								src += image->pixlen;
+								if ( IRGB == image->type ) {
+									p = RGB_TO_TRUE( image->rgb.red[p], image->rgb.green[p],
+									                  image->rgb.blue[p] );
+								}
+								if ( dogamma ) {
+									p = RGB_TO_TRUE( GAMMA8( TRUE_RED( p ) ) << 8,
+									                  GAMMA8( TRUE_GREEN( p ) ) << 8, GAMMA8( TRUE_BLUE( p ) ) << 8 );
+								}
+								p = redvalue[TRUE_RED( p )] | greenvalue[TRUE_GREEN( p )] |
+								     bluevalue[TRUE_BLUE( p )];
+								valToMemLSB( p, dst, dpixlen );
+								dst += dpixlen;
 							}
+							data += xii->ximage->bytes_per_line;
 						}
-						for ( p = pixels, x = image->width; x--; ++p ) {
-							*p = redvalue[TRUE_RED( *p )] | greenvalue[TRUE_GREEN( *p )] |
-							     bluevalue[TRUE_BLUE( *p )];
-						}
-						dst = data;
-						if ( MSBFirst == xii->ximage->byte_order ) {
-							for ( p = pixels, x = image->width; x--; ++p, dst += dpixlen ) {
-								valToMem( *p, dst, dpixlen );
-							}
-						} else {
-							for ( p = pixels, x = image->width; x--; ++p, dst += dpixlen ) {
-								valToMemLSB( *p, dst, dpixlen );
-							}
-						}
-						data += xii->ximage->bytes_per_line;
 					}
-					lfree( ( byte* ) pixels );
 					break;
 				}
 
