@@ -83,6 +83,7 @@ all:: xli
 clean::
 	rm -f *.o *~ xli *.tar *.tar.gz
 
+.PHONY: debian
 debian:
 	dpkg-buildpackage -rfakeroot -D -b -uc
 
