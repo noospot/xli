@@ -4,11 +4,8 @@ xli packages in many linux distros are based on a 2006 version.
 
 version 1.18.0 has many patches included, with multiple origins:
 debian patches, netbsd patches, +35 other patches,
-and also local changes.
-see file CHANGES to see their descriptions.
+and also local changes:
 
-
-changes in 1.18.0:
 * exif rotation with jpg images
 * webp support
 * tiff support
@@ -22,7 +19,6 @@ xli will display several types of images under X11, or load images onto
 an X11 root window.
 xli displays images also with pseudo-colors x11 servers display,
 or even monochrome servers displays.
-
 
 version 1.18.0 supports:
   Portable Network Graphics (PNG)
@@ -46,13 +42,15 @@ version 1.18.0 supports:
   GEM Image (IMG)
   MacPaint Image
 
-
 A variety of options are available to modify images prior to viewing:
 clipping, dithering, depth reduction, zoom (X, Y axis or both), 
 brightening or darkening, input gamma correction, and image merging.  
 When applicable, these options are done automatically (eg. a color image 
 to be displayed on a monochrome screen will be dithered automatically).
 see xli manual page
+
+
+KEYS
 
 while displaying the image, some keys can change the way it is displayed:
 <, >     Zoom
@@ -67,10 +65,12 @@ SUGGESTIONS AND BUG REPORTS
 
 xli has been developed in a fairly limited hardware environment, and
 not all combinations of displays and/or image formats and options have
-been tested. xli is useful to me, and maybe it will be useful to others.
+been tested. 
+
+github issues tracker https://github.com/noospot/xli/issues
 
 
-COMPILNG and INSTALLING
+COMPILING and INSTALLING
 see INSTALL file
 
 
