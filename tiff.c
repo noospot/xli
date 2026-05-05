@@ -125,7 +125,12 @@ Image* tiffLoad( strbyte* filename_with_path, ImageOptions* image_ops, bool verb
 	TIFFGetField( tif, TIFFTAG_SAMPLESPERPIXEL, &bpp );
 
 
-	uint32_t* tiff_data = ( uint32_t* )_TIFFmalloc( width * height * sizeof( uint32_t ) );
+	size_t pixel_count = (size_t)width * (size_t)height;
+	if ( pixel_count > SIZE_MAX / sizeof( uint32_t ) ) {
+		fprintf( stderr, "Couldn't get memory to load Tiff file\n" );
+		return rec;
+	}
+	uint32_t* tiff_data = ( uint32_t* )_TIFFmalloc( pixel_count * sizeof( uint32_t ) );
 	if ( !tiff_data ) {
 		fprintf( stderr, "Couldn't get memory to load Tiff file\n" );
 		return rec;
