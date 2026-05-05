@@ -240,7 +240,7 @@ Image* clip( Image* iimage, int clipx, int clipy,
 			for ( y= 0; y < dcliph; y++ ) {
 				sp= sline + start;
 				dp= dline + dstart;
-				memcpy( dp, sp, simage->pixlen * dclipw );
+				memcpy( dp, sp, (size_t)simage->pixlen * (size_t)dclipw );
 				sline += slinelen;
 				dline += dlinelen;
 			}
