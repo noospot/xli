@@ -238,7 +238,8 @@ static bool isXpixmap( ZFILE* zf, unsigned int* w, unsigned int* h, unsigned int
 		*p = '\0';
 		*imagetitle = dupString( what );
 	}
-	if ( !*format || !*w || !*h || !*ncolors || !*cpp ) {
+	// cpp > 4 would cause integer overflow in color lookup calculation
+	if ( !*format || !*w || !*h || !*ncolors || !*cpp || *cpp > 4 ) {
 		if ( *imagetitle ) {
 			lfree( ( byte* )*imagetitle );
 		}
