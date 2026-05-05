@@ -143,7 +143,7 @@ Image* tiffLoad( strbyte* filename_with_path, ImageOptions* image_ops, bool verb
 
 	byte a=0;
 	size_t i = 0;
-	while ( i < width * height ) {
+	while ( i < ( (size_t)width * (size_t)height ) ) {
 		if ( bpp % 4==0 ) {
 			a = TIFFGetA( tiff_data[i] );
 			rec->data[i*3 + 0] = byte_applyalpha3( TIFFGetR( tiff_data[i] ), a );
