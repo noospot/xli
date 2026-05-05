@@ -137,7 +137,7 @@ Image* reduce( Image* image, unsigned colors, int ditherf, float gamma, int verb
 		gammacorrect( image, REDUCE_GAMMA, verbose );
 	}
 
-	NPixels = image->width * image->height;
+	NPixels = ( unsigned long ) image->width * image->height;
 
 	Histogram = ( unsigned long* ) lcalloc( ColormaxI * ColormaxI * ColormaxI * sizeof( long ) );
 	Boxes = ( Box* ) lmalloc( colors * sizeof( Box ) );
