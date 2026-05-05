@@ -1,3 +1,10 @@
+20260505
+window.c, fix 64 archs window symbol    
+window.c, use memmove to remove leading path
+xpixmap.c, add XPM bounds checking
+exif.c, default reporting, if verbose
+
+
 20251223
 changed legacy index/rindex string functions as standard strchr/strrchr.
 removed intermediary pixels array in send.c imageToXImage()
