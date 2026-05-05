@@ -67,7 +67,7 @@ Image* imgLoad ( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	register int i;				/* Random index */
 	ZFILE* zf;				/* Input file */
 	short creps;				/* Repetition counter */
-	short ictr;				/* Secondary index counter */
+	unsigned short ictr;			/* Secondary index counter */
 	unsigned int bpl;			/* Bytes per scanline */
 	Image* image;				/* Allocated image struct */
 	IMG_Header header;			/* GEM Image header */
