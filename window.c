@@ -271,14 +271,11 @@ static strbyte* iconName( strbyte* s )
 		*t = '\0';
 	}
 
-	/* strip off leading path.  if not using unix-style paths, one might
+	/* remove leading path.  if not using unix-style paths, one might
 	 * want to change this.
 	 */
 	if ( ( t = strrchr( buf, '/' ) ) ) {
-		for ( s = buf, t++; *t; s++, t++ ) {
-			*s = *t;
-		}
-		*s = '\0';
+		memmove( buf, t + 1, strlen( t + 1 ) + 1 );
 	}
 	t = strchr( buf, '.' );	/* look for an extension and strip it off */
 	if ( t ) {
