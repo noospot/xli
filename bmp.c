@@ -388,7 +388,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 
 		if ( hdr.biCompression == BI_RLE8 ) {
 			int d, e;
-			memset( ( byte* ) image->data, 0, image->width * image->height );
+			memset( ( byte* ) image->data, 0, (size_t)image->width * (size_t)image->height );
 			for ( x = y = 0;; ) {
 				if ( ( d = zgetc( zf ) ) == EOF ) {
 					goto data_short;
