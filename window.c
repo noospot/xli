@@ -868,6 +868,10 @@ strbyte imageInWindow( DisplayInfo* dinfo, Image* image, ImageOptions* options, 
 
 	// window manager symbol
 	{
+		unsigned int i, n_elements;
+		unsigned long* icon_data;
+		const Atom NET_WM_ICON = XInternAtom( disp, "_NET_WM_ICON", 0 );
+
 		// NOTE: XChangeProperty expects 32-bit values like the image data above to be
 		//       placed in the 32 least significant bits of individual longs.  This is
 		//       true even if long is 64-bit and a WM protocol calls for "packed" data.
@@ -875,12 +879,16 @@ strbyte imageInWindow( DisplayInfo* dinfo, Image* image, ImageOptions* options, 
 		//       ABI.  Xlib will pack these values into a regular array of 32-bit values
 		//       before sending it over the wire.
 		// source: libGLFW source code  https://www.glfw.org/
-		unsigned long* xli_wm=( unsigned long* )xli_wm_symbol;
-		const Atom NET_WM_ICON = XInternAtom( disp, "_NET_WM_ICON", 0 );
-		XChangeProperty( disp, ViewportWin, NET_WM_ICON, XA_CARDINAL, 32, PropModeReplace,
-		                 ( byte* ) xli_wm,	( 2 + xli_wm_symbol[0] * xli_wm_symbol[1] ) );
-	}
+		n_elements = 2 + xli_wm_symbol[0] * xli_wm_symbol[1];
+		icon_data = ( unsigned long* ) lmalloc( n_elements * sizeof( unsigned long ) );
+		for ( i = 0; i < n_elements; i++ ) {
+			icon_data[i] = ( unsigned long ) xli_wm_symbol[i];
+		}
 
+		XChangeProperty( disp, ViewportWin, NET_WM_ICON, XA_CARDINAL, 32, PropModeReplace,
+		                 ( byte* ) icon_data, n_elements );
+		lfree( ( byte* ) icon_data );
+	}
 
 	/* start displaying image
 	 */
