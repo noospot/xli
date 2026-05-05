@@ -406,7 +406,7 @@ static void BoxStats( Box* box )
 		freq = &box->freq[color][i];
 		for ( ; i < box->high[color]; i++, freq++ ) {
 			mean += i * *freq;
-			var += i * i * *freq;
+			var += (unsigned long)i * (unsigned long)i * *freq;
 		}
 		box->mean[color] = mean / ( float ) box->weight;
 		box->weightedvar += var - box->mean[color] * box->mean[color] *
