@@ -109,9 +109,10 @@ Image* exif_rotation( Image* image, const strbyte* file )
 			image = tmpimage;
 			break;
 		default:
-			printf( "xli/exif: unknown rotation value %i\n",rotation );
+			if ( globals.verbose ) {
+				printf( "xli/exif: unknown rotation value %i\n", rotation );
+			}
 			break;
 	}
 	return( image );
 }
-
