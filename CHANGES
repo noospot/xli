@@ -1,4 +1,8 @@
 20260505
+only lock resources when used to draw to the root window. author @Ost3rbaer
+
+
+20260505
 window.c, fix 64 archs window symbol    
 window.c, use memmove to remove leading path
 xpixmap.c, add XPM bounds checking
