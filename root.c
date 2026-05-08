@@ -227,5 +227,6 @@ void imageOnRoot( DisplayInfo* dinfo, Image* image, ImageOptions* options )
 	XFreePixmap( disp, pixmap );
 	ximageinfo->rootimage = TRUE;	/* make sure colors arn't freed */
 	freeXImage( image, ximageinfo );
-	preserveResource( disp, root );
+	 if( root != globals.dest_window ) /* ChK: do not lock resources when drawing on window of external process */
+		preserveResource( disp, root );
 }
