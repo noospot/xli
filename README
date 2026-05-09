@@ -2,9 +2,10 @@ xli - an Xorg image viewer utility - since 1989
 
 xli packages in many linux distros are based on a 2006 version.
 
-version 1.18.0 has many patches included, with multiple origins:
-debian patches, netbsd patches, +35 other patches,
-and also local changes:
+so this new xli version 1.18.0 is an attempt at merging many patches, with multiple origins:
+debian patches, netbsd patches, +35 other patches...
+
+with also local changes:
 
 * exif rotation with jpg images
 * webp support
