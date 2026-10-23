@@ -61,6 +61,7 @@ static inline int32_t GSINT2( const uint8_t* bp )
 /* Return TRUE if this looks like a bmp file */
 static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 {
+	hp->name = name;
 	byte buf[WIN_INFOHEADER_LEN];	/* largest we'll need */
 
 	if ( zread( zf, buf, BMP_FILEHEADER_LEN ) != BMP_FILEHEADER_LEN ) {
@@ -166,7 +167,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 	} else {
 		hp->biClrUsed = 0;
 	}
-	hp->name = name;
+	
 	return TRUE;
 }
 
@@ -182,7 +183,7 @@ static void tell_about_bmp( bmpHeader* hp )
 int bmpIdent( strbyte* fullname, strbyte* name )
 {
 	ZFILE* zf;
-	bmpHeader hdr;
+	bmpHeader hdr = {0};
 
 	if ( !( zf = zopen( fullname ) ) ) {
 		perror( "bmpIdent" );
@@ -200,7 +201,7 @@ int bmpIdent( strbyte* fullname, strbyte* name )
 Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 {
 	ZFILE* zf;
-	bmpHeader hdr;
+	bmpHeader hdr = {0};
 	Image* image;
 	bool data_bounds = FALSE;
 	int skip;
