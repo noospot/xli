@@ -12,12 +12,50 @@
 #include "imagetypes.h"
 #include "bmp.h"
 
-#define GULONG4(bp) ((unsigned long)(bp)[0] + 256 * (unsigned long)(bp)[1] \
-	+ 65536 * (unsigned long)(bp)[2] + 16777216 * (unsigned long)(bp)[3])
-#define GULONG2(bp) ((unsigned long)(bp)[0] + 256 * (unsigned long)(bp)[1])
-#define GUINT2(bp) ((unsigned int)(bp)[0] + 256 * (unsigned int)(bp)[1])
-#define GSINT4(bp) ((int32_t)((unsigned long)(bp)[0] + 256UL * (unsigned long)(bp)[1]+ 65536UL * (unsigned long)(bp)[2] + 16777216UL * (unsigned long)(bp)[3]))
-#define GSINT2(bp) ((int32_t)((unsigned int)(bp)[0] + 256U * (unsigned int)(bp)[1]))
+// d: extract unsigned 4-byte little-endian integer into unsigned long
+static inline unsigned long GULONG4( const uint8_t* bp )
+{
+	unsigned long value = ( unsigned long )bp[0]
+	                      | ( ( unsigned long )bp[1] << 8 )
+	                      | ( ( unsigned long )bp[2] << 16 )
+	                      | ( ( unsigned long )bp[3] << 24 );
+	return value;
+}
+
+// d: extract unsigned 2-byte little-endian integer into unsigned long
+static inline unsigned long GULONG2( const uint8_t* bp )
+{
+	unsigned long value = ( unsigned long )bp[0]
+	                      | ( ( unsigned long )bp[1] << 8 );
+	return value;
+}
+
+// d: extract unsigned 2-byte little-endian integer into unsigned int
+static inline unsigned int GUINT2( const uint8_t* bp )
+{
+	unsigned int value = ( unsigned int )bp[0]
+	                     | ( ( unsigned int )bp[1] << 8 );
+	return value;
+}
+
+// d: extract signed 4-byte little-endian integer into int32_t
+static inline int32_t GSINT4( const uint8_t* bp )
+{
+	uint32_t value = ( uint32_t )bp[0]
+	                 | ( ( uint32_t )bp[1] << 8 )
+	                 | ( ( uint32_t )bp[2] << 16 )
+	                 | ( ( uint32_t )bp[3] << 24 );
+	return ( int32_t )value;
+}
+
+// d: extract signed 2-byte little-endian integer into int32_t
+static inline int32_t GSINT2( const uint8_t* bp )
+{
+	uint16_t value = ( uint16_t )bp[0]
+	                 | ( ( uint16_t )bp[1] << 8 );
+	return ( int32_t )( int16_t )value;
+}
+
 
 /* Read the header of the file, and */
 /* Return TRUE if this looks like a bmp file */
@@ -55,7 +93,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 	if ( hp->class == C_WIN ) {
 		/* read in the rest of the info header */
 		if ( zread( zf, buf + 4, WIN_INFOHEADER_LEN - 4 )
-		      != WIN_INFOHEADER_LEN - 4 ) {
+		        != WIN_INFOHEADER_LEN - 4 ) {
 			return FALSE;
 		}
 
@@ -72,7 +110,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 	} else {		/* C_OS2 */
 		/* read in the rest of the info header */
 		if ( zread( zf, buf + 4, OS2_INFOHEADER_LEN - 4 )
-		      != OS2_INFOHEADER_LEN - 4 ) {
+		        != OS2_INFOHEADER_LEN - 4 ) {
 			return FALSE;
 		}
 
@@ -94,17 +132,17 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		return FALSE;
 	}
 	if ( hp->biBitCount != 1
-	      && hp->biBitCount != 4
-	      && hp->biBitCount != 8
-	      && hp->biBitCount != 24 ) {
+	        && hp->biBitCount != 4
+	        && hp->biBitCount != 8
+	        && hp->biBitCount != 24 ) {
 		fprintf( stderr, "bmpLoad: %s - Illegal image BitCount\n", hp->name );
 		return FALSE;
 	}
 	if ( ( hp->biCompression != BI_RGB
-	       && hp->biCompression != BI_RLE8
-	       && hp->biCompression != BI_RLE4 )
-	      || ( hp->biCompression == BI_RLE8 && hp->biBitCount != 8 )
-	      || ( hp->biCompression == BI_RLE4 && hp->biBitCount != 4 ) ) {
+	        && hp->biCompression != BI_RLE8
+	        && hp->biCompression != BI_RLE4 )
+	        || ( hp->biCompression == BI_RLE8 && hp->biBitCount != 8 )
+	        || ( hp->biCompression == BI_RLE4 && hp->biBitCount != 4 ) ) {
 		fprintf( stderr,	"bmpLoad: %s - Illegal image compression type\n", hp->name );
 		return FALSE;
 	}
@@ -249,7 +287,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 			 * so read straight in.
 			 */
 			if ( zread( zf, data, illen ) != illen
-			      || zread( zf, pad, padlen ) != padlen ) {
+			        || zread( zf, pad, padlen ) != padlen ) {
 				goto data_short;
 			}
 		}
@@ -263,7 +301,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 
 		if ( hdr.biCompression == BI_RLE4 ) {
 			int d, e;
-			memset( ( byte* ) image->data, 0, (size_t)image->width * (size_t)image->height );
+			memset( ( byte* ) image->data, 0, ( size_t )image->width * ( size_t )image->height );
 			for ( x = y = 0;; ) {
 				int i, f;
 				if ( ( d = zgetc( zf ) ) == EOF ) {
@@ -272,7 +310,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 				if ( d != 0 ) {	/* run of pixels */
 					x += d;
 					if ( x > image->width ||
-					      y > image->height ) {
+					        y > image->height ) {
 						/* don't run off buffer */
 						data_bounds = TRUE;
 						/* ignore this run */
@@ -313,7 +351,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 				/* else */
 				if ( d == 2 ) {	/* delta */
 					if ( ( d = zgetc( zf ) ) == EOF ||
-					      ( e = zgetc( zf ) ) == EOF ) {
+					        ( e = zgetc( zf ) ) == EOF ) {
 						goto data_short;
 					}
 					x += d;
@@ -393,7 +431,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 
 		if ( hdr.biCompression == BI_RLE8 ) {
 			int d, e;
-			memset( ( byte* ) image->data, 0, (size_t)image->width * (size_t)image->height );
+			memset( ( byte* ) image->data, 0, ( size_t )image->width * ( size_t )image->height );
 			for ( x = y = 0;; ) {
 				if ( ( d = zgetc( zf ) ) == EOF ) {
 					goto data_short;
@@ -401,7 +439,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 				if ( d != 0 ) {	/* run of pixels */
 					x += d;
 					if ( x > image->width ||
-					      y > image->height ) {
+					        y > image->height ) {
 						/* don't run off buffer */
 						data_bounds = TRUE;
 						/* ignore this run */
@@ -435,7 +473,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 				/* else */
 				if ( d == 2 ) {	/* delta */
 					if ( ( d = zgetc( zf ) ) == EOF ||
-					      ( e = zgetc( zf ) ) == EOF ) {
+					        ( e = zgetc( zf ) ) == EOF ) {
 						goto data_short;
 					}
 					x += d;
@@ -477,7 +515,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 			padlen = ( ( image->width + 3 ) & ~3 ) - illen;
 			for ( y = image->height; y > 0; y--, data -= illen ) {
 				if ( zread( zf, data, illen ) != illen
-				      || zread( zf, pad, padlen ) != padlen ) {
+				        || zread( zf, pad, padlen ) != padlen ) {
 					goto data_short;
 				}
 			}
@@ -495,7 +533,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 
 			/* BMP files are RGB, so read straight in. */
 			if ( zread( zf, data, illen ) != illen
-			      || zread( zf, pad, padlen ) != padlen ) {
+			        || zread( zf, pad, padlen ) != padlen ) {
 				goto data_short;
 			}
 			/* Oh, no they're not */
