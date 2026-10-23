@@ -127,8 +127,8 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		hp->biClrImportant = 0;
 	}
 
-	/* Check for file corruption and dimensions bounds */
-	if ( hp->biWidth == 0 || hp->biHeight == 0) {
+	/* Check file corruption and dimensions bounds */
+	if ( hp->biWidth == 0 || hp->biHeight == 0 ) {
 		fprintf( stderr, "bmpLoad: %s - Image dimension is 0\n", hp->name );
 		return FALSE;
 	}	
@@ -204,7 +204,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	bmpHeader hdr = {0};
 	Image* image;
 	bool data_bounds = FALSE;
-	int skip;
+	unsigned long skip;
 
 	if ( !( zf = zopen( fullname ) ) ) {
 		perror( "bmpIdent" );
@@ -269,7 +269,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		image->title = dupString( hdr.name );
 	}
 
-	/* Skip to offset specified in file header for image data with underflow check */
+	/* Skip to image data offset specified in file header */
 	{
 		unsigned long min_offbits = BMP_FILEHEADER_LEN
 		                            + ( hdr.class == C_WIN ? WIN_INFOHEADER_LEN : OS2_INFOHEADER_LEN )
@@ -280,7 +280,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 			zclose( zf );
 			return NULL;
 		}
-		skip = ( int )( hdr.bfOffBits - min_offbits );
+		skip = hdr.bfOffBits - min_offbits;
 	}
 
 	while ( skip > 0 ) {
@@ -384,9 +384,14 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 						goto data_short;
 					}
 					x = x + d;
-					data = data + d;
 					y = y + e;
-					data = data - ( e * illen );
+					if ( x > image->width || y > image->height ) {
+						data_bounds = TRUE;
+						x = x - d;
+						y = y - e;
+						goto skip_iter_rle4;
+					}
+					data = data + d - ( e * illen );
 					goto skip_iter_rle4;
 				}
 				/* else run of literals */
@@ -528,9 +533,14 @@ skip_iter_rle4:
 						goto data_short;
 					}
 					x = x + d;
-					data = data + d;
 					y = y + e;
-					data = data - ( e * illen );
+					if ( x > image->width || y > image->height ) {
+						data_bounds = TRUE;
+						x = x - d;
+						y = y - e;
+						goto skip_iter_rle8;
+					}
+					data = data + d - ( e * illen );
 					goto skip_iter_rle8;
 				}
 				/* else run of literals */

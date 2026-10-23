@@ -11,8 +11,12 @@
 
 #define BMP_FILEHEADER_LEN 14
 
-#define WIN_INFOHEADER_LEN 40
-#define OS2_INFOHEADER_LEN 12
+#define WIN_INFOHEADER_LEN	40
+#define OS2_INFOHEADER_LEN	12
+#define BMP_V2INFOHEADER_LEN	52
+#define BMP_V3INFOHEADER_LEN	56
+#define BMP_V4INFOHEADER_LEN	108
+#define BMP_V5INFOHEADER_LEN	124
 
 /* Header structure definition. */
 typedef struct {
