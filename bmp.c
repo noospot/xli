@@ -16,6 +16,8 @@
 	+ 65536 * (unsigned long)(bp)[2] + 16777216 * (unsigned long)(bp)[3])
 #define GULONG2(bp) ((unsigned long)(bp)[0] + 256 * (unsigned long)(bp)[1])
 #define GUINT2(bp) ((unsigned int)(bp)[0] + 256 * (unsigned int)(bp)[1])
+#define GSINT4(bp) ((int32_t)((unsigned long)(bp)[0] + 256UL * (unsigned long)(bp)[1]+ 65536UL * (unsigned long)(bp)[2] + 16777216UL * (unsigned long)(bp)[3]))
+#define GSINT2(bp) ((int32_t)((unsigned int)(bp)[0] + 256U * (unsigned int)(bp)[1]))
 
 /* Read the header of the file, and */
 /* Return TRUE if this looks like a bmp file */
@@ -58,7 +60,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		}
 
 		hp->biWidth = GULONG4( &buf[4] );
-		hp->biHeight = GULONG4( &buf[8] );
+		hp->biHeight = GSINT4( &buf[8] );
 		hp->biPlanes = GUINT2( &buf[12] );;
 		hp->biBitCount = GUINT2( &buf[14] );;
 		hp->biCompression = GULONG4( &buf[16] );;
@@ -75,7 +77,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		}
 
 		hp->biWidth = GULONG2( &buf[4] );
-		hp->biHeight = GULONG2( &buf[6] );
+		hp->biHeight = GSINT2( &buf[6] );
 		hp->biPlanes = GUINT2( &buf[8] );;
 		hp->biBitCount = GUINT2( &buf[10] );;
 		hp->biCompression = BI_RGB;
@@ -87,7 +89,10 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 	}
 
 	/* Check for file corruption */
-
+	if ( hp->biHeight <= 0 ) {
+		fprintf( stderr, "bmpLoad: %s - Illegal image Height value (top-down or negative height not supported)\n", hp->name );
+		return FALSE;
+	}
 	if ( hp->biBitCount != 1
 	      && hp->biBitCount != 4
 	      && hp->biBitCount != 8
@@ -122,7 +127,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 /* Print a brief description of the image */
 static void tell_about_bmp( bmpHeader* hp )
 {
-	printf( "%s is a %lux%lu %d bit deep, %s%s BMP image\n", hp->name,
+	printf( "%s is a %lux%i %d bit deep, %s%s BMP image\n", hp->name,
 	        hp->biWidth, hp->biHeight, hp->biBitCount,
 	        hp->biCompression == BI_RGB ? "" : "Run length compressed, ",
 	        hp->class == C_WIN ? "Windows" : "OS/2" );

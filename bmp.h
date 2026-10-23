@@ -26,7 +26,7 @@ typedef struct {
 
 	unsigned long biSize;		/* Size of info header in bytes */
 	unsigned long biWidth;		/* Image width in pixels */
-	unsigned long biHeight;		/* Image height in pixels */
+	int32_t biHeight;		/* Image height in pixels */
 	unsigned int  biPlanes;		/* Planes. Must == 1 */
 	unsigned int  biBitCount;	/* Bits per pixels. Must be 1, 4, 8 or 24 */
 	unsigned long biCompression;	/* Compression type */
