@@ -2,7 +2,7 @@
  * bmp.h - header file for Bmp files
  */
 
-#define C_WIN   1		/* Image class */
+#define C_WIN   1		/* Image bfType */
 #define C_OS2   2
 
 #define BI_RGB  0		/* Compression type */
@@ -21,7 +21,7 @@
 /* Header structure definition. */
 typedef struct {
 	strbyte* name;			/* stash pointer to name here too */
-	int class;			/* Windows or OS/2 */
+	int bfType;			/* Windows or OS/2 */
 
 	unsigned long bfSize;		/* Size of file in bytes */
 	unsigned int  bfxHotSpot;	/* Not used */

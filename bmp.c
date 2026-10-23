@@ -84,14 +84,14 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 
 	hp->biSize = GULONG4( &buf[0] );
 	if ( hp->biSize == WIN_INFOHEADER_LEN ) {
-		hp->class = C_WIN;
+		hp->bfType = C_WIN;
 	} else if ( hp->biSize == OS2_INFOHEADER_LEN ) {
-		hp->class = C_OS2;
+		hp->bfType = C_OS2;
 	} else {
 		return FALSE;
 	}
 
-	if ( hp->class == C_WIN ) {
+	if ( hp->bfType == C_WIN ) {
 		/* read in the rest of the info header */
 		if ( zread( zf, buf + 4, WIN_INFOHEADER_LEN - 4 )
 		        != WIN_INFOHEADER_LEN - 4 ) {
@@ -177,7 +177,7 @@ static void tell_about_bmp( bmpHeader* hp )
 	printf( "%s is a %lux%i %d bit deep, %s%s BMP image\n", hp->name,
 	        hp->biWidth, hp->biHeight, hp->biBitCount,
 	        hp->biCompression == BI_RGB ? "" : "Run length compressed, ",
-	        hp->class == C_WIN ? "Windows" : "OS/2" );
+	        hp->bfType == C_WIN ? "Windows" : "OS/2" );
 }
 
 int bmpIdent( strbyte* fullname, strbyte* name )
@@ -236,7 +236,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		}
 		image->title = dupString( hdr.name );
 
-		if ( hdr.class == C_WIN ) {
+		if ( hdr.bfType == C_WIN ) {
 			n = n + 1;
 		}
 		i = 0;
@@ -272,8 +272,8 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	/* Skip to image data offset specified in file header */
 	{
 		unsigned long min_offbits = BMP_FILEHEADER_LEN
-		                            + ( hdr.class == C_WIN ? WIN_INFOHEADER_LEN : OS2_INFOHEADER_LEN )
-		                            + ( hdr.biBitCount < 24 ? ( hdr.class == C_WIN ? 4 : 3 ) * hdr.biClrUsed : 0 );
+		                            + ( hdr.bfType == C_WIN ? WIN_INFOHEADER_LEN : OS2_INFOHEADER_LEN )
+		                            + ( hdr.biBitCount < 24 ? ( hdr.bfType == C_WIN ? 4 : 3 ) * hdr.biClrUsed : 0 );
 		if ( hdr.bfOffBits < min_offbits ) {
 			fprintf( stderr, "bmpLoad: %s - Illegal bfOffBits (underflow or overlaps header)\n", hdr.name );
 			freeImage( image );
