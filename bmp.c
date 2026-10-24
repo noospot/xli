@@ -279,7 +279,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		return FALSE;
 	}
 	/* Fix up a few things */
-	if ( hp->biBitCount < 24 ) {
+	if ( hp->biBitCount <=8 ) {
 		if ( hp->biClrUsed == 0 || hp->biClrUsed > ( long unsigned int )( 1 << hp->biBitCount ) ) {
 			hp->biClrUsed = ( 1 << hp->biBitCount );
 		}
@@ -433,7 +433,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	znocache( zf );
 
 	/* Report 16-bit and 64-bit files as identifiable but not displayable yet */
-	if ( hdr.biBitCount == 16 || hdr.biBitCount == 64 ) {
+	if (  hdr.biBitCount == 64 ) {
 		fprintf( stderr, "bmpLoad: %s - %d-bit BMP loading not supported yet\n", hdr.name, ( int )hdr.biBitCount );
 		zclose( zf );
 		return NULL;
@@ -443,7 +443,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	abs_height = top_down ? ( unsigned long )( -hdr.biHeight ) : ( unsigned long )hdr.biHeight;
 
 	/* Create the appropriate image and colormap */
-	if ( hdr.biBitCount < 24 ) {
+	if ( hdr.biBitCount <=8 ) {
 		/* must be 1, 2, 4 or 8 bit mapped type */
 		unsigned int i;
 		int n = 4;
@@ -984,6 +984,73 @@ skip_iter_rle8:
 				data = data - illen;
 			}
 		}
+	} else if ( hdr.biBitCount == 16 ) {		/* hdr.biBitCount == 16 */
+		byte* pixel_row, *src_ptr, *dst_ptr, pad[4];
+		int illen, src_illen, src_padlen, y;
+		long row_stride;
+		unsigned int red_shift = get_mask_shift( hdr.redMask );
+		unsigned int green_shift = get_mask_shift( hdr.greenMask );
+		unsigned int blue_shift = get_mask_shift( hdr.blueMask );
+		unsigned int alpha_shift = get_mask_shift( hdr.alphaMask );
+		unsigned int red_bits = get_mask_bits( hdr.redMask );
+		unsigned int green_bits = get_mask_bits( hdr.greenMask );
+		unsigned int blue_bits = get_mask_bits( hdr.blueMask );
+		unsigned int alpha_bits = get_mask_bits( hdr.alphaMask );
+
+		illen = image->width * image->pixlen;
+		src_illen = image->width * 2;
+		src_padlen = ( ( src_illen + 3 ) & ~3 ) - src_illen;
+		row_stride = top_down ? ( long )illen : -( long )illen;
+
+		pixel_row = ( byte* )calloc( ( size_t )src_illen + 4, 1 );
+		if ( pixel_row == NULL ) {
+			fprintf( stderr, "bmpLoad: %s - Out of memory\n", hdr.name );
+			freeImage( image );
+			zclose( zf );
+			return NULL;
+		}
+
+		dst_ptr = top_down ? image->data : image->data + ( abs_height - 1 ) * illen;
+		y = ( int )abs_height;
+		while ( y > 0 ) {
+			if ( zread( zf, pixel_row, src_illen ) != src_illen
+			        || ( src_padlen > 0 && zread( zf, pad, src_padlen ) != src_padlen ) ) {
+				free( pixel_row );
+				goto data_short;
+			}
+			{
+				unsigned int x = 0;
+				src_ptr = pixel_row;
+				byte* row_dst_ptr = dst_ptr;
+				while ( x < image->width ) {
+					unsigned long pixelval = ( unsigned long )GUINT2( src_ptr );
+					unsigned long r_val = red_bits > 0 ? ( ( pixelval & hdr.redMask ) >> red_shift ) : 0;
+					unsigned long g_val = green_bits > 0 ? ( ( pixelval & hdr.greenMask ) >> green_shift ) : 0;
+					unsigned long b_val = blue_bits > 0 ? ( ( pixelval & hdr.blueMask ) >> blue_shift ) : 0;
+					unsigned long a_val = alpha_bits > 0 ? ( ( pixelval & hdr.alphaMask ) >> alpha_shift ) : 0;
+
+					byte r = red_bits > 0 ? ( byte )( ( r_val * 255 ) / ( ( 1 << red_bits ) - 1 ) ) : 0;
+					byte g = green_bits > 0 ? ( byte )( ( g_val * 255 ) / ( ( 1 << green_bits ) - 1 ) ) : 0;
+					byte b = blue_bits > 0 ? ( byte )( ( b_val * 255 ) / ( ( 1 << blue_bits ) - 1 ) ) : 0;
+					byte a = alpha_bits > 0 ? ( byte )( ( a_val * 255 ) / ( ( 1 << alpha_bits ) - 1 ) ) : 0xff;
+
+					if ( alpha_bits == 0 || a == 0x00 ) {
+						a = 0xff;
+					}
+
+					row_dst_ptr[0] = colorreg_applyalpha( r, a );
+					row_dst_ptr[1] = colorreg_applyalpha( g, a );
+					row_dst_ptr[2] = colorreg_applyalpha( b, a );
+
+					src_ptr = src_ptr + 2;
+					row_dst_ptr = row_dst_ptr + 3;
+					x = x + 1;
+				}
+			}
+			y = y - 1;
+			dst_ptr = dst_ptr + row_stride;
+		}
+		free( pixel_row );
 	} else if ( hdr.biBitCount == 32 ) {		/* hdr.biBitCount == 32 */
 		byte* data, *src_row, pad[4];
 		int illen, src_illen, src_padlen, y;
