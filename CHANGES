@@ -1,3 +1,11 @@
+20261023
+command line options also can be used with two hyphens as --help
+fixed out of memory error while loading some bmp
+added new bmp headers len and options in bmp.h
+improved bmp identifications
+support some recent bmp 24
+
+
 20260505
 only lock resources when used to draw to the root window. author @Ost3rbaer
 
