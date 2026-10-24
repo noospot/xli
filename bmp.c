@@ -145,20 +145,20 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		fprintf( stderr, "bmpLoad: %s - Image dimension is 0\n", hp->name );
 		return FALSE;
 	}	
-	if ( hp->biHeight < 0 ) {
-		fprintf( stderr, "bmpLoad: %s - Illegal image Height value (top-down or negative height not supported)\n", hp->name );
-		return FALSE;
-	}
+
 	if ( hp->biWidth > 65535 || hp->biHeight > 65535 ) {
 		fprintf( stderr, "bmpLoad: %s - Image dimensions exceed bounds\n", hp->name );
 		return FALSE;
 	}
 	if ( hp->biBitCount != 1
+		&& hp->biBitCount != 2
 	        && hp->biBitCount != 4
 	        && hp->biBitCount != 8
 	        && hp->biBitCount != 16
 	        && hp->biBitCount != 24
-	        && hp->biBitCount != 32 ) {
+	        && hp->biBitCount != 32
+		&& hp->biBitCount != 64
+	) {
 		fprintf( stderr, "bmpLoad: %s - Illegal image BitCount\n", hp->name );
 		return FALSE;
 	}
@@ -170,7 +170,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 	        && hp->biCompression != BI_PNG )
 	        || ( hp->biCompression == BI_RLE8 && hp->biBitCount != 8 )
 	        || ( hp->biCompression == BI_RLE4 && hp->biBitCount != 4 ) ) {
-		fprintf( stderr,	"bmpLoad: %s - Illegal image compression type\n", hp->name );
+		fprintf( stderr, "bmpLoad: %s - Illegal image compression type\n", hp->name );
 		return FALSE;
 	}
 	if ( hp->biPlanes != 1 ) {
@@ -207,7 +207,8 @@ static void tell_about_bmp( bmpHeader* hp )
 		typelabel = "Windows V5";
 	}
 
-	const strbyte* colormode = ( hp->biBitCount <= 8 ) ? "Palette-mapped" : "TrueColor";
+	const strbyte* colormode = ( hp->biBitCount <= 8 ) ? "palette" : "TrueColor";
+	const strbyte* topdown = ( hp->biHeight < 0 ) ? "topdown, " : "";
 
 	const strbyte* complabel = "";
 	if ( hp->biCompression == BI_RLE8 || hp->biCompression == BI_RLE4 ) {
@@ -220,9 +221,9 @@ static void tell_about_bmp( bmpHeader* hp )
 		complabel = "Uncompressed, ";
 	}
 
-	printf( "%s is a %lux%i %d bit deep (%s), %s%s BMP image\n", hp->name,
-	        hp->biWidth, hp->biHeight, hp->biBitCount, colormode,
-	        complabel, typelabel );
+	printf( "%s is a %lux%i %d bit deep, %s%s%s %s BMP image\n", hp->name,
+	        hp->biWidth, hp->biHeight, hp->biBitCount, topdown,complabel, colormode,
+	        typelabel );
 }
 
 int bmpIdent( strbyte* fullname, strbyte* name )
@@ -265,12 +266,16 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	znocache( zf );
 
 	/* Report 16-bit and 32-bit files as identifiable but not displayable yet */
-	if ( hdr.biBitCount == 16 || hdr.biBitCount == 32 ) {
+	if ( hdr.biBitCount == 16 || hdr.biBitCount == 32 || hdr.biBitCount == 64) {
 		fprintf( stderr, "bmpLoad: %s - %d-bit BMP loading not supported yet\n", hdr.name, ( int )hdr.biBitCount );
 		zclose( zf );
 		return NULL;
 	}
-
+	if ( hdr.biHeight < 0 ) {
+		fprintf( stderr, "bmpLoad: %s - top-down or negative height not supported yet\n", hdr.name );
+		zclose( zf );
+		return NULL;
+	}
 	/* Create the appropriate image and colormap */
 	if ( hdr.biBitCount < 24 ) {
 		/* must be 1, 4 or 8 bit mapped type */
@@ -322,7 +327,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		image->title = dupString( hdr.name );
 	}
 
-	/* Skip to offset specified in file header for image data with underflow and overflow checks */
+	/* Skip to offset specified in file header */
 	{
 		unsigned long color_entry_len = ( hdr.bfType == C_OS2 ) ? 3 : 4;
 		unsigned long min_offbits = BMP_FILEHEADER_LEN
