@@ -330,29 +330,64 @@ static void tell_about_bmp( bmpHeader* hp )
 	        typelabel );
 }
 
+// d: print detailed developer header information including decoded labels and flags
 static void print_bmp_hdr( bmpHeader* hp )
 {
-	printf(" File Name name:                      %s\n", hp->name);
-	printf(" File Type Identifier bfType:         %i (0x%04X)\n", hp->bfType, hp->bfType);
-	printf(" Total File Size bfSize:              %lu bytes\n", hp->bfSize);
-	printf(" X Hot Spot bfxHotSpot:               %u\n", hp->bfxHotSpot);
-	printf(" Y Hot Spot bfyHotSpot:               %u\n", hp->bfyHotSpot);
-	printf(" Pixel Data Offset bfOffBits:         %lu bytes\n", hp->bfOffBits);
-	printf(" Info Header Size biSize:             %lu bytes\n", hp->biSize);
-	printf(" Image Width biWidth:                 %lu pixels\n", hp->biWidth);
-	printf(" Image Height biHeight:               %i pixels\n", hp->biHeight);
-	printf(" Color Planes biPlanes:               %u\n", hp->biPlanes);
-	printf(" Bits Per Pixel biBitCount:           %u bits\n", hp->biBitCount);
-	printf(" Compression Type biCompression:      %lu\n", hp->biCompression);
-	printf(" Raw Image Data Size biSizeImage:     %lu bytes\n", hp->biSizeImage);
-	printf(" Horizontal Resolution biXPels/Meter: %lu\n", hp->biXPelsPerMeter);
-	printf(" Vertical Resolution biYPels/Meter:   %lu\n", hp->biYPelsPerMeter);
-	printf(" Colormap Entries Used biClrUsed:     %lu\n", hp->biClrUsed);
-	printf(" Important Colors biClrImportant:     %lu\n", hp->biClrImportant);
-	printf(" Red Channel Mask redMask:            0x%08lx\n", hp->redMask);
-	printf(" Green Channel Mask greenMask:        0x%08lx\n", hp->greenMask);
-	printf(" Blue Channel Mask blueMask:          0x%08lx\n", hp->blueMask);
-	printf(" Alpha Channel Mask alphaMask:        0x%08lx\n", hp->alphaMask);
+	const strbyte* typelabel = "Windows";
+	if ( hp->bfType == C_OS2 ) {
+		typelabel = "OS/2";
+	} else if ( hp->bfType == C_OS2_V2 ) {
+		typelabel = "OS/2 V2";
+	} else if ( hp->bfType == C_WIN_V2 ) {
+		typelabel = "Windows V2";
+	} else if ( hp->bfType == C_WIN_V3 ) {
+		typelabel = "Windows V3";
+	} else if ( hp->bfType == C_WIN_V4 ) {
+		typelabel = "Windows V4";
+	} else if ( hp->bfType == C_WIN_V5 ) {
+		typelabel = "Windows V5";
+	}
+
+	const strbyte* colormode = ( hp->biBitCount <= 8 ) ? "palette" : "TrueColor";
+	unsigned long abs_height = ( hp->biHeight < 0 ) ? ( unsigned long )( -hp->biHeight ) : ( unsigned long )hp->biHeight;
+	const strbyte* topdown = ( hp->biHeight < 0 ) ? "top-down" : "bottom-up";
+
+	const strbyte* complabel = "Unknown";
+	if ( hp->biCompression == BI_RGB ) {
+		complabel = "Uncompressed (BI_RGB)";
+	} else if ( hp->biCompression == BI_RLE8 ) {
+		complabel = "RLE 8-bit (BI_RLE8)";
+	} else if ( hp->biCompression == BI_RLE4 ) {
+		complabel = "RLE 4-bit (BI_RLE4)";
+	} else if ( hp->biCompression == BI_FIELDS ) {
+		complabel = "Bitfields (BI_FIELDS)";
+	} else if ( hp->biCompression == BI_JPEG ) {
+		complabel = "JPEG (BI_JPEG)";
+	} else if ( hp->biCompression == BI_PNG ) {
+		complabel = "PNG (BI_PNG)";
+	}
+
+	printf( " File Name name:                      %s\n", hp->name );
+	printf( " File Type Identifier bfType:         %i (0x%04X) [%s]\n", hp->bfType, hp->bfType, typelabel );
+	printf( " Total File Size bfSize:              %lu bytes\n", hp->bfSize );
+	printf( " X Hot Spot bfxHotSpot:               %u\n", hp->bfxHotSpot );
+	printf( " Y Hot Spot bfyHotSpot:               %u\n", hp->bfyHotSpot );
+	printf( " Pixel Data Offset bfOffBits:         %lu bytes\n", hp->bfOffBits );
+	printf( " Info Header Size biSize:             %lu bytes\n", hp->biSize );
+	printf( " Image Width biWidth:                 %lu pixels\n", hp->biWidth );
+	printf( " Image Height biHeight:               %i pixels (Abs: %lu, Orientation: %s)\n", hp->biHeight, abs_height, topdown );
+	printf( " Color Planes biPlanes:               %u\n", hp->biPlanes );
+	printf( " Bits Per Pixel biBitCount:           %u bits [%s]\n", hp->biBitCount, colormode );
+	printf( " Compression Type biCompression:      %lu [%s]\n", hp->biCompression, complabel );
+	printf( " Raw Image Data Size biSizeImage:     %lu bytes\n", hp->biSizeImage );
+	printf( " Horizontal Resolution biXPels/Meter: %lu\n", hp->biXPelsPerMeter );
+	printf( " Vertical Resolution biYPels/Meter:   %lu\n", hp->biYPelsPerMeter );
+	printf( " Colormap Entries Used biClrUsed:     %lu\n", hp->biClrUsed );
+	printf( " Important Colors biClrImportant:     %lu\n", hp->biClrImportant );
+	printf( " Red Channel Mask redMask:            0x%08lx\n", hp->redMask );
+	printf( " Green Channel Mask greenMask:        0x%08lx\n", hp->greenMask );
+	printf( " Blue Channel Mask blueMask:          0x%08lx\n", hp->blueMask );
+	printf( " Alpha Channel Mask alphaMask:        0x%08lx\n", hp->alphaMask );
 }
 
 int bmpIdent( strbyte* fullname, strbyte* name )
@@ -393,7 +428,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	}
 	if ( verbose ) {
 		tell_about_bmp( &hdr );
-		print_bmp_hdr( &hdr );
+		//print_bmp_hdr( &hdr );
 	}
 	znocache( zf );
 
@@ -952,6 +987,7 @@ skip_iter_rle8:
 	} else if ( hdr.biBitCount == 32 ) {		/* hdr.biBitCount == 32 */
 		byte* data, *src_row, pad[4];
 		int illen, src_illen, src_padlen, y;
+		long row_stride;
 		unsigned int red_shift = get_mask_shift( hdr.redMask );
 		unsigned int green_shift = get_mask_shift( hdr.greenMask );
 		unsigned int blue_shift = get_mask_shift( hdr.blueMask );
@@ -964,6 +1000,7 @@ skip_iter_rle8:
 		illen = image->width * image->pixlen;
 		src_illen = image->width * 4;
 		src_padlen = ( ( src_illen + 3 ) & ~3 ) - src_illen;
+		row_stride = top_down ? ( long )illen : -( long )illen;
 
 		src_row = ( byte* )calloc( ( size_t )src_illen + 4, 1 );
 		if ( src_row == NULL ) {
@@ -973,88 +1010,45 @@ skip_iter_rle8:
 			return NULL;
 		}
 
-		if ( top_down ) {
-			data = image->data;
-			y = ( int )abs_height;
-			while ( y > 0 ) {
-				if ( zread( zf, src_row, src_illen ) != src_illen
-				        || ( src_padlen > 0 && zread( zf, pad, src_padlen ) != src_padlen ) ) {
-					free( src_row );
-					goto data_short;
-				}
-				{
-					unsigned int x = 0;
-					byte* src_ptr = src_row;
-					byte* dst_ptr = data;
-					while ( x < image->width ) {
-						unsigned long pixelval = GULONG4( src_ptr );
-						unsigned long r_val = red_bits > 0 ? ( ( pixelval & hdr.redMask ) >> red_shift ) : 0;
-						unsigned long g_val = green_bits > 0 ? ( ( pixelval & hdr.greenMask ) >> green_shift ) : 0;
-						unsigned long b_val = blue_bits > 0 ? ( ( pixelval & hdr.blueMask ) >> blue_shift ) : 0;
-						unsigned long a_val = alpha_bits > 0 ? ( ( pixelval & hdr.alphaMask ) >> alpha_shift ) : 0;
-
-						byte r = red_bits > 0 ? ( byte )( ( r_val * 255 ) / ( ( 1 << red_bits ) - 1 ) ) : src_ptr[2];
-						byte g = green_bits > 0 ? ( byte )( ( g_val * 255 ) / ( ( 1 << green_bits ) - 1 ) ) : src_ptr[1];
-						byte b = blue_bits > 0 ? ( byte )( ( b_val * 255 ) / ( ( 1 << blue_bits ) - 1 ) ) : src_ptr[0];
-						byte a = alpha_bits > 0 ? ( byte )( ( a_val * 255 ) / ( ( 1 << alpha_bits ) - 1 ) ) : src_ptr[3];
-
-						if ( alpha_bits == 0 || a == 0x00 ) {
-							a = 0xff;
-						}
-
-						dst_ptr[0] = colorreg_applyalpha( r, a );
-						dst_ptr[1] = colorreg_applyalpha( g, a );
-						dst_ptr[2] = colorreg_applyalpha( b, a );
-
-						src_ptr = src_ptr + 4;
-						dst_ptr = dst_ptr + 3;
-						x = x + 1;
-					}
-				}
-				y = y - 1;
-				data = data + illen;
+		data = top_down ? image->data : image->data + ( abs_height - 1 ) * illen;
+		y = ( int )abs_height;
+		while ( y > 0 ) {
+			if ( zread( zf, src_row, src_illen ) != src_illen
+			        || ( src_padlen > 0 && zread( zf, pad, src_padlen ) != src_padlen ) ) {
+				free( src_row );
+				goto data_short;
 			}
-		} else {
-			data = image->data + ( abs_height - 1 ) * illen;
-			y = ( int )abs_height;
-			while ( y > 0 ) {
-				if ( zread( zf, src_row, src_illen ) != src_illen
-				        || ( src_padlen > 0 && zread( zf, pad, src_padlen ) != src_padlen ) ) {
-					free( src_row );
-					goto data_short;
-				}
-				{
-					unsigned int x = 0;
-					byte* src_ptr = src_row;
-					byte* dst_ptr = data;
-					while ( x < image->width ) {
-						unsigned long pixelval = GULONG4( src_ptr );
-						unsigned long r_val = red_bits > 0 ? ( ( pixelval & hdr.redMask ) >> red_shift ) : 0;
-						unsigned long g_val = green_bits > 0 ? ( ( pixelval & hdr.greenMask ) >> green_shift ) : 0;
-						unsigned long b_val = blue_bits > 0 ? ( ( pixelval & hdr.blueMask ) >> blue_shift ) : 0;
-						unsigned long a_val = alpha_bits > 0 ? ( ( pixelval & hdr.alphaMask ) >> alpha_shift ) : 0;
+			{
+				unsigned int x = 0;
+				byte* src_ptr = src_row;
+				byte* dst_ptr = data;
+				while ( x < image->width ) {
+					unsigned long pixelval = GULONG4( src_ptr );
+					unsigned long r_val = red_bits > 0 ? ( ( pixelval & hdr.redMask ) >> red_shift ) : 0;
+					unsigned long g_val = green_bits > 0 ? ( ( pixelval & hdr.greenMask ) >> green_shift ) : 0;
+					unsigned long b_val = blue_bits > 0 ? ( ( pixelval & hdr.blueMask ) >> blue_shift ) : 0;
+					unsigned long a_val = alpha_bits > 0 ? ( ( pixelval & hdr.alphaMask ) >> alpha_shift ) : 0;
 
-						byte r = red_bits > 0 ? ( byte )( ( r_val * 255 ) / ( ( 1 << red_bits ) - 1 ) ) : src_ptr[2];
-						byte g = green_bits > 0 ? ( byte )( ( g_val * 255 ) / ( ( 1 << green_bits ) - 1 ) ) : src_ptr[1];
-						byte b = blue_bits > 0 ? ( byte )( ( b_val * 255 ) / ( ( 1 << blue_bits ) - 1 ) ) : src_ptr[0];
-						byte a = alpha_bits > 0 ? ( byte )( ( a_val * 255 ) / ( ( 1 << alpha_bits ) - 1 ) ) : src_ptr[3];
+					byte r = red_bits > 0 ? ( byte )( ( r_val * 255 ) / ( ( 1 << red_bits ) - 1 ) ) : src_ptr[2];
+					byte g = green_bits > 0 ? ( byte )( ( g_val * 255 ) / ( ( 1 << green_bits ) - 1 ) ) : src_ptr[1];
+					byte b = blue_bits > 0 ? ( byte )( ( b_val * 255 ) / ( ( 1 << blue_bits ) - 1 ) ) : src_ptr[0];
+					byte a = alpha_bits > 0 ? ( byte )( ( a_val * 255 ) / ( ( 1 << alpha_bits ) - 1 ) ) : src_ptr[3];
 
-						if ( alpha_bits == 0 || a == 0x00 ) {
-							a = 0xff;
-						}
-
-						dst_ptr[0] = colorreg_applyalpha( r, a );
-						dst_ptr[1] = colorreg_applyalpha( g, a );
-						dst_ptr[2] = colorreg_applyalpha( b, a );
-
-						src_ptr = src_ptr + 4;
-						dst_ptr = dst_ptr + 3;
-						x = x + 1;
+					if ( alpha_bits == 0 || a == 0x00 ) {
+						a = 0xff;
 					}
+
+					dst_ptr[0] = colorreg_applyalpha( r, a );
+					dst_ptr[1] = colorreg_applyalpha( g, a );
+					dst_ptr[2] = colorreg_applyalpha( b, a );
+
+					src_ptr = src_ptr + 4;
+					dst_ptr = dst_ptr + 3;
+					x = x + 1;
 				}
-				y = y - 1;
-				data = data - illen;
 			}
+			y = y - 1;
+			data = data + row_stride;
 		}
 		free( src_row );
 	} else {
