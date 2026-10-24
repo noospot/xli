@@ -2,17 +2,27 @@
  * bmp.h - header file for Bmp files
  */
 
-#define C_WIN   1		/* Image bfType */
-#define C_OS2   2
+#define C_WIN	1		/* Image bfType */
+#define C_OS2	2
+#define C_OS2_V2	3
+#define C_WIN_V2	4
+#define C_WIN_V3	5
+#define C_WIN_V4	6	
+#define C_WIN_V5	7
 
-#define BI_RGB  0		/* Compression type */
+#define BI_RGB  0	       /* Compression type */
 #define BI_RLE8 1
 #define BI_RLE4 2
+#define BI_NONE 3 
+#define BI_JPEG 4
+#define BI_PNG  5
+
 
 #define BMP_FILEHEADER_LEN 14
 
 #define WIN_INFOHEADER_LEN	40
 #define OS2_INFOHEADER_LEN	12
+#define OS2_V2_INFOHEADER_LEN	64
 #define BMP_V2INFOHEADER_LEN	52
 #define BMP_V3INFOHEADER_LEN	56
 #define BMP_V4INFOHEADER_LEN	108
@@ -20,8 +30,8 @@
 
 /* Header structure definition. */
 typedef struct {
-	strbyte* name;			/* stash pointer to name here too */
-	int bfType;			/* Windows or OS/2 */
+	     strbyte* name;		/* stash pointer to name here too */
+	          int bfType;		/* Windows or OS/2 */
 
 	unsigned long bfSize;		/* Size of file in bytes */
 	unsigned int  bfxHotSpot;	/* Not used */
@@ -30,7 +40,7 @@ typedef struct {
 
 	unsigned long biSize;		/* Size of info header in bytes */
 	unsigned long biWidth;		/* Image width in pixels */
-	int32_t biHeight;		/* Image height in pixels */
+	      int32_t biHeight;		/* Image height in pixels */
 	unsigned int  biPlanes;		/* Planes. Must == 1 */
 	unsigned int  biBitCount;	/* Bits per pixels. Must be 1, 4, 8 or 24 */
 	unsigned long biCompression;	/* Compression type */

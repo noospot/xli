@@ -62,72 +62,85 @@ static inline int32_t GSINT2( const uint8_t* bp )
 static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 {
 	hp->name = name;
-	byte buf[WIN_INFOHEADER_LEN];	/* largest we'll need */
+	byte infobuf[BMP_V5INFOHEADER_LEN];	/* largest we'll need */
 
-	if ( zread( zf, buf, BMP_FILEHEADER_LEN ) != BMP_FILEHEADER_LEN ) {
+	if ( zread( zf, infobuf, BMP_FILEHEADER_LEN ) != BMP_FILEHEADER_LEN ) {
 		return FALSE;
 	}
 
-	if ( buf[0] != 'B' || buf[1] != 'M' ) {
+	if ( infobuf[0] != 'B' || infobuf[1] != 'M' ) {
 		return FALSE;      /* bad magic number */
 	}
 
-	hp->bfSize = GULONG4( &buf[2] );
-	hp->bfxHotSpot = GUINT2( &buf[6] );
-	hp->bfyHotSpot = GUINT2( &buf[8] );
-	hp->bfOffBits = GULONG4( &buf[10] );
+	hp->bfSize = GULONG4( &infobuf[2] );
+	hp->bfxHotSpot = GUINT2( &infobuf[6] );
+	hp->bfyHotSpot = GUINT2( &infobuf[8] );
+	hp->bfOffBits = GULONG4( &infobuf[10] );
 
 	/* Read enough of the file info to figure the type out */
-	if ( zread( zf, buf, 4 ) != 4 ) {
+	if ( zread( zf, infobuf, 4 ) != 4 ) {
 		return FALSE;
 	}
 
-	hp->biSize = GULONG4( &buf[0] );
+	hp->biSize = GULONG4( &infobuf[0] );
 	if ( hp->biSize == WIN_INFOHEADER_LEN ) {
 		hp->bfType = C_WIN;
 	} else if ( hp->biSize == OS2_INFOHEADER_LEN ) {
 		hp->bfType = C_OS2;
+	} else if ( hp->biSize == OS2_V2_INFOHEADER_LEN ) {
+		hp->bfType = C_OS2_V2;
+	} else if ( hp->biSize == BMP_V2INFOHEADER_LEN ) {
+		hp->bfType = C_WIN_V2;
+	} else if ( hp->biSize == BMP_V3INFOHEADER_LEN ) {
+		hp->bfType = C_WIN_V3;
+	} else if ( hp->biSize == BMP_V4INFOHEADER_LEN ) {
+		hp->bfType = C_WIN_V4;
+	} else if ( hp->biSize == BMP_V5INFOHEADER_LEN ) {
+		hp->bfType = C_WIN_V5;
 	} else {
 		return FALSE;
 	}
 
-	if ( hp->bfType == C_WIN ) {
-		/* read in the rest of the info header */
-		if ( zread( zf, buf + 4, WIN_INFOHEADER_LEN - 4 )
-		        != WIN_INFOHEADER_LEN - 4 ) {
-			return FALSE;
-		}
-
-		hp->biWidth = GULONG4( &buf[4] );
-		hp->biHeight = GSINT4( &buf[8] );
-		hp->biPlanes = GUINT2( &buf[12] );
-		hp->biBitCount = GUINT2( &buf[14] );
-		hp->biCompression = GULONG4( &buf[16] );
-		hp->biSizeImage = GULONG4( &buf[20] );
-		hp->biXPelsPerMeter = GULONG4( &buf[24] );
-		hp->biYPelsPerMeter = GULONG4( &buf[28] );
-		hp->biClrUsed = GULONG4( &buf[32] );
-		hp->biClrImportant = GULONG4( &buf[36] );
-	} else {		/* C_OS2 */
-		/* read in the rest of the info header */
-		if ( zread( zf, buf + 4, OS2_INFOHEADER_LEN - 4 )
+	if ( hp->bfType == C_OS2 ) {
+		/* read in the rest of the info header for OS/2 1.x */
+		if ( zread( zf, infobuf + 4, OS2_INFOHEADER_LEN - 4 )
 		        != OS2_INFOHEADER_LEN - 4 ) {
 			return FALSE;
 		}
 
-		hp->biWidth = GULONG2( &buf[4] );
-		hp->biHeight = GSINT2( &buf[6] );
-		hp->biPlanes = GUINT2( &buf[8] );
-		hp->biBitCount = GUINT2( &buf[10] );
+		hp->biWidth = GULONG2( &infobuf[4] );
+		hp->biHeight = GSINT2( &infobuf[6] );
+		hp->biPlanes = GUINT2( &infobuf[8] );
+		hp->biBitCount = GUINT2( &infobuf[10] );
 		hp->biCompression = BI_RGB;
 		hp->biSizeImage = 0;
 		hp->biXPelsPerMeter = 0;
 		hp->biYPelsPerMeter = 0;
 		hp->biClrUsed = 0;
 		hp->biClrImportant = 0;
+	} else {		/* Windows or OS/2 V2+ */
+		if ( hp->biSize > BMP_V5INFOHEADER_LEN ) {
+			return FALSE;
+		}
+		/* read in the rest of the info header */
+		if ( zread( zf, infobuf + 4, hp->biSize - 4 )
+		        != ( int )( hp->biSize - 4 ) ) {
+			return FALSE;
+		}
+
+		hp->biWidth = GULONG4( &infobuf[4] );
+		hp->biHeight = GSINT4( &infobuf[8] );
+		hp->biPlanes = GUINT2( &infobuf[12] );
+		hp->biBitCount = GUINT2( &infobuf[14] );
+		hp->biCompression = GULONG4( &infobuf[16] );
+		hp->biSizeImage = GULONG4( &infobuf[20] );
+		hp->biXPelsPerMeter = GULONG4( &infobuf[24] );
+		hp->biYPelsPerMeter = GULONG4( &infobuf[28] );
+		hp->biClrUsed = GULONG4( &infobuf[32] );
+		hp->biClrImportant = GULONG4( &infobuf[36] );
 	}
 
-	/* Check file corruption and dimensions bounds */
+	/* Check for file corruption and dimensions bounds */
 	if ( hp->biWidth == 0 || hp->biHeight == 0 ) {
 		fprintf( stderr, "bmpLoad: %s - Image dimension is 0\n", hp->name );
 		return FALSE;
@@ -143,13 +156,18 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 	if ( hp->biBitCount != 1
 	        && hp->biBitCount != 4
 	        && hp->biBitCount != 8
-	        && hp->biBitCount != 24 ) {
+	        && hp->biBitCount != 16
+	        && hp->biBitCount != 24
+	        && hp->biBitCount != 32 ) {
 		fprintf( stderr, "bmpLoad: %s - Illegal image BitCount\n", hp->name );
 		return FALSE;
 	}
 	if ( ( hp->biCompression != BI_RGB
 	        && hp->biCompression != BI_RLE8
-	        && hp->biCompression != BI_RLE4 )
+	        && hp->biCompression != BI_RLE4
+	        && hp->biCompression != BI_NONE
+	        && hp->biCompression != BI_JPEG
+	        && hp->biCompression != BI_PNG )
 	        || ( hp->biCompression == BI_RLE8 && hp->biBitCount != 8 )
 	        || ( hp->biCompression == BI_RLE4 && hp->biBitCount != 4 ) ) {
 		fprintf( stderr,	"bmpLoad: %s - Illegal image compression type\n", hp->name );
@@ -174,10 +192,37 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 /* Print a brief description of the image */
 static void tell_about_bmp( bmpHeader* hp )
 {
-	printf( "%s is a %lux%i %d bit deep, %s%s BMP image\n", hp->name,
-	        hp->biWidth, hp->biHeight, hp->biBitCount,
-	        hp->biCompression == BI_RGB ? "" : "Run length compressed, ",
-	        hp->bfType == C_WIN ? "Windows" : "OS/2" );
+	const strbyte* typelabel = "Windows";
+	if ( hp->bfType == C_OS2 ) {
+		typelabel = "OS/2";
+	} else if ( hp->bfType == C_OS2_V2 ) {
+		typelabel = "OS/2 V2";
+	} else if ( hp->bfType == C_WIN_V2 ) {
+		typelabel = "Windows V2";
+	} else if ( hp->bfType == C_WIN_V3 ) {
+		typelabel = "Windows V3";
+	} else if ( hp->bfType == C_WIN_V4 ) {
+		typelabel = "Windows V4";
+	} else if ( hp->bfType == C_WIN_V5 ) {
+		typelabel = "Windows V5";
+	}
+
+	const strbyte* colormode = ( hp->biBitCount <= 8 ) ? "Palette-mapped" : "TrueColor";
+
+	const strbyte* complabel = "";
+	if ( hp->biCompression == BI_RLE8 || hp->biCompression == BI_RLE4 ) {
+		complabel = "Run length compressed, ";
+	} else if ( hp->biCompression == BI_JPEG ) {
+		complabel = "JPEG compressed, ";
+	} else if ( hp->biCompression == BI_PNG ) {
+		complabel = "PNG compressed, ";
+	} else if ( hp->biCompression == BI_NONE ) {
+		complabel = "Uncompressed, ";
+	}
+
+	printf( "%s is a %lux%i %d bit deep (%s), %s%s BMP image\n", hp->name,
+	        hp->biWidth, hp->biHeight, hp->biBitCount, colormode,
+	        complabel, typelabel );
 }
 
 int bmpIdent( strbyte* fullname, strbyte* name )
@@ -219,14 +264,25 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	}
 	znocache( zf );
 
+	/* Report 16-bit and 32-bit files as identifiable but not displayable yet */
+	if ( hdr.biBitCount == 16 || hdr.biBitCount == 32 ) {
+		fprintf( stderr, "bmpLoad: %s - %d-bit BMP loading not supported yet\n", hdr.name, ( int )hdr.biBitCount );
+		zclose( zf );
+		return NULL;
+	}
+
 	/* Create the appropriate image and colormap */
 	if ( hdr.biBitCount < 24 ) {
 		/* must be 1, 4 or 8 bit mapped type */
 		unsigned int i;
-		int n = 3;
+		int n = 4;
 		byte buf[4];
 		/* maximum number of colors */
 		unsigned int used = ( 1 << hdr.biBitCount );
+
+		if ( hdr.bfType == C_OS2 ) {
+			n = 3;
+		}
 
 		if ( hdr.biBitCount == 1 ) {	/* bitmap */
 			image = newBitImage( hdr.biWidth, hdr.biHeight );
@@ -236,9 +292,6 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		}
 		image->title = dupString( hdr.name );
 
-		if ( hdr.bfType == C_WIN ) {
-			n = n + 1;
-		}
 		i = 0;
 		while ( i < hdr.biClrUsed ) {
 			if ( zread( zf, buf, n ) != n ) {
@@ -269,11 +322,12 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		image->title = dupString( hdr.name );
 	}
 
-	/* Skip to image data offset specified in file header */
+	/* Skip to offset specified in file header for image data with underflow and overflow checks */
 	{
+		unsigned long color_entry_len = ( hdr.bfType == C_OS2 ) ? 3 : 4;
 		unsigned long min_offbits = BMP_FILEHEADER_LEN
-		                            + ( hdr.bfType == C_WIN ? WIN_INFOHEADER_LEN : OS2_INFOHEADER_LEN )
-		                            + ( hdr.biBitCount < 24 ? ( hdr.bfType == C_WIN ? 4 : 3 ) * hdr.biClrUsed : 0 );
+		                            + hdr.biSize
+		                            + ( hdr.biBitCount < 24 ? color_entry_len * hdr.biClrUsed : 0 );
 		if ( hdr.bfOffBits < min_offbits ) {
 			fprintf( stderr, "bmpLoad: %s - Illegal bfOffBits (underflow or overlaps header)\n", hdr.name );
 			freeImage( image );
@@ -549,7 +603,6 @@ skip_iter_rle4:
 					int btr;
 					/* don't run off buffer */
 					data_bounds = TRUE;
-					/* ignore this run */
 					x = x - d;
 					btr = d + ( d & 1 );
 					while ( btr > 0 ) {
