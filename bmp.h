@@ -13,7 +13,7 @@
 #define BI_RGB  0	       /* Compression type */
 #define BI_RLE8 1
 #define BI_RLE4 2
-#define BI_NONE 3 
+#define BI_FIELDS 3 
 #define BI_JPEG 4
 #define BI_PNG  5
 
@@ -36,12 +36,13 @@ typedef struct {
 	unsigned long bfSize;		/* Size of file in bytes */
 	unsigned int  bfxHotSpot;	/* Not used */
 	unsigned int  bfyHotSpot;	/* Not used */
-	unsigned long bfOffBits;	/* Offset of image bits from start of header */
+	unsigned long bfOffBits;	/* Offset of image from start of header */
 
 	unsigned long biSize;		/* Size of info header in bytes */
 	unsigned long biWidth;		/* Image width in pixels */
 	      int32_t biHeight;		/* Image height in pixels */
 	unsigned int  biPlanes;		/* Planes. Must == 1 */
+	
 	unsigned int  biBitCount;	/* Bits per pixels. Must be one of 1 2 4 8 16 24 32 64 */
 	unsigned long biCompression;	/* Compression type */
 	unsigned long biSizeImage;	/* Size of image in bytes */
@@ -49,5 +50,10 @@ typedef struct {
 	unsigned long biYPelsPerMeter;	/* Y pixels per meter */
 	unsigned long biClrUsed;	/* Number of colormap entries (0 == max) */
 	unsigned long biClrImportant;	/* Number of important colors */
+	unsigned long redMask;		/* Red channel bitmask for BI_FIELDS */
+	unsigned long greenMask;	/* Green channel bitmask for BI_FIELDS */
+	unsigned long blueMask;		/* Blue channel bitmask for BI_FIELDS */
+	unsigned long alphaMask;	/* Alpha channel bitmask for BI_FIELDS */
+
 } bmpHeader;
 

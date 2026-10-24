@@ -11,6 +11,7 @@
 #include "xli.h"
 #include "imagetypes.h"
 #include "bmp.h"
+#include <math.h>
 
 // d: extract unsigned 4-byte little-endian integer into unsigned long
 static inline unsigned long GULONG4( const uint8_t* bp )
@@ -54,6 +55,56 @@ static inline int32_t GSINT2( const uint8_t* bp )
 	uint16_t value = ( uint16_t )bp[0]
 	                 | ( ( uint16_t )bp[1] << 8 );
 	return ( int32_t )( int16_t )value;
+}
+
+// d: get bit shift from bitmask
+static inline unsigned int get_mask_shift( unsigned long mask )
+{
+	unsigned int shift = 0;
+	if ( mask == 0 ) {
+		return 0;
+	}
+	while ( ( mask & 1 ) == 0 ) {
+		mask = mask >> 1;
+		shift = shift + 1;
+	}
+	return shift;
+}
+
+// d: get bit width from bitmask
+static inline unsigned int get_mask_bits( unsigned long mask )
+{
+	unsigned int bits = 0;
+	if ( mask == 0 ) {
+		return 0;
+	}
+	while ( ( mask & 1 ) == 0 ) {
+		mask = mask >> 1;
+	}
+	while ( ( mask & 1 ) != 0 ) {
+		mask = mask >> 1;
+		bits = bits + 1;
+	}
+	return bits;
+}
+
+// d: apply alpha to a single color register
+static inline byte colorreg_applyalpha( byte colorreg, byte alpha )
+{
+	if ( alpha == 0x00 ) {
+		return colorreg;
+	}
+	if ( alpha == 0xff ) {
+		return colorreg;
+	}
+	double tmp = ( double )( ( double )colorreg * ( double )alpha ) / 255.0;
+	if ( tmp < 0.0 ) {
+		tmp = 0.0;
+	}
+	if ( tmp > 255.0 ) {
+		tmp = 255.0;
+	}
+	return ( byte )round( tmp );
 }
 
 
@@ -140,6 +191,47 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		hp->biClrImportant = GULONG4( &infobuf[36] );
 	}
 
+	/* Read or extract bitmasks if BI_FIELDS */
+	if ( hp->biCompression == BI_FIELDS ) {
+		if ( hp->biSize == WIN_INFOHEADER_LEN ) {
+			byte maskbuf[12];
+			if ( zread( zf, maskbuf, 12 ) != 12 ) {
+				return FALSE;
+			}
+			hp->redMask = GULONG4( &maskbuf[0] );
+			hp->greenMask = GULONG4( &maskbuf[4] );
+			hp->blueMask = GULONG4( &maskbuf[8] );
+			hp->alphaMask = 0;
+		} else {
+			hp->redMask = GULONG4( &infobuf[40] );
+			hp->greenMask = GULONG4( &infobuf[44] );
+			hp->blueMask = GULONG4( &infobuf[48] );
+			if ( hp->biSize >= BMP_V4INFOHEADER_LEN ) {
+				hp->alphaMask = GULONG4( &infobuf[52] );
+			} else {
+				hp->alphaMask = 0;
+			}
+		}
+		
+	} else {
+		if ( hp->biBitCount == 16 ) {
+			hp->redMask = 0x7c00;
+			hp->greenMask = 0x03e0;
+			hp->blueMask = 0x001f;
+			hp->alphaMask = 0;
+		} else if ( hp->biBitCount == 32 ) {
+			hp->redMask = 0x00ff0000;
+			hp->greenMask = 0x0000ff00;
+			hp->blueMask = 0x000000ff;
+			hp->alphaMask = 0xff000000;
+		} else {
+			hp->redMask = 0;
+			hp->greenMask = 0;
+			hp->blueMask = 0;
+			hp->alphaMask = 0;
+		}
+	}
+
 	/* Check for file corruption and dimensions bounds */
 	if ( hp->biWidth == 0 || hp->biHeight == 0 || hp->biHeight == ( int32_t )0x80000000 ) {
 		fprintf( stderr, "bmpLoad: %s - Image dimension is 0 or invalid\n", hp->name );
@@ -169,7 +261,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 	if ( ( hp->biCompression != BI_RGB
 	        && hp->biCompression != BI_RLE8
 	        && hp->biCompression != BI_RLE4
-	        && hp->biCompression != BI_NONE
+	        && hp->biCompression != BI_FIELDS
 	        && hp->biCompression != BI_JPEG
 	        && hp->biCompression != BI_PNG )
 	        || ( hp->biCompression == BI_RLE8 && hp->biBitCount != 8 )
@@ -227,13 +319,40 @@ static void tell_about_bmp( bmpHeader* hp )
 		complabel = "JPEG compressed, ";
 	} else if ( hp->biCompression == BI_PNG ) {
 		complabel = "PNG compressed, ";
-	} else if ( hp->biCompression == BI_NONE ) {
+	} else if ( hp->biCompression == BI_FIELDS ) {
+		complabel = "Bitfields, ";
+	} else if ( hp->biCompression == BI_RGB ) {
 		complabel = "Uncompressed, ";
 	}
 
 	printf( "%s is a %lux%lu %d bit deep, %s%s%s %s BMP image\n", hp->name,
 	        hp->biWidth, abs_height, hp->biBitCount, topdown, complabel, colormode,
 	        typelabel );
+}
+
+static void print_bmp_hdr( bmpHeader* hp )
+{
+	printf(" File Name name:                      %s\n", hp->name);
+	printf(" File Type Identifier bfType:         %i (0x%04X)\n", hp->bfType, hp->bfType);
+	printf(" Total File Size bfSize:              %lu bytes\n", hp->bfSize);
+	printf(" X Hot Spot bfxHotSpot:               %u\n", hp->bfxHotSpot);
+	printf(" Y Hot Spot bfyHotSpot:               %u\n", hp->bfyHotSpot);
+	printf(" Pixel Data Offset bfOffBits:         %lu bytes\n", hp->bfOffBits);
+	printf(" Info Header Size biSize:             %lu bytes\n", hp->biSize);
+	printf(" Image Width biWidth:                 %lu pixels\n", hp->biWidth);
+	printf(" Image Height biHeight:               %i pixels\n", hp->biHeight);
+	printf(" Color Planes biPlanes:               %u\n", hp->biPlanes);
+	printf(" Bits Per Pixel biBitCount:           %u bits\n", hp->biBitCount);
+	printf(" Compression Type biCompression:      %lu\n", hp->biCompression);
+	printf(" Raw Image Data Size biSizeImage:     %lu bytes\n", hp->biSizeImage);
+	printf(" Horizontal Resolution biXPels/Meter: %lu\n", hp->biXPelsPerMeter);
+	printf(" Vertical Resolution biYPels/Meter:   %lu\n", hp->biYPelsPerMeter);
+	printf(" Colormap Entries Used biClrUsed:     %lu\n", hp->biClrUsed);
+	printf(" Important Colors biClrImportant:     %lu\n", hp->biClrImportant);
+	printf(" Red Channel Mask redMask:            0x%08lx\n", hp->redMask);
+	printf(" Green Channel Mask greenMask:        0x%08lx\n", hp->greenMask);
+	printf(" Blue Channel Mask blueMask:          0x%08lx\n", hp->blueMask);
+	printf(" Alpha Channel Mask alphaMask:        0x%08lx\n", hp->alphaMask);
 }
 
 int bmpIdent( strbyte* fullname, strbyte* name )
@@ -274,11 +393,12 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	}
 	if ( verbose ) {
 		tell_about_bmp( &hdr );
+		print_bmp_hdr( &hdr );
 	}
 	znocache( zf );
 
-	/* Report 16-bit, 32-bit, and 64-bit files as identifiable but not displayable yet */
-	if ( hdr.biBitCount == 16 || hdr.biBitCount == 32 || hdr.biBitCount == 64 ) {
+	/* Report 16-bit and 64-bit files as identifiable but not displayable yet */
+	if ( hdr.biBitCount == 16 || hdr.biBitCount == 64 ) {
 		fprintf( stderr, "bmpLoad: %s - %d-bit BMP loading not supported yet\n", hdr.name, ( int )hdr.biBitCount );
 		zclose( zf );
 		return NULL;
@@ -339,8 +459,13 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	/* Skip to offset specified in file header */
 	{
 		unsigned long color_entry_len = ( hdr.bfType == C_OS2 ) ? 3 : 4;
+		unsigned long extra_header_len = 0;
+		if ( hdr.biCompression == BI_FIELDS && hdr.biSize == WIN_INFOHEADER_LEN ) {
+			extra_header_len = 12;
+		}
 		unsigned long min_offbits = BMP_FILEHEADER_LEN
 		                            + hdr.biSize
+		                            + extra_header_len
 		                            + ( hdr.biBitCount < 24 ? color_entry_len * hdr.biClrUsed : 0 );
 		if ( hdr.bfOffBits < min_offbits ) {
 			fprintf( stderr, "bmpLoad: %s - Illegal bfOffBits (underflow or overlaps header)\n", hdr.name );
@@ -779,7 +904,7 @@ skip_iter_rle8:
 				}
 			}
 		}
-	} else {		/* hdr.biBitCount == 24 */
+	} else if ( hdr.biBitCount == 24 ) {		/* hdr.biBitCount == 24 */
 		byte* data, pad[4];
 		int illen, padlen, y;
 		illen = image->width * image->pixlen;
@@ -824,10 +949,119 @@ skip_iter_rle8:
 				data = data - illen;
 			}
 		}
+	} else if ( hdr.biBitCount == 32 ) {		/* hdr.biBitCount == 32 */
+		byte* data, *src_row, pad[4];
+		int illen, src_illen, src_padlen, y;
+		unsigned int red_shift = get_mask_shift( hdr.redMask );
+		unsigned int green_shift = get_mask_shift( hdr.greenMask );
+		unsigned int blue_shift = get_mask_shift( hdr.blueMask );
+		unsigned int alpha_shift = get_mask_shift( hdr.alphaMask );
+		unsigned int red_bits = get_mask_bits( hdr.redMask );
+		unsigned int green_bits = get_mask_bits( hdr.greenMask );
+		unsigned int blue_bits = get_mask_bits( hdr.blueMask );
+		unsigned int alpha_bits = get_mask_bits( hdr.alphaMask );
+
+		illen = image->width * image->pixlen;
+		src_illen = image->width * 4;
+		src_padlen = ( ( src_illen + 3 ) & ~3 ) - src_illen;
+
+		src_row = ( byte* )calloc( ( size_t )src_illen + 4, 1 );
+		if ( src_row == NULL ) {
+			fprintf( stderr, "bmpLoad: %s - Out of memory\n", hdr.name );
+			freeImage( image );
+			zclose( zf );
+			return NULL;
+		}
+
+		if ( top_down ) {
+			data = image->data;
+			y = ( int )abs_height;
+			while ( y > 0 ) {
+				if ( zread( zf, src_row, src_illen ) != src_illen
+				        || ( src_padlen > 0 && zread( zf, pad, src_padlen ) != src_padlen ) ) {
+					free( src_row );
+					goto data_short;
+				}
+				{
+					unsigned int x = 0;
+					byte* src_ptr = src_row;
+					byte* dst_ptr = data;
+					while ( x < image->width ) {
+						unsigned long pixelval = GULONG4( src_ptr );
+						unsigned long r_val = red_bits > 0 ? ( ( pixelval & hdr.redMask ) >> red_shift ) : 0;
+						unsigned long g_val = green_bits > 0 ? ( ( pixelval & hdr.greenMask ) >> green_shift ) : 0;
+						unsigned long b_val = blue_bits > 0 ? ( ( pixelval & hdr.blueMask ) >> blue_shift ) : 0;
+						unsigned long a_val = alpha_bits > 0 ? ( ( pixelval & hdr.alphaMask ) >> alpha_shift ) : 0;
+
+						byte r = red_bits > 0 ? ( byte )( ( r_val * 255 ) / ( ( 1 << red_bits ) - 1 ) ) : src_ptr[2];
+						byte g = green_bits > 0 ? ( byte )( ( g_val * 255 ) / ( ( 1 << green_bits ) - 1 ) ) : src_ptr[1];
+						byte b = blue_bits > 0 ? ( byte )( ( b_val * 255 ) / ( ( 1 << blue_bits ) - 1 ) ) : src_ptr[0];
+						byte a = alpha_bits > 0 ? ( byte )( ( a_val * 255 ) / ( ( 1 << alpha_bits ) - 1 ) ) : src_ptr[3];
+
+						if ( alpha_bits == 0 || a == 0x00 ) {
+							a = 0xff;
+						}
+
+						dst_ptr[0] = colorreg_applyalpha( r, a );
+						dst_ptr[1] = colorreg_applyalpha( g, a );
+						dst_ptr[2] = colorreg_applyalpha( b, a );
+
+						src_ptr = src_ptr + 4;
+						dst_ptr = dst_ptr + 3;
+						x = x + 1;
+					}
+				}
+				y = y - 1;
+				data = data + illen;
+			}
+		} else {
+			data = image->data + ( abs_height - 1 ) * illen;
+			y = ( int )abs_height;
+			while ( y > 0 ) {
+				if ( zread( zf, src_row, src_illen ) != src_illen
+				        || ( src_padlen > 0 && zread( zf, pad, src_padlen ) != src_padlen ) ) {
+					free( src_row );
+					goto data_short;
+				}
+				{
+					unsigned int x = 0;
+					byte* src_ptr = src_row;
+					byte* dst_ptr = data;
+					while ( x < image->width ) {
+						unsigned long pixelval = GULONG4( src_ptr );
+						unsigned long r_val = red_bits > 0 ? ( ( pixelval & hdr.redMask ) >> red_shift ) : 0;
+						unsigned long g_val = green_bits > 0 ? ( ( pixelval & hdr.greenMask ) >> green_shift ) : 0;
+						unsigned long b_val = blue_bits > 0 ? ( ( pixelval & hdr.blueMask ) >> blue_shift ) : 0;
+						unsigned long a_val = alpha_bits > 0 ? ( ( pixelval & hdr.alphaMask ) >> alpha_shift ) : 0;
+
+						byte r = red_bits > 0 ? ( byte )( ( r_val * 255 ) / ( ( 1 << red_bits ) - 1 ) ) : src_ptr[2];
+						byte g = green_bits > 0 ? ( byte )( ( g_val * 255 ) / ( ( 1 << green_bits ) - 1 ) ) : src_ptr[1];
+						byte b = blue_bits > 0 ? ( byte )( ( b_val * 255 ) / ( ( 1 << blue_bits ) - 1 ) ) : src_ptr[0];
+						byte a = alpha_bits > 0 ? ( byte )( ( a_val * 255 ) / ( ( 1 << alpha_bits ) - 1 ) ) : src_ptr[3];
+
+						if ( alpha_bits == 0 || a == 0x00 ) {
+							a = 0xff;
+						}
+
+						dst_ptr[0] = colorreg_applyalpha( r, a );
+						dst_ptr[1] = colorreg_applyalpha( g, a );
+						dst_ptr[2] = colorreg_applyalpha( b, a );
+
+						src_ptr = src_ptr + 4;
+						dst_ptr = dst_ptr + 3;
+						x = x + 1;
+					}
+				}
+				y = y - 1;
+				data = data - illen;
+			}
+		}
+		free( src_row );
+	} else {
+		
 	}
 	if ( data_bounds ) {
-		fprintf( stderr, "bmpLoad: %s - Data outside image area\n",
-		         hdr.name );
+		fprintf( stderr, "bmpLoad: %s - Data outside image area\n", hdr.name );
 	}
 	zclose( zf );
 	return image;
