@@ -289,7 +289,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 
 	/* Create the appropriate image and colormap */
 	if ( hdr.biBitCount < 24 ) {
-		/* must be 1, 4 or 8 bit mapped type */
+		/* must be 1, 2, 4 or 8 bit mapped type */
 		unsigned int i;
 		int n = 4;
 		byte buf[4];
@@ -361,7 +361,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	/* Read the pixel data */
 	if ( hdr.biBitCount == 1 ) {
 		byte* data, pad[4];
-		int illen, padlen, y;
+		int illen, padlen, rowcount;
 
 		/* round bits up to byte */
 		illen = ( image->width + 7 ) / 8;
@@ -370,25 +370,107 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 
 		if ( top_down ) {
 			data = image->data;
-			y = ( int )abs_height;
-			while ( y > 0 ) {
+			rowcount = ( int )abs_height;
+			while ( rowcount > 0 ) {
 				if ( zread( zf, data, illen ) != illen
 				        || zread( zf, pad, padlen ) != padlen ) {
 					goto data_short;
 				}
-				y = y - 1;
+				rowcount = rowcount - 1;
 				data = data + illen;
 			}
 		} else {
 			data = image->data + ( abs_height - 1 ) * illen;
-			y = ( int )abs_height;
-			while ( y > 0 ) {
+			rowcount = ( int )abs_height;
+			while ( rowcount > 0 ) {
 				if ( zread( zf, data, illen ) != illen
 				        || zread( zf, pad, padlen ) != padlen ) {
 					goto data_short;
 				}
-				y = y - 1;
+				rowcount = rowcount - 1;
 				data = data - illen;
+			}
+		}
+	} else if ( hdr.biBitCount == 2 ) {
+		byte* data;
+		unsigned int illen, padlen, rowcount, colidx, padbytes, packedbyte;
+
+		illen = ( image->width * 2 + 7 ) / 8;
+		padlen = ( ( ( image->width * 2 + 31 ) / 32 ) * 4 ) - illen;
+
+		if ( top_down ) {
+			data = image->data;
+			rowcount = ( int )abs_height;
+			while ( rowcount > 0 ) {
+				colidx = 0;
+				while ( colidx < image->width ) {
+					packedbyte = zgetc( zf );
+					if ( packedbyte == ( unsigned int )EOF ) {
+						goto data_short;
+					}
+					if ( colidx < image->width ) {
+						data[colidx] = ( packedbyte >> 6 ) & 0x3;
+						colidx = colidx + 1;
+					}
+					if ( colidx < image->width ) {
+						data[colidx] = ( packedbyte >> 4 ) & 0x3;
+						colidx = colidx + 1;
+					}
+					if ( colidx < image->width ) {
+						data[colidx] = ( packedbyte >> 2 ) & 0x3;
+						colidx = colidx + 1;
+					}
+					if ( colidx < image->width ) {
+						data[colidx] = packedbyte & 0x3;
+						colidx = colidx + 1;
+					}
+				}
+				padbytes = 0;
+				while ( padbytes < padlen ) {
+					if ( zgetc( zf ) == EOF ) {
+						goto data_short;
+					}
+					padbytes = padbytes + 1;
+				}
+				rowcount = rowcount - 1;
+				data = data + image->width;
+			}
+		} else {
+			data = image->data + ( abs_height - 1 ) * image->width;
+			rowcount = ( int )abs_height;
+			while ( rowcount > 0 ) {
+				colidx = 0;
+				while ( colidx < image->width ) {
+					packedbyte = zgetc( zf );
+					if ( packedbyte == ( unsigned int )EOF ) {
+						goto data_short;
+					}
+					if ( colidx < image->width ) {
+						data[colidx] = ( packedbyte >> 6 ) & 0x3;
+						colidx = colidx + 1;
+					}
+					if ( colidx < image->width ) {
+						data[colidx] = ( packedbyte >> 4 ) & 0x3;
+						colidx = colidx + 1;
+					}
+					if ( colidx < image->width ) {
+						data[colidx] = ( packedbyte >> 2 ) & 0x3;
+						colidx = colidx + 1;
+					}
+					if ( colidx < image->width ) {
+						data[colidx] = packedbyte & 0x3;
+						colidx = colidx + 1;
+					}
+				}
+				padbytes = 0;
+				while ( padbytes < padlen ) {
+					if ( zgetc( zf ) == EOF ) {
+						goto data_short;
+					}
+					padbytes = padbytes + 1;
+				}
+				rowcount = rowcount - 1;
+				data = data - image->width;
 			}
 		}
 	} else if ( hdr.biBitCount == 4 ) {
