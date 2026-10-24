@@ -263,21 +263,51 @@ static OptionArray Options[] = {
 OptionId optionNumber( strbyte* arg )
 {
 	int a, b;
+	size_t len;
+	int hyphen_count = 0;
 
-	if ( ( *arg ) != '-' ) {
+	/* find if arg starts with '-' or '--' */
+	if ( arg[0] == '-' ) {
+		hyphen_count = 1;
+		if ( arg[1] == '-' ) {
+			hyphen_count = 2;
+		}
+	} else {
+		/* Not a cli  option */
 		return ( OPT_NOTOPT );
 	}
+
+	/*  avoid isolated '-' or '--' strings */
+	len = strlen( arg );
+	if ( len <= (size_t)hyphen_count ) {
+		return ( OPT_BADOPT );
+	}
+
+	/* Iterate Options[] array until NULL */
 	for ( a = 0; Options[a].name; a++ ) {
-		if ( !strncmp( arg + 1, Options[a].name, strlen( arg ) - 1 ) ) {
+		
+		if ( !strncmp( arg + hyphen_count, Options[a].name, len - hyphen_count ) ) {
+			
+			/* Scan remaining array options to detect ambiguity */
 			for ( b = a + 1; Options[b].name; b++ )
-				if ( !strncmp( arg + 1, Options[b].name, strlen( arg ) - 1 ) ) {
+				if ( !strncmp( arg + hyphen_count, Options[b].name, len - hyphen_count ) ) {
+					/* Option substring is too short to disambiguate */
 					return ( OPT_SHORTOPT );
 				}
+				
+			/* match valid; return option ID */
 			return ( Options[a].option_id );
 		}
 	}
+	
+	/* token does not exist */
 	return ( OPT_BADOPT );
 }
+
+
+
+
+
 
 //static void listOptions( void )
 //{
