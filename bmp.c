@@ -138,7 +138,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		hp->bfType = C_WIN;
 	} else if ( hp->biSize == OS2_INFOHEADER_LEN ) {
 		hp->bfType = C_OS2;
-	} else if ( hp->biSize == OS2_V2_INFOHEADER_LEN ) {
+	} else if ( hp->biSize >= OS2_V2_INFOHEADER_MIN_LEN && hp->biSize <= OS2_V2_INFOHEADER_MAX_LEN ) {
 		hp->bfType = C_OS2_V2;
 	} else if ( hp->biSize == BMP_V2INFOHEADER_LEN ) {
 		hp->bfType = C_WIN_V2;
@@ -169,7 +169,28 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		hp->biYPelsPerMeter = 0;
 		hp->biClrUsed = 0;
 		hp->biClrImportant = 0;
-	} else {		/* Windows or OS/2 V2+ */
+	} else if ( hp->bfType == C_OS2_V2 && hp->biSize < OS2_V2_INFOHEADER_MAX_LEN ) {
+		/* read in the rest of the truncated info header for OS/2 2.x (16 to 63 bytes) */
+		if ( zread( zf, infobuf + 4, hp->biSize - 4 )
+		        != ( int )( hp->biSize - 4 ) ) {
+			return FALSE;
+		}
+
+		hp->biWidth = ( hp->biSize >= 8 ) ? GULONG4( &infobuf[4] ) : 0;
+		hp->biHeight = ( hp->biSize >= 12 ) ? GSINT4( &infobuf[8] ) : 0;
+		hp->biPlanes = ( hp->biSize >= 14 ) ? GUINT2( &infobuf[12] ) : 1;
+		hp->biBitCount = ( hp->biSize >= 16 ) ? GUINT2( &infobuf[14] ) : 1;
+		hp->biCompression = ( hp->biSize >= 20 ) ? GULONG4( &infobuf[16] ) : BI_RGB;
+		hp->biSizeImage = ( hp->biSize >= 24 ) ? GULONG4( &infobuf[20] ) : 0;
+		hp->biXPelsPerMeter = ( hp->biSize >= 28 ) ? GULONG4( &infobuf[24] ) : 0;
+		hp->biYPelsPerMeter = ( hp->biSize >= 32 ) ? GULONG4( &infobuf[28] ) : 0;
+		hp->biClrUsed = ( hp->biSize >= 36 ) ? GULONG4( &infobuf[32] ) : 0;
+		hp->biClrImportant = ( hp->biSize >= 40 ) ? GULONG4( &infobuf[36] ) : 0;
+		hp->redMask = 0;
+		hp->greenMask = 0;
+		hp->blueMask = 0;
+		hp->alphaMask = 0;
+	} else {		/* Windows or OS/2 V2+ full 64 */
 		if ( hp->biSize > BMP_V5INFOHEADER_LEN ) {
 			return FALSE;
 		}
@@ -278,8 +299,9 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		fprintf( stderr, "bmpLoad: %s - image Planes value error\n", hp->name );
 		return FALSE;
 	}
+	
 	/* Fix up a few things */
-	if ( hp->biBitCount <=8 ) {
+	if ( hp->biBitCount <= PAL_MAX ) {
 		if ( hp->biClrUsed == 0 || hp->biClrUsed > ( long unsigned int )( 1 << hp->biBitCount ) ) {
 			hp->biClrUsed = ( 1 << hp->biBitCount );
 		}
@@ -308,7 +330,7 @@ static void tell_about_bmp( bmpHeader* hp )
 		typelabel = "Windows V5";
 	}
 
-	const strbyte* colormode = ( hp->biBitCount <= 8 ) ? "palette" : "TrueColor";
+	const strbyte* colormode = ( hp->biBitCount <= PAL_MAX ) ? "palette" : "TrueColor";
 	unsigned long abs_height = ( hp->biHeight < 0 ) ? ( unsigned long )( -hp->biHeight ) : ( unsigned long )hp->biHeight;
 	const strbyte* topbot = ( hp->biHeight < 0 ) ? "top-bot, " : "";
 
@@ -348,7 +370,7 @@ static void print_bmp_hdr( bmpHeader* hp )
 		typelabel = "Windows V5";
 	}
 
-	const strbyte* colormode = ( hp->biBitCount <= 8 ) ? "palette" : "TrueColor";
+	const strbyte* colormode = ( hp->biBitCount <= PAL_MAX ) ? "palette" : "TrueColor";
 	unsigned long abs_height = ( hp->biHeight < 0 ) ? ( unsigned long )( -hp->biHeight ) : ( unsigned long )hp->biHeight;
 	const strbyte* topbot = ( hp->biHeight < 0 ) ? "top-bot" : "bot-top";
 
@@ -443,7 +465,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	abs_height = top_bot ? ( unsigned long )( -hdr.biHeight ) : ( unsigned long )hdr.biHeight;
 
 	/* Create the appropriate image and colormap */
-	if ( hdr.biBitCount <=8 ) {
+	if ( hdr.biBitCount <= PAL_MAX ) {
 		/* must be 1, 2, 4 or 8 bit mapped type */
 		unsigned int i;
 		int n = 4;
@@ -493,21 +515,49 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 
 	/* Skip to offset specified in file header */
 	{
-		unsigned long color_entry_len = ( hdr.bfType == C_OS2 ) ? 3 : 4;
+		unsigned long color_entry_len = ( hdr.bfType == C_OS2 || hdr.bfType == C_OS2_V2 ) ? 3 : 4;
 		unsigned long extra_header_len = 0;
+		unsigned long base_offbits;
+		unsigned long palette_bytes;
+
 		if ( hdr.biCompression == BI_FIELDS && hdr.biSize == WIN_INFOHEADER_LEN ) {
 			extra_header_len = 12;
 		}
-		unsigned long min_offbits = BMP_FILEHEADER_LEN
-		                            + hdr.biSize
-		                            + extra_header_len
-		                            + ( hdr.biBitCount < 24 ? color_entry_len * hdr.biClrUsed : 0 );
-		if ( hdr.bfOffBits < min_offbits ) {
-			fprintf( stderr, "bmpLoad: %s - bfOffBits error (underflow or overlaps header)\n", hdr.name );
+
+		base_offbits = BMP_FILEHEADER_LEN + hdr.biSize + extra_header_len;
+
+		if ( hdr.biBitCount <= PAL_MAX ) {
+			palette_bytes = color_entry_len * hdr.biClrUsed;
+		} else {
+			palette_bytes = 0;
+		}
+
+		unsigned long min_offbits = base_offbits + palette_bytes;
+
+		if ( hdr.bfOffBits == 0 ) {
+			hdr.bfOffBits = min_offbits;
+		}
+
+		if ( hdr.bfOffBits < base_offbits ) {
+			fprintf( stderr, "bmpLoad: %s - bfOffBits underflow or overlaps header\n", hdr.name );
 			freeImage( image );
 			zclose( zf );
 			return NULL;
 		}
+
+		if ( hdr.biBitCount <= PAL_MAX && hdr.bfOffBits < min_offbits ) {
+			unsigned long available_palette_bytes = hdr.bfOffBits - base_offbits;
+			if ( available_palette_bytes > 0 && ( available_palette_bytes % color_entry_len ) == 0 ) {
+				hdr.biClrUsed = available_palette_bytes / color_entry_len;
+				min_offbits = hdr.bfOffBits;
+			} else {
+				fprintf( stderr, "bmpLoad: %s - bfOffBits overlaps header or invalid palette size\n", hdr.name );
+				freeImage( image );
+				zclose( zf );
+				return NULL;
+			}
+		}
+
 		skip = hdr.bfOffBits - min_offbits;
 	}
 

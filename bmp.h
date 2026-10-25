@@ -22,11 +22,15 @@
 
 #define WIN_INFOHEADER_LEN	40
 #define OS2_INFOHEADER_LEN	12
-#define OS2_V2_INFOHEADER_LEN	64
+#define OS2_V2_INFOHEADER_MIN_LEN	16
+#define OS2_V2_INFOHEADER_MAX_LEN	64
 #define BMP_V2INFOHEADER_LEN	52
 #define BMP_V3INFOHEADER_LEN	56
 #define BMP_V4INFOHEADER_LEN	108
 #define BMP_V5INFOHEADER_LEN	124
+
+// d: definition for maximum bit depth supporting a color palette
+#define PAL_MAX 8
 
 /* Header structure definition. */
 typedef struct {
