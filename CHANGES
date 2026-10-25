@@ -3,7 +3,7 @@ command line options also can be used with two hyphens as --help
 fixed out of memory error while loading some bmp
 added new bmp headers len and options in bmp.h
 improved bmp identifications
-support some recent bmp 24
+support recent bmp
 
 
 20260505
