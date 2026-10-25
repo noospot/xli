@@ -522,116 +522,68 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	if ( hdr.biBitCount == 1 ) {
 		byte* data, pad[4];
 		int illen, padlen, rowcount;
+		long row_stride;
 
 		/* round bits up to byte */
 		illen = ( image->width + 7 ) / 8;
 		/* extra bytes to word boundary */
 		padlen = ( ( ( image->width + 31 ) / 32 ) * 4 ) - illen;
+		row_stride = top_bot ? ( long )illen : -( long )illen;
+		data = top_bot ? image->data : image->data + ( abs_height - 1 ) * illen;
+		rowcount = ( int )abs_height;
 
-		if ( top_bot ) {
-			data = image->data;
-			rowcount = ( int )abs_height;
-			while ( rowcount > 0 ) {
-				if ( zread( zf, data, illen ) != illen
-				        || zread( zf, pad, padlen ) != padlen ) {
-					goto data_short;
-				}
-				rowcount = rowcount - 1;
-				data = data + illen;
+		while ( rowcount > 0 ) {
+			if ( zread( zf, data, illen ) != illen
+			        || zread( zf, pad, padlen ) != padlen ) {
+				goto data_short;
 			}
-		} else {
-			data = image->data + ( abs_height - 1 ) * illen;
-			rowcount = ( int )abs_height;
-			while ( rowcount > 0 ) {
-				if ( zread( zf, data, illen ) != illen
-				        || zread( zf, pad, padlen ) != padlen ) {
-					goto data_short;
-				}
-				rowcount = rowcount - 1;
-				data = data - illen;
-			}
+			rowcount = rowcount - 1;
+			data = data + row_stride;
 		}
 	} else if ( hdr.biBitCount == 2 ) {
 		byte* data;
 		unsigned int illen, padlen, rowcount, i, padbytes, packedbyte;
+		long row_stride;
 
 		illen = ( image->width * 2 + 7 ) / 8;
 		padlen = ( ( ( image->width * 2 + 31 ) / 32 ) * 4 ) - illen;
+		row_stride = top_bot ? ( long )image->width : -( long )image->width;
+		data = top_bot ? image->data : image->data + ( abs_height - 1 ) * image->width;
+		rowcount = ( int )abs_height;
 
-		if ( top_bot ) {
-			data = image->data;
-			rowcount = ( int )abs_height;
-			while ( rowcount > 0 ) {
-				i = 0;
-				while ( i < image->width ) {
-					packedbyte = zgetc( zf );
-					if ( packedbyte == ( unsigned int )EOF ) {
-						goto data_short;
-					}
-					if ( i < image->width ) {
-						data[i] = ( packedbyte >> 6 ) & 0x3;
-						i = i + 1;
-					}
-					if ( i < image->width ) {
-						data[i] = ( packedbyte >> 4 ) & 0x3;
-						i = i + 1;
-					}
-					if ( i < image->width ) {
-						data[i] = ( packedbyte >> 2 ) & 0x3;
-						i = i + 1;
-					}
-					if ( i < image->width ) {
-						data[i] = packedbyte & 0x3;
-						i = i + 1;
-					}
+		while ( rowcount > 0 ) {
+			i = 0;
+			while ( i < image->width ) {
+				packedbyte = zgetc( zf );
+				if ( packedbyte == ( unsigned int )EOF ) {
+					goto data_short;
 				}
-				padbytes = 0;
-				while ( padbytes < padlen ) {
-					if ( zgetc( zf ) == EOF ) {
-						goto data_short;
-					}
-					padbytes = padbytes + 1;
+				if ( i < image->width ) {
+					data[i] = ( packedbyte >> 6 ) & 0x3;
+					i = i + 1;
 				}
-				rowcount = rowcount - 1;
-				data = data + image->width;
+				if ( i < image->width ) {
+					data[i] = ( packedbyte >> 4 ) & 0x3;
+					i = i + 1;
+				}
+				if ( i < image->width ) {
+					data[i] = ( packedbyte >> 2 ) & 0x3;
+					i = i + 1;
+				}
+				if ( i < image->width ) {
+					data[i] = packedbyte & 0x3;
+					i = i + 1;
+				}
 			}
-		} else {
-			data = image->data + ( abs_height - 1 ) * image->width;
-			rowcount = ( int )abs_height;
-			while ( rowcount > 0 ) {
-				i = 0;
-				while ( i < image->width ) {
-					packedbyte = zgetc( zf );
-					if ( packedbyte == ( unsigned int )EOF ) {
-						goto data_short;
-					}
-					if ( i < image->width ) {
-						data[i] = ( packedbyte >> 6 ) & 0x3;
-						i = i + 1;
-					}
-					if ( i < image->width ) {
-						data[i] = ( packedbyte >> 4 ) & 0x3;
-						i = i + 1;
-					}
-					if ( i < image->width ) {
-						data[i] = ( packedbyte >> 2 ) & 0x3;
-						i = i + 1;
-					}
-					if ( i < image->width ) {
-						data[i] = packedbyte & 0x3;
-						i = i + 1;
-					}
+			padbytes = 0;
+			while ( padbytes < padlen ) {
+				if ( zgetc( zf ) == EOF ) {
+					goto data_short;
 				}
-				padbytes = 0;
-				while ( padbytes < padlen ) {
-					if ( zgetc( zf ) == EOF ) {
-						goto data_short;
-					}
-					padbytes = padbytes + 1;
-				}
-				rowcount = rowcount - 1;
-				data = data - image->width;
+				padbytes = padbytes + 1;
 			}
+			rowcount = rowcount - 1;
+			data = data + row_stride;
 		}
 	} else if ( hdr.biBitCount == 4 ) {
 		byte* data;
@@ -752,73 +704,45 @@ skip_iter_rle4:
 		} else {	/* No 4 bit rle compression */
 			int d, s, p;
 			int i, e;
+			byte* row_ptr;
+			long row_stride;
 			d = image->width / 2;
 			s = image->width & 1;
 			p = ( 4 - ( d + s ) ) & 0x3;
 
-			if ( top_bot ) {
-				data = image->data;
-				y = ( int )abs_height;
-				while ( y > 0 ) {
-					i = d;
-					while ( i > 0 ) {
-						if ( ( e = zgetc( zf ) ) == EOF ) {
-							goto data_short;
-						}
-						*( data ) = e >> 4;
-						data = data + 1;
-						*( data ) = e & 0xf;
-						data = data + 1;
-						i = i - 1;
+			row_stride = top_bot ? ( long )illen : -( long )illen;
+			row_ptr = top_bot ? image->data : image->data + ( abs_height - 1 ) * illen;
+			y = ( int )abs_height;
+
+			while ( y > 0 ) {
+				byte* row_data = row_ptr;
+				i = d;
+				while ( i > 0 ) {
+					if ( ( e = zgetc( zf ) ) == EOF ) {
+						goto data_short;
 					}
-					if ( s ) {
-						if ( ( e = zgetc( zf ) ) == EOF ) {
-							goto data_short;
-						}
-						*( data ) = e >> 4;
-						data = data + 1;
-					}
-					i = p;
-					while ( i > 0 ) {
-						if ( zgetc( zf ) == EOF ) {
-							goto data_short;
-						}
-						i = i - 1;
-					}
-					y = y - 1;
+					*( row_data ) = e >> 4;
+					row_data = row_data + 1;
+					*( row_data ) = e & 0xf;
+					row_data = row_data + 1;
+					i = i - 1;
 				}
-			} else {
-				data = image->data + ( abs_height - 1 ) * illen;
-				y = ( int )abs_height;
-				while ( y > 0 ) {
-					i = d;
-					while ( i > 0 ) {
-						if ( ( e = zgetc( zf ) ) == EOF ) {
-							goto data_short;
-						}
-						*( data ) = e >> 4;
-						data = data + 1;
-						*( data ) = e & 0xf;
-						data = data + 1;
-						i = i - 1;
+				if ( s ) {
+					if ( ( e = zgetc( zf ) ) == EOF ) {
+						goto data_short;
 					}
-					if ( s ) {
-						if ( ( e = zgetc( zf ) ) == EOF ) {
-							goto data_short;
-						}
-						*( data ) = e >> 4;
-						data = data + 1;
-					}
-					i = p;
-					while ( i > 0 ) {
-						if ( zgetc( zf ) == EOF ) {
-							goto data_short;
-						}
-						i = i - 1;
-					}
-					y = y - 1;
-					data = data - ( 2 * illen );
+					*( row_data ) = e >> 4;
+					row_data = row_data + 1;
 				}
+				i = p;
+				while ( i > 0 ) {
+					if ( zgetc( zf ) == EOF ) {
+						goto data_short;
+					}
+					i = i - 1;
+				}
+				y = y - 1;
+				row_ptr = row_ptr + row_stride;
 			}
 		}
 	} else if ( hdr.biBitCount == 8 ) {
@@ -913,76 +837,48 @@ skip_iter_rle8:
 		} else {	/* No 8 bit rle compression */
 			byte pad[4];
 			int padlen;
+			long row_stride;
 
 			padlen = ( ( image->width + 3 ) & ~3 ) - illen;
-			if ( top_bot ) {
-				data = image->data;
-				y = ( int )abs_height;
-				while ( y > 0 ) {
-					if ( zread( zf, data, illen ) != illen
-					        || zread( zf, pad, padlen ) != padlen ) {
-						goto data_short;
-					}
-					y = y - 1;
-					data = data + illen;
+			row_stride = top_bot ? ( long )illen : -( long )illen;
+			data = top_bot ? image->data : image->data + ( abs_height - 1 ) * illen;
+			y = ( int )abs_height;
+
+			while ( y > 0 ) {
+				if ( zread( zf, data, illen ) != illen
+				        || zread( zf, pad, padlen ) != padlen ) {
+					goto data_short;
 				}
-			} else {
-				data = image->data + ( abs_height - 1 ) * illen;
-				y = ( int )abs_height;
-				while ( y > 0 ) {
-					if ( zread( zf, data, illen ) != illen
-					        || zread( zf, pad, padlen ) != padlen ) {
-						goto data_short;
-					}
-					y = y - 1;
-					data = data - illen;
-				}
+				y = y - 1;
+				data = data + row_stride;
 			}
 		}
 	} else if ( hdr.biBitCount == 24 ) {		/* hdr.biBitCount == 24 */
 		byte* data, pad[4];
 		int illen, padlen, y;
+		long row_stride;
+
 		illen = image->width * image->pixlen;
 		padlen = ( ( ( image->width * 3 ) + 3 ) & ~3 ) - illen;
+		row_stride = top_bot ? ( long )illen : -( long )illen;
+		data = top_bot ? image->data : image->data + ( abs_height - 1 ) * illen;
+		y = ( int )abs_height;
 
-		if ( top_bot ) {
-			data = image->data;
-			y = ( int )abs_height;
-			while ( y > 0 ) {
-				int i;
-				if ( zread( zf, data, illen ) != illen
-				        || zread( zf, pad, padlen ) != padlen ) {
-					goto data_short;
-				}
-				i = 3 * image->width - 1;
-				while ( i > 0 ) {
-					int t = data[i];
-					data[i] = data[i - 2];
-					data[i - 2] = t;
-					i = i - 3;
-				}
-				y = y - 1;
-				data = data + illen;
+		while ( y > 0 ) {
+			int i;
+			if ( zread( zf, data, illen ) != illen
+			        || zread( zf, pad, padlen ) != padlen ) {
+				goto data_short;
 			}
-		} else {
-			data = image->data + ( abs_height - 1 ) * illen;
-			y = ( int )abs_height;
-			while ( y > 0 ) {
-				int i;
-				if ( zread( zf, data, illen ) != illen
-				        || zread( zf, pad, padlen ) != padlen ) {
-					goto data_short;
-				}
-				i = 3 * image->width - 1;
-				while ( i > 0 ) {
-					int t = data[i];
-					data[i] = data[i - 2];
-					data[i - 2] = t;
-					i = i - 3;
-				}
-				y = y - 1;
-				data = data - illen;
+			i = 3 * image->width - 1;
+			while ( i > 0 ) {
+				int t = data[i];
+				data[i] = data[i - 2];
+				data[i - 2] = t;
+				i = i - 3;
 			}
+			y = y - 1;
+			data = data + row_stride;
 		}
 	} else if ( hdr.biBitCount == 16 ) {		/* hdr.biBitCount == 16 */
 		byte* pixel_row, *src_ptr, *dst_ptr, pad[4];
