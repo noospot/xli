@@ -10,6 +10,9 @@
 #define C_WIN_V4	6	
 #define C_WIN_V5	7
 
+
+#define BMP_FILEHEADER_LEN 14
+
 #define BI_RGB  0	       /* Compression type */
 #define BI_RLE8 1
 #define BI_RLE4 2
@@ -17,8 +20,10 @@
 #define BI_JPEG 4
 #define BI_PNG  5
 
+#define BI_HUFF1D 3         /* Compression type, OS/2 v2*/
+#define BI_RLE24 4
 
-#define BMP_FILEHEADER_LEN 14
+// info header
 
 #define WIN_INFOHEADER_LEN	40
 #define OS2_INFOHEADER_LEN	12
@@ -37,27 +42,26 @@ typedef struct {
 	     strbyte* name;		/* stash pointer to name here too */
 	          int bfType;		/* Windows or OS/2 */
 
-	unsigned long bfSize;		/* Size of file in bytes */
+	unsigned long bfFileSize;	/* Size of file in bytes */
 	unsigned int  bfxHotSpot;	/* Not used */
 	unsigned int  bfyHotSpot;	/* Not used */
-	unsigned long bfOffBits;	/* Offset of image from start of header */
+	unsigned long bfImageOffset;	/* Offset of image from start of header */
 
-	unsigned long biSize;		/* Size of info header in bytes */
+	unsigned long biInfoHeaderSize;	/* Size of info header in bytes */
 	unsigned long biWidth;		/* Image width in pixels */
 	      int32_t biHeight;		/* Image height in pixels */
 	unsigned int  biPlanes;		/* Planes. Must == 1 */
 	
-	unsigned int  biBitCount;	/* Bits per pixels. Must be one of 1 2 4 8 16 24 32 64 */
+	unsigned int  biPixelSize;	/* Bits per pixels. Must be one of 1 2 4 8 16 24 32 64 */
 	unsigned long biCompression;	/* Compression type */
 	unsigned long biSizeImage;	/* Size of image in bytes */
 	unsigned long biXPelsPerMeter;	/* X pixels per meter */
 	unsigned long biYPelsPerMeter;	/* Y pixels per meter */
 	unsigned long biClrUsed;	/* Number of colormap entries (0 == max) */
 	unsigned long biClrImportant;	/* Number of important colors */
-	unsigned long redMask;		/* Red channel bitmask for BI_FIELDS */
-	unsigned long greenMask;	/* Green channel bitmask for BI_FIELDS */
-	unsigned long blueMask;		/* Blue channel bitmask for BI_FIELDS */
-	unsigned long alphaMask;	/* Alpha channel bitmask for BI_FIELDS */
+	unsigned long redMask;		/* BI_FIELDS Red channel mask    */
+	unsigned long greenMask;	/* BI_FIELDS Green channel mask  */
+	unsigned long blueMask;		/* BI_FIELDS Blue channel mask   */
+	unsigned long alphaMask;	/* BI_FIELDS Alpha channel mask  */
 
 } bmpHeader;
-
