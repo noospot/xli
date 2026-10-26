@@ -34,7 +34,7 @@ static struct {
 	{webpIdent,	webpLoad,	"WEBP Image"},
 #endif
 	{tgaIdent,	tgaLoad,	"Targa Image (TGA)"},
-	{bmpIdent,	bmpLoad,	"Windows, OS/2 RLE Image (early BMP)"},
+	{bmpIdent,	bmpLoad,	"BMP Image Windows, OS/2"},
 	{pbmIdent,	pbmLoad,	"Portable Bit Map (PNM, PBM, PGM, PPM)"},
 	{pcxIdent,	pcxLoad,	"PC Paintbrush Image (PCX)"},
 	{xpixmapIdent,	xpixmapLoad,	"X Pixmap XPM"},

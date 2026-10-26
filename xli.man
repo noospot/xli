@@ -524,7 +524,7 @@ system\-wide file if a personal configuration file exists.
   JFIF style jpeg Image
   WEBP Image
   Targa Image (TGA)
-  Windows, OS/2 RLE Image (early BMP)
+  BMP Image Windows, OS/2
   Portable Bit Map (PNM, PBM, PGM, PPM)
   PC Paintbrush Image (PCX)
   X Pixmap XPM
