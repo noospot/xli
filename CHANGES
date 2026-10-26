@@ -1,7 +1,7 @@
-20261023
+20261025
 command line options also can be used with two hyphens as --help
+accept -h -v and -q cli options
 fixed out of memory error while loading some bmp
-added new bmp headers len and options in bmp.h
 improved bmp identifications
 support recent bmp
 
