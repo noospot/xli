@@ -227,13 +227,12 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 			hp->redMask = GULONG4( &infobuf[40] );
 			hp->greenMask = GULONG4( &infobuf[44] );
 			hp->blueMask = GULONG4( &infobuf[48] );
-			if ( hp->biInfoHeaderSize >= BMP_V4INFOHEADER_LEN ) {
+			if ( hp->biInfoHeaderSize >= BMP_V3INFOHEADER_LEN ) {
 				hp->alphaMask = GULONG4( &infobuf[52] );
 			} else {
 				hp->alphaMask = 0;
 			}
 		}
-		
 	} else {
 		if ( hp->biPixelSize == 16 ) {
 			hp->redMask = 0x7c00;
