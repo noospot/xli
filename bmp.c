@@ -681,22 +681,25 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 					goto data_short;
 				}
 				if ( d != 0 ) {	/* run of pixels */
-					x = x + d;
+					unsigned int start_x = x;
+					unsigned int run_len = ( unsigned int )d;
+					x = x + run_len;
 					if ( x > image->width ||
 					        y > abs_height ) {
 						data_bounds = TRUE;
-						x = x - d;
-						if ( ( e = zgetc( zf ) ) == EOF ) {
-							goto data_short;
+						if ( start_x < image->width ) {
+							run_len = image->width - start_x;
+						} else {
+							run_len = 0;
 						}
-						goto skip_iter_rle4;
+						x = image->width;
 					}
 					if ( ( e = zgetc( zf ) ) == EOF ) {
 						goto data_short;
 					}
-					f = e & 0xf;
-					e = e >> 4;
-					i = d / 2;
+					f = e & 0xf;    // nibble #2
+					e = e >> 4;     // nibble #1
+					i = ( int )( run_len / 2 );
 					while ( i > 0 ) {
 						*( data ) = e;
 						data = data + 1;
@@ -704,7 +707,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 						data = data + 1;
 						i = i - 1;
 					}
-					if ( d & 1 ) {
+					if ( run_len & 1 ) {
 						*( data ) = e;
 						data = data + 1;
 					}
@@ -738,42 +741,50 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 					data = data + d - ( e * illen );
 					goto skip_iter_rle4;
 				}
-				x = x + d;
-				if ( x > image->width || y > abs_height ) {
-					int btr;
-					data_bounds = TRUE;
-					x = x - d;
-					btr = d / 2 + ( d & 1 )
-					      + ( ( ( d + 1 ) & 2 ) >> 1 );
-					while ( btr > 0 ) {
+				/* Absolute / unencoded run (d >= 3) */
+				{
+					unsigned int start_x = x;
+					unsigned int run_len = ( unsigned int )d;
+					int total_bytes = d / 2 + ( d & 1 ) + ( ( ( d + 1 ) & 2 ) >> 1 );
+					int bytes_read = 0;
+
+					x = x + run_len;
+					if ( x > image->width || y > abs_height ) {
+						data_bounds = TRUE;
+						if ( start_x < image->width ) {
+							run_len = image->width - start_x;
+						} else {
+							run_len = 0;
+						}
+						x = image->width;
+					}
+
+					i = ( int )( run_len / 2 );
+					while ( i > 0 ) {
 						if ( ( e = zgetc( zf ) ) == EOF ) {
 							goto data_short;
 						}
-						btr = btr - 1;
+						bytes_read = bytes_read + 1;
+						*( data ) = e >> 4;
+						data = data + 1;
+						*( data ) = e & 0xf;
+						data = data + 1;
+						i = i - 1;
 					}
-					goto skip_iter_rle4;
-				}
-				i = d / 2;
-				while ( i > 0 ) {
-					if ( ( e = zgetc( zf ) ) == EOF ) {
-						goto data_short;
+					if ( run_len & 1 ) {
+						if ( ( e = zgetc( zf ) ) == EOF ) {
+							goto data_short;
+						}
+						bytes_read = bytes_read + 1;
+						*( data ) = e >> 4;
+						data = data + 1;
 					}
-					*( data ) = e >> 4;
-					data = data + 1;
-					*( data ) = e & 0xf;
-					data = data + 1;
-					i = i - 1;
-				}
-				if ( d & 1 ) {
-					if ( ( e = zgetc( zf ) ) == EOF ) {
-						goto data_short;
-					}
-					*( data ) = e >> 4;
-					data = data + 1;
-				}
-				if ( ( d + 1 ) & 2 ) {
-					if ( zgetc( zf ) == EOF ) {
-						goto data_short;
+
+					while ( bytes_read < total_bytes ) {
+						if ( zgetc( zf ) == EOF ) {
+							goto data_short;
+						}
+						bytes_read = bytes_read + 1;
 					}
 				}
 skip_iter_rle4:
