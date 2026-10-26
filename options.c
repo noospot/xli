@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-/* options array and definitions. 
+/* options array and definitions.
  * If adding something here, also add its OptionId in options.h.
  */
 static OptionArray Options[] = {
@@ -55,13 +55,13 @@ static OptionArray Options[] = {
 		"fork", FORK, NULL, "Background automatically.  Turns on -quiet.",
 	},
 	{
-		"fullscreen", FULLSCREEN, NULL, 
+		"fullscreen", FULLSCREEN, NULL,
 		"Use the whole screen for displaying an image. The image will be surrounded by "
 		"a border if it is smaller than the screen. If -onroot is also specified, "
 		"the image will be zoomed so that it just fits the size of the screen.",
 	},
 	{
-		"geometry", GEOMETRY, "window_geometry", 
+		"geometry", GEOMETRY, "window_geometry",
 		"Specify the size of the display window.  Ignored if -fullscreen or -fillscreen is given. "
 		"If used in conjunction with -onroot, defines the size of the base image.",
 	},
@@ -70,6 +70,9 @@ static OptionArray Options[] = {
 	},
 	{
 		"help", HELP, NULL, "Print help ",
+	},
+	{
+		"h", HELP, NULL, "alias, see -help ",
 	},
 	{
 		"identify", IDENTIFY, NULL, "Identify images rather than displaying them.",
@@ -83,7 +86,7 @@ static OptionArray Options[] = {
 		"list", LIST, NULL, "List the images along the image path.  also see '-path' ",
 	},
 	{
-		"onroot", ONROOT, NULL, 
+		"onroot", ONROOT, NULL,
 		"Place the image on the root window.  If used in conjunction with -fullscreen, "
 		"the image will be zoomed to just fit. If used with -fillscreen, the image will "
 		"be zoomed to completely fill the screen. -border, -at, and -center also affect the"
@@ -106,10 +109,16 @@ static OptionArray Options[] = {
 		"Default if using -onroot or -windowid.",
 	},
 	{
+		"q", QUIET, NULL, "aliaas, see -quiet ",
+	},
+	{
 		"supported", SUPPORTED, NULL, "Print a list of supported image types.",
 	},
 	{
 		"verbose", VERBOSE, NULL, "Turn on verbose mode. Default if using -view.",
+	},
+	{
+		"v", VERBOSE, NULL, "alias, see -verbose",
 	},
 	{
 		"version", VER_NUM, NULL, "Show xli version number.",
@@ -141,10 +150,10 @@ static OptionArray Options[] = {
 
 	{
 		"at", AT, NULL, "Load the image onto the base image (if using -merge) or the root window (if"
-"using -onroot) at a specific location.",
+		"using -onroot) at a specific location.",
 	},
 	{
-		"background", BACKGROUND, "color", "Set the background pixel color for a monochrome image. " 
+		"background", BACKGROUND, "color", "Set the background pixel color for a monochrome image. "
 		"See also -foreground and -invert.",
 	},
 	{
@@ -204,7 +213,7 @@ static OptionArray Options[] = {
 		"invert", INVERT, NULL, "Invert colors of a monochrome image.",
 	},
 	{
-		"iscale", ISCALE, "scale factor", 
+		"iscale", ISCALE, "scale factor",
 		"Scale the image using a fast, image-dependent method, if available. "
 		"Positive values make the image smaller, negative values larger. "
 		"Specifying `auto' will fast-scale the image to fit on the screen.",
@@ -252,60 +261,76 @@ static OptionArray Options[] = {
 		"values greater than 100 will enlarge it. "
 		"See also -xzoom and -yzoom.",
 	},
-	
-	
+
+
 	{NULL, OPT_NOTOPT, NULL, NULL}
 };
-
-
 
 
 OptionId optionNumber( strbyte* arg )
 {
 	int a, b;
 	size_t len;
+	size_t arg_len;
 	int hyphen_count = 0;
-
-	/* find if arg starts with '-' or '--' */
+	
+	// find if arg starts with '-' or '--'
 	if ( arg[0] == '-' ) {
 		hyphen_count = 1;
 		if ( arg[1] == '-' ) {
 			hyphen_count = 2;
 		}
 	} else {
-		/* Not a cli  option */
+		// Not a cli option 
 		return ( OPT_NOTOPT );
 	}
 
-	/*  avoid isolated '-' or '--' strings */
+	// avoid isolated '-' or '--' strings
 	len = strlen( arg );
-	if ( len <= (size_t)hyphen_count ) {
+	if ( len <= ( size_t )hyphen_count ) {
 		return ( OPT_BADOPT );
 	}
 
-	/* Iterate Options[] array until NULL */
-	for ( a = 0; Options[a].name; a++ ) {
-		
-		if ( !strncmp( arg + hyphen_count, Options[a].name, len - hyphen_count ) ) {
-			
-			/* Scan remaining array options to detect ambiguity */
-			for ( b = a + 1; Options[b].name; b++ )
-				if ( !strncmp( arg + hyphen_count, Options[b].name, len - hyphen_count ) ) {
-					/* Option substring is too short to disambiguate */
-					return ( OPT_SHORTOPT );
-				}
-				
-			/* match valid; return option ID */
+	arg_len = len - hyphen_count;
+
+	// Iterate Options[] array until NULL
+	a = 0;
+	while ( Options[a].name) {
+		// check if an exact match length-wise
+		if ( strlen( Options[a].name ) == arg_len
+		&& strncmp( arg + hyphen_count, Options[a].name, arg_len )==0 ) {
 			return ( Options[a].option_id );
 		}
+
+		// If not an exact match, check if it's a valid abbreviated substring prefix
+		if ( strncmp( arg + hyphen_count, Options[a].name, arg_len )==0 ) {
+
+			// Scan remaining array options to detect ambiguity
+			b = a + 1;
+			while (  Options[b].name ) {
+				// if an exact match
+				if ( strlen( Options[b].name ) == arg_len 
+				&& strncmp( arg + hyphen_count, Options[b].name, arg_len )==0) {
+					return ( Options[b].option_id );
+				}
+				// if another option beininning with the same string is found
+				if ( strncmp( arg + hyphen_count, Options[b].name, arg_len )==0 ) {
+					// Option substring is too short to disambiguate
+					return ( OPT_SHORTOPT );
+				}
+				b=b+1;
+			}
+
+			// match valid; return option ID
+			return ( Options[a].option_id );
+		}
+		a=a+1;
 	}
-	
-	/* token does not exist */
+
+	// token does not exist
 	return ( OPT_BADOPT );
+
 }
-
-
-
 
 
 
@@ -329,43 +354,43 @@ OptionId optionNumber( strbyte* arg )
 void help( void )
 {
 	strbyte optionwithhypen[32];
-	memset(&optionwithhypen,0,32);
+	memset( &optionwithhypen,0,32 );
 	byte i;
-	
+
 	version();
 	//printf( "xli version %s.%s.%s Copyright (c) 1989-2025 the xli developers\n", VERSION, PATCHLEVEL, REVISION);
 	printf( "usage: xli [general options]  {[image options] FILE}...\n" );
-	printf( "\n");
-	printf( "General options:\n");
+	printf( "\n" );
+	printf( "General options:\n" );
 	i = 0;
 	while( Options[i].name  ) {
 		if ( Options[i].option_id>GENERAL_OPTIONS_START && Options[i].option_id<GENERAL_OPTIONS_END ) {
-			memset(&optionwithhypen,0,32);
-			snprintf(optionwithhypen,32,"-%s",Options[i].name);
+			memset( &optionwithhypen,0,32 );
+			snprintf( optionwithhypen,32,"-%s",Options[i].name );
 			printf( "%12s %-21s  %-40s\n", optionwithhypen,
-				( Options[i].args ? Options[i].args : "" ),
-				Options[i].description );
+			        ( Options[i].args ? Options[i].args : "" ),
+			        Options[i].description );
 		}
 		i=i+1;
 	}
-	printf( "\n");
-	printf( "Local options:\n");
+	printf( "\n" );
+	printf( "Local options:\n" );
 	i = 0;
 	while( Options[i].name ) {
-		if (Options[i].option_id>LOCAL_OPTIONS_START && Options[i].option_id<LOCAL_OPTIONS_END  ) {
-			memset(&optionwithhypen,0,32);
-			snprintf(optionwithhypen,32,"-%s",Options[i].name);
+		if ( Options[i].option_id>LOCAL_OPTIONS_START && Options[i].option_id<LOCAL_OPTIONS_END  ) {
+			memset( &optionwithhypen,0,32 );
+			snprintf( optionwithhypen,32,"-%s",Options[i].name );
 			printf( "%12s %-21s  %-40s\n", optionwithhypen,
-			( Options[i].args ? Options[i].args : "" ),
-			Options[i].description );
+			        ( Options[i].args ? Options[i].args : "" ),
+			        Options[i].description );
 		}
 		i=i+1;
-	}	
-	printf( "\n");
-	
-	printf( "See xli manual page for detailed description of the options.\n");
-	printf( "\n");
-	
+	}
+	printf( "\n" );
+
+	printf( "See xli manual page for detailed description of the options.\n" );
+	printf( "\n" );
+
 	return;
 }
 
@@ -402,7 +427,7 @@ int doGeneralOption( OptionId opid, strbyte** argv, ImageOptions* persist_ops,
 				break;
 			}
 			persist_ops->delay =
-			      image_ops->delay = atoi( argv[a] );
+			        image_ops->delay = atoi( argv[a] );
 			if ( image_ops->delay < 0 ) {
 				printf( "Bad argument to -delay\n" );
 				usage( globals.argv0 );
@@ -702,7 +727,7 @@ int doLocalOption( OptionId opid, strbyte** argv, bool setpersist,
 				}
 				if ( setpersist ) {
 					persist_ops->iscale_auto =
-					      image_ops->iscale_auto;
+					        image_ops->iscale_auto;
 				}
 			}
 			break;
@@ -853,7 +878,7 @@ int visualClassFromName( strbyte* name )
 	for ( a = 0; VisualClassName[a].name; a++ ) {
 		for ( s1 = VisualClassName[a].name, s2 = name; *s1 && *s2; s1++, s2++ )
 			if ( ( isupper( *s1 ) ? tolower( *s1 ) : *s1 ) !=
-			      ( isupper( *s2 ) ? tolower( *s2 ) : *s2 ) ) {
+			        ( isupper( *s2 ) ? tolower( *s2 ) : *s2 ) ) {
 				break;
 			}
 
