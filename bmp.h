@@ -63,5 +63,9 @@ typedef struct {
 	unsigned long greenMask;	/* BI_FIELDS Green channel mask  */
 	unsigned long blueMask;		/* BI_FIELDS Blue channel mask   */
 	unsigned long alphaMask;	/* BI_FIELDS Alpha channel mask  */
-
+	
+	unsigned long all_headers_len;	/* Cumulative size of all headers and masks */
+	unsigned long masks_header_len;	/* Size of BI_FIELDS mask header extension */
+	unsigned long palette_len;	/* Calculated byte length of color palette */
+	unsigned long color_entry_len;	/* Length of individual palette entry (3 or 4 bytes) */
 } bmpHeader;

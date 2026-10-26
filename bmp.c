@@ -233,6 +233,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 				hp->alphaMask = 0;
 			}
 		}
+		
 	} else {
 		if ( hp->biPixelSize == 16 ) {
 			hp->redMask = 0x7c00;
@@ -299,13 +300,52 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		return FALSE;
 	}
 	
-	/* Fix up a few things */
-	if ( hp->biPixelSize <= PAL_MAX ) {
-		if ( hp->biClrUsed == 0 || hp->biClrUsed > ( long unsigned int )( 1 << hp->biPixelSize ) ) {
-			hp->biClrUsed = ( 1 << hp->biPixelSize );
+	/* Calculate headers, masks, and palette lengths */
+	{
+		unsigned long color_entry_len = 4;
+		unsigned long masks_header_len = 0;
+		unsigned long all_headers_len = 0;
+		unsigned long palette_len = 0;
+
+		if ( hp->biCompression == BI_FIELDS && hp->biInfoHeaderSize == WIN_INFOHEADER_LEN ) {
+			masks_header_len = 12;
 		}
-	} else {
-		hp->biClrUsed = 0;
+
+		all_headers_len = BMP_FILEHEADER_LEN + hp->biInfoHeaderSize + masks_header_len;
+		palette_len = ( hp->bfImageOffset > all_headers_len ) ? ( hp->bfImageOffset - all_headers_len ) : 0;
+
+		if ( hp->bfType == C_OS2 ) {
+			color_entry_len = 3;
+		} else if ( hp->bfType == C_OS2_V2 ) {
+			if ( palette_len > 0 && ( palette_len % 3 == 0 ) && ( palette_len / 3 <= ( 1UL << hp->biPixelSize ) ) ) {
+				color_entry_len = 3;
+				fprintf( stderr, "bmpLoad: %s - OS/2 v2 file could have 3bytes palette entries\n", hp->name );
+			} else if ( palette_len > 0 && ( palette_len % 4 == 0 ) && ( palette_len / 4 <= ( 1UL << hp->biPixelSize ) ) ) {
+				color_entry_len = 4;
+			} else {
+				color_entry_len = 3;
+			}
+		} else {
+			color_entry_len = 4;
+		}
+
+		if ( hp->biPixelSize <= PAL_MAX ) {
+			if ( hp->biClrUsed == 0 || hp->biClrUsed > ( long unsigned int )( 1 << hp->biPixelSize ) ) {
+				hp->biClrUsed = ( 1 << hp->biPixelSize );
+			} else if ( palette_len > 0 && ( palette_len % color_entry_len == 0 ) ) {
+				unsigned long computed_colors = palette_len / color_entry_len;
+				if ( computed_colors <= ( 1UL << hp->biPixelSize ) ) {
+					hp->biClrUsed = computed_colors;
+				}
+			}
+		} else {
+			hp->biClrUsed = 0;
+		}
+
+		hp->all_headers_len = all_headers_len;
+		hp->masks_header_len = masks_header_len;
+		hp->palette_len = palette_len;
+		hp->color_entry_len = color_entry_len;
 	}
 	
 	return TRUE;
@@ -438,9 +478,6 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	unsigned long skip;
 	unsigned long abs_height;
 	bool top_bot;
-	unsigned long color_entry_len = 4;
-	unsigned long base_header_offset;
-	unsigned long palette_space;
 
 	if ( !( zf = zopen( fullname ) ) ) {
 		perror( "bmpIdent" );
@@ -453,10 +490,9 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	if ( verbose ) {
 		tell_about_bmp( &hdr );
 	}
-	if (globals._Xdebug ) {
-		print_bmp_hdr( &hdr );
-	}	
-		
+	if ( globals._Xdebug ) {
+		print_bmp_hdr( &hdr );	
+	}
 	znocache( zf );
 
 	/* Report  64-bit files as identifiable but not displayable yet */
@@ -469,42 +505,11 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	top_bot = ( hdr.biHeight < 0 );
 	abs_height = top_bot ? ( unsigned long )( -hdr.biHeight ) : ( unsigned long )hdr.biHeight;
 
-	{
-		unsigned long extra_header_len = 0;
-		if ( hdr.biCompression == BI_FIELDS && hdr.biInfoHeaderSize == WIN_INFOHEADER_LEN ) {
-			extra_header_len = 12;
-		}
-
-		base_header_offset = BMP_FILEHEADER_LEN + hdr.biInfoHeaderSize + extra_header_len;
-		palette_space = ( hdr.bfImageOffset > base_header_offset ) ? ( hdr.bfImageOffset - base_header_offset ) : 0;
-
-		if ( hdr.bfType == C_OS2 ) {
-			color_entry_len = 3;
-		} else if ( hdr.bfType == C_OS2_V2 ) {
-			if ( palette_space > 0 && ( palette_space % 3 == 0 ) && ( palette_space / 3 <= ( 1UL << hdr.biPixelSize ) ) ) {
-				color_entry_len = 3;
-			} else if ( palette_space > 0 && ( palette_space % 4 == 0 ) && ( palette_space / 4 <= ( 1UL << hdr.biPixelSize ) ) ) {
-				color_entry_len = 4;
-			} else {
-				color_entry_len = 3;
-			}
-		} else {
-			color_entry_len = 4;
-		}
-
-		if ( hdr.biPixelSize <= PAL_MAX && palette_space > 0 && ( palette_space % color_entry_len == 0 ) ) {
-			unsigned long computed_colors = palette_space / color_entry_len;
-			if ( computed_colors <= ( 1UL << hdr.biPixelSize ) ) {
-				hdr.biClrUsed = computed_colors;
-			}
-		}
-	}
-
 	/* Create the appropriate image and colormap */
 	if ( hdr.biPixelSize <= PAL_MAX ) {
 		/* must be 1, 2, 4 or 8 bit mapped type */
 		unsigned int i;
-		int n = ( int )color_entry_len;
+		int n = ( int )hdr.color_entry_len;
 		byte buf[4];
 		/* maximum number of colors */
 		unsigned int used = ( 1 << hdr.biPixelSize );
@@ -550,18 +555,18 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		unsigned long palette_bytes;
 
 		if ( hdr.biPixelSize <= PAL_MAX ) {
-			palette_bytes = color_entry_len * hdr.biClrUsed;
+			palette_bytes = hdr.color_entry_len * hdr.biClrUsed;
 		} else {
 			palette_bytes = 0;
 		}
 
-		unsigned long min_pixel_offset = base_header_offset + palette_bytes;
+		unsigned long min_pixel_offset = hdr.all_headers_len + palette_bytes;
 
 		if ( hdr.bfImageOffset == 0 ) {
 			hdr.bfImageOffset = min_pixel_offset;
 		}
 
-		if ( hdr.bfImageOffset < base_header_offset ) {
+		if ( hdr.bfImageOffset < hdr.all_headers_len ) {
 			fprintf( stderr, "bmpLoad: %s - bfImageOffset underflow or overlaps header\n", hdr.name );
 			freeImage( image );
 			zclose( zf );
@@ -569,9 +574,9 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		}
 
 		if ( hdr.biPixelSize <= PAL_MAX && hdr.bfImageOffset < min_pixel_offset ) {
-			unsigned long available_palette_bytes = hdr.bfImageOffset - base_header_offset;
-			if ( available_palette_bytes > 0 && ( available_palette_bytes % color_entry_len ) == 0 ) {
-				hdr.biClrUsed = available_palette_bytes / color_entry_len;
+			unsigned long available_palette_bytes = hdr.bfImageOffset - hdr.all_headers_len;
+			if ( available_palette_bytes > 0 && ( available_palette_bytes % hdr.color_entry_len ) == 0 ) {
+				hdr.biClrUsed = available_palette_bytes / hdr.color_entry_len;
 				min_pixel_offset = hdr.bfImageOffset;
 			} else {
 				fprintf( stderr, "bmpLoad: %s - bfImageOffset overlaps header or invalid palette size\n", hdr.name );
