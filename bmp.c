@@ -669,7 +669,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 
 		illen = image->width;
 
-		if ( hdr.biCompression == BI_RLE4 ) {
+if ( hdr.biCompression == BI_RLE4 ) {
 			int d, e;
 			memset( ( byte* ) image->data, 0, ( size_t )image->width * ( size_t )image->height );
 			x = 0;
@@ -684,9 +684,11 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 					unsigned int start_x = x;
 					unsigned int run_len = ( unsigned int )d;
 					x = x + run_len;
-					if ( x > image->width ||
-					        y > abs_height ) {
+					if ( y > abs_height ) {
 						data_bounds = TRUE;
+						goto skip_iter_rle4;
+					}
+					if ( x > image->width ) {
 						if ( start_x < image->width ) {
 							run_len = image->width - start_x;
 						} else {
@@ -697,8 +699,8 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 					if ( ( e = zgetc( zf ) ) == EOF ) {
 						goto data_short;
 					}
-					f = e & 0xf;    // nibble #2
-					e = e >> 4;     // nibble #1
+					f = e & 0xf;
+					e = e >> 4;
 					i = ( int )( run_len / 2 );
 					while ( i > 0 ) {
 						*( data ) = e;
@@ -749,8 +751,11 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 					int bytes_read = 0;
 
 					x = x + run_len;
-					if ( x > image->width || y > abs_height ) {
+					if ( y > abs_height ) {
 						data_bounds = TRUE;
+						goto skip_iter_rle4;
+					}
+					if ( x > image->width ) {
 						if ( start_x < image->width ) {
 							run_len = image->width - start_x;
 						} else {
