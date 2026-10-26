@@ -452,8 +452,11 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	}
 	if ( verbose ) {
 		tell_about_bmp( &hdr );
-		print_bmp_hdr( &hdr );
 	}
+	if (globals._Xdebug ) {
+		print_bmp_hdr( &hdr );
+	}	
+		
 	znocache( zf );
 
 	/* Report  64-bit files as identifiable but not displayable yet */
