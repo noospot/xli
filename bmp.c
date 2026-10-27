@@ -669,7 +669,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 
 		illen = image->width;
 
-if ( hdr.biCompression == BI_RLE4 ) {
+		if ( hdr.biCompression == BI_RLE4 ) {
 			int d, e;
 			memset( ( byte* ) image->data, 0, ( size_t )image->width * ( size_t )image->height );
 			x = 0;
@@ -949,30 +949,152 @@ skip_iter_rle8:
 		}
 	} else if ( hdr.biPixelSize == 24 ) {		/* hdr.biPixelSize == 24 */
 		byte* data, pad[4];
-		int illen, padlen, y;
-		long row_stride;
+		int illen; 
 
 		illen = image->width * image->pixlen;
-		padlen = ( ( ( image->width * 3 ) + 3 ) & ~3 ) - illen;
-		row_stride = top_bot ? ( long )illen : -( long )illen;
-		data = top_bot ? image->data : image->data + ( abs_height - 1 ) * illen;
-		y = ( int )abs_height;
+		
+		if ( hdr.biCompression == BI_RLE24 ) {
+			int d;
+			unsigned int x,y;
+			byte triplet[3];
+			memset( ( byte* ) image->data, 0, ( size_t )image->width * ( size_t )image->height * ( size_t )image->pixlen );
+			x = 0;
+			y = 0;
+			data = image->data + ( abs_height - 1 ) * illen;
+			while ( 1 ) {
+				int i;
+				if ( ( d = zgetc( zf ) ) == EOF ) {
+					goto data_short;
+				}
+				if ( d != 0 ) {	/* run of pixels */
+					unsigned int start_x = x;
+					unsigned int run_len = ( unsigned int )d;
+					x = x + run_len;
+					if ( y > abs_height ) {
+						data_bounds = TRUE;
+						goto skip_iter_rle24;
+					}
+					if ( x > image->width ) {
+						if ( start_x < image->width ) {
+							run_len = image->width - start_x;
+						} else {
+							run_len = 0;
+						}
+						x = image->width;
+					}
+					if ( zread( zf, triplet, 3 ) != 3 ) {
+						goto data_short;
+					}
+					i = ( int )run_len;
+					while ( i > 0 ) {
+						*( data + 0 ) = triplet[2];
+						*( data + 1 ) = triplet[1];
+						*( data + 2 ) = triplet[0];
+						data = data + 3;
+						i = i - 1;
+					}
+					goto skip_iter_rle24;
+				}
+				if ( ( d = zgetc( zf ) ) == EOF ) {
+					goto data_short;
+				}
+				if ( d == 0 ) {	/* end of line */
+					data = data - ( ( x * image->pixlen ) + illen );
+					x = 0;
+					y = y + 1;
+					goto skip_iter_rle24;
+				}
+				if ( d == 1 ) {	/* end of bitmap */
+					break;
+				}
+				if ( d == 2 ) {	/* delta */
+					int delta_x, delta_y;
+					if ( ( delta_x = zgetc( zf ) ) == EOF ||
+					        ( delta_y = zgetc( zf ) ) == EOF ) {
+						goto data_short;
+					}
+					x = x + delta_x;
+					y = y + delta_y;
+					if ( x > image->width || y > abs_height ) {
+						data_bounds = TRUE;
+						x = x - delta_x;
+						y = y - delta_y;
+						goto skip_iter_rle24;
+					}
+					data = data + ( delta_x * image->pixlen ) - ( delta_y * illen );
+					goto skip_iter_rle24;
+				}
+				/* Absolute / unencoded run (d >= 3) */
+				{
+					unsigned int start_x = x;
+					unsigned int run_len = ( unsigned int )d;
+					int total_bytes = d * 3;
+					int padded_bytes = ( total_bytes + 1 ) & ~1;
+					int bytes_read = 0;
 
-		while ( y > 0 ) {
-			int i;
-			if ( zread( zf, data, illen ) != illen
-			        || zread( zf, pad, padlen ) != padlen ) {
-				goto data_short;
+					x = x + run_len;
+					if ( y > abs_height ) {
+						data_bounds = TRUE;
+						goto skip_iter_rle24;
+					}
+					if ( x > image->width ) {
+						if ( start_x < image->width ) {
+							run_len = image->width - start_x;
+						} else {
+							run_len = 0;
+						}
+						x = image->width;
+					}
+
+					i = ( int )run_len;
+					while ( i > 0 ) {
+						if ( zread( zf, triplet, 3 ) != 3 ) {
+							goto data_short;
+						}
+						bytes_read = bytes_read + 3;
+						*( data + 0 ) = triplet[2];
+						*( data + 1 ) = triplet[1];
+						*( data + 2 ) = triplet[0];
+						data = data + 3;
+						i = i - 1;
+					}
+
+					while ( bytes_read < padded_bytes ) {
+						if ( zgetc( zf ) == EOF ) {
+							goto data_short;
+						}
+						bytes_read = bytes_read + 1;
+					}
+				}
+skip_iter_rle24:
+				;
 			}
-			i = 3 * image->width - 1;
-			while ( i > 0 ) {
-				int t = data[i];
-				data[i] = data[i - 2];
-				data[i - 2] = t;
-				i = i - 3;
+		} else {                  // no rle24
+		
+			int padlen;
+			int y;
+			long row_stride;
+			padlen = ( ( ( image->width * 3 ) + 3 ) & ~3 ) - illen;
+			row_stride = top_bot ? ( long )illen : -( long )illen;
+			data = top_bot ? image->data : image->data + ( abs_height - 1 ) * illen;
+			y = ( int )abs_height;
+	
+			while ( y > 0 ) {
+				int i;
+				if ( zread( zf, data, illen ) != illen
+					|| zread( zf, pad, padlen ) != padlen ) {
+					goto data_short;
+				}
+				i = 3 * image->width - 1;
+				while ( i > 0 ) {
+					int t = data[i];
+					data[i] = data[i - 2];
+					data[i - 2] = t;
+					i = i - 3;
+				}
+				y = y - 1;
+				data = data + row_stride;
 			}
-			y = y - 1;
-			data = data + row_stride;
 		}
 	} else if ( hdr.biPixelSize == 16 ) {		/* hdr.biPixelSize == 16 */
 		byte* pixel_row, *src_ptr, *dst_ptr, pad[4];
