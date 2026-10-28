@@ -128,10 +128,8 @@ File input resources:
        /∗ Open a file by name and return a pointer to a file descriptor. ∗/ 
        ZFILE ∗zopen(strbyte ∗name)
 
-
        /∗ Read some data into a buffer ∗/ 
        int zread( ZFILE ∗zf,byte ∗ buf, int len)
-
 
        /∗ Macro that returns a byte from the file. ∗/ 
        byte ∗zgetc(ZFILE ∗zf)
@@ -139,13 +137,11 @@ File input resources:
        /∗ Function that reads a string into a buffer ∗/ 
        strbyte ∗zgets(strbyte  ∗buf, unsigned int  size,ZFILE ∗ zf)
 
-
        /∗ Return the files EOF status ∗/ 
        int zeof(ZFILE ∗zf)
 
        /∗ Clear any errors (ie. EOF) ∗/ 
        void zclearerr( ZFILE ∗zf )
-
 
        /∗
 	 Turn off caching when an image has been identified
@@ -154,7 +150,6 @@ File input resources:
 	 point are not cached.
 	∗/ 
 	void znocache(ZFILE ∗zf)
-
 
        /∗
 	 Rewind the cached file. This won't work if the file
@@ -171,14 +166,12 @@ File input resources:
 	∗/ 
 	void zunread( ZFILE ∗zf, byte ∗buf,	int len)
 
-
        /∗
 	 Close a file.
 	 The file is not actually closed until zreset is called,
 	 in case another loader wants to re-open it.
 	∗/ 
 	void zclose( ZFILE ∗zf)
-
 
        /∗ Really close a file. Not used by imageLoad functions.	∗/ 
 	void zreset(strbyte ∗filename)
