@@ -324,31 +324,40 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		palette_len = ( hp->bfImageOffset > all_headers_len ) ? ( hp->bfImageOffset - all_headers_len ) : 0;
 
 		if ( hp->bfType == C_OS2 ) {
-			color_entry_len = 3;
+			color_entry_len = 3; /* OS/2 v1 always uses 3-byte RGBTRIPLE entries */
 		} else if ( hp->bfType == C_OS2_V2 ) {
+			/* OS/2 v2 dynamically permits either 3-byte or 4-byte entries */
 			if ( palette_len > 0 && ( palette_len % 3 == 0 ) && ( palette_len / 3 <= ( 1UL << hp->biPixelSize ) ) ) {
 				color_entry_len = 3;
-				fprintf( stderr, "bmpLoad: %s - OS/2 v2 file could have 3bytes palette entries\n", hp->name );
+				fprintf( stderr, "bmpLoad: %s - OS/2 v2 file handles 3-byte palette entries\n", hp->name );
 			} else if ( palette_len > 0 && ( palette_len % 4 == 0 ) && ( palette_len / 4 <= ( 1UL << hp->biPixelSize ) ) ) {
 				color_entry_len = 4;
 			} else {
-				color_entry_len = 3;
+				color_entry_len = 3; /* Standard fallback for native OS/2 streams */
 			}
 		} else {
-			color_entry_len = 4;
+			color_entry_len = 4; /* Windows formats always use 4-byte RGBQUAD entries */
 		}
 
+		/* Determine number of colors used for indexed color modes */
 		if ( hp->biPixelSize <= PAL_MAX ) {
-			if ( hp->biClrUsed == 0 || hp->biClrUsed > ( long unsigned int )( 1 << hp->biPixelSize ) ) {
-				hp->biClrUsed = ( 1 << hp->biPixelSize );
-			} else if ( palette_len > 0 && ( palette_len % color_entry_len == 0 ) ) {
-				unsigned long computed_colors = palette_len / color_entry_len;
-				if ( computed_colors <= ( 1UL << hp->biPixelSize ) ) {
-					hp->biClrUsed = computed_colors;
+			unsigned long max_colors = ( 1UL << hp->biPixelSize );
+			
+			/* try to find number of colors with distance between header and image data */
+			if ( palette_len > 0 && color_entry_len > 0 && ( palette_len % color_entry_len == 0 ) ) {
+				unsigned long colors_num = palette_len / color_entry_len;
+				if ( colors_num <= max_colors ) {
+					hp->biClrUsed = colors_num;
+				} else {
+					hp->biClrUsed = max_colors;
 				}
+			} 
+			/* Fallback to header field or absolute bit-depth limit */
+			else if ( hp->biClrUsed == 0 || hp->biClrUsed > max_colors ) {
+				hp->biClrUsed = max_colors;
 			}
 		} else {
-			hp->biClrUsed = 0;
+			hp->biClrUsed = 0; /* TrueColor/HighColor streams do not utilize a required palette */
 		}
 
 		hp->all_headers_len = all_headers_len;
@@ -572,7 +581,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		image->title = dupString( hdr.name );
 	}
 
-	/* Skip to offset specified in file header */
+	/* find amount of bytes to Skip to image offset */
 	{
 		unsigned long palette_bytes;
 
@@ -610,7 +619,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 
 		skip = hdr.bfImageOffset - min_pixel_offset;
 	}
-
+	/* Skip to image offset, specified in file header */
 	while ( skip > 0 ) {
 		if ( zgetc( zf ) == EOF ) {
 			goto data_short;
@@ -868,7 +877,7 @@ skip_iter_rle4:
 
 		illen = image->width;
 
-		if ( hdr.biCompression == BI_RLE8 ) {
+if ( hdr.biCompression == BI_RLE8 ) {
 			int d, e;
 			memset( ( byte* ) image->data, 0, ( size_t )image->width * ( size_t )image->height );
 			x = 0;
@@ -879,21 +888,26 @@ skip_iter_rle4:
 					goto data_short;
 				}
 				if ( d != 0 ) {	/* run of pixels */
-					x = x + d;
-					if ( x > image->width ||
-					        y > abs_height ) {
+					unsigned int start_x = x;
+					unsigned int run_len = ( unsigned int )d;
+					x = x + run_len;
+					if ( y > abs_height ) {
 						data_bounds = TRUE;
-						x = x - d;
-						if ( ( e = zgetc( zf ) ) == EOF ) {
-							goto data_short;
-						}
 						goto skip_iter_rle8;
+					}
+					if ( x > image->width ) {
+						if ( start_x < image->width ) {
+							run_len = image->width - start_x;
+						} else {
+							run_len = 0;
+						}
+						x = image->width;
 					}
 					if ( ( e = zgetc( zf ) ) == EOF ) {
 						goto data_short;
 					}
-					memset( data, e, d );
-					data = data + d;
+					memset( data, e, run_len );
+					data = data + run_len;
 					goto skip_iter_rle8;
 				}
 				if ( ( d = zgetc( zf ) ) == EOF ) {
@@ -909,42 +923,58 @@ skip_iter_rle4:
 					break;
 				}
 				if ( d == 2 ) {	/* delta */
-					if ( ( d = zgetc( zf ) ) == EOF ||
-					        ( e = zgetc( zf ) ) == EOF ) {
+					int delta_x, delta_y;
+					if ( ( delta_x = zgetc( zf ) ) == EOF ||
+					        ( delta_y = zgetc( zf ) ) == EOF ) {
 						goto data_short;
 					}
-					x = x + d;
-					y = y + e;
+					x = x + delta_x;
+					y = y + delta_y;
 					if ( x > image->width || y > abs_height ) {
 						data_bounds = TRUE;
-						x = x - d;
-						y = y - e;
+						x = x - delta_x;
+						y = y - delta_y;
 						goto skip_iter_rle8;
 					}
-					data = data + d - ( e * illen );
+					data = data + delta_x - ( delta_y * illen );
 					goto skip_iter_rle8;
 				}
-				x = x + d;
-				if ( x > image->width || y > abs_height ) {
-					int btr;
-					data_bounds = TRUE;
-					x = x - d;
-					btr = d + ( d & 1 );
-					while ( btr > 0 ) {
-						if ( ( e = zgetc( zf ) ) == EOF ) {
+				/* Absolute / unencoded run (d >= 3) */
+				{
+					unsigned int start_x = x;
+					unsigned int run_len = ( unsigned int )d;
+					int total_bytes = d + ( d & 1 );
+					int bytes_read = 0;
+
+					x = x + run_len;
+					if ( y > abs_height ) {
+						data_bounds = TRUE;
+						goto skip_iter_rle8;
+					}
+					if ( x > image->width ) {
+						if ( start_x < image->width ) {
+							run_len = image->width - start_x;
+						} else {
+							run_len = 0;
+						}
+						x = image->width;
+					}
+
+					while ( bytes_read < ( int )run_len ) {
+						int pixel_val = zgetc( zf );
+						if ( pixel_val == EOF ) {
 							goto data_short;
 						}
-						btr = btr - 1;
+						*( data ) = ( byte )pixel_val;
+						data = data + 1;
+						bytes_read = bytes_read + 1;
 					}
-					goto skip_iter_rle8;
-				}
-				if ( zread( zf, data, d ) != d ) {
-					goto data_short;
-				}
-				data = data + d;
-				if ( d & 1 ) {
-					if ( zgetc( zf ) == EOF ) {
-						goto data_short;
+
+					while ( bytes_read < total_bytes ) {
+						if ( zgetc( zf ) == EOF ) {
+							goto data_short;
+						}
+						bytes_read = bytes_read + 1;
 					}
 				}
 skip_iter_rle8:
