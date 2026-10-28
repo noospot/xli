@@ -358,7 +358,7 @@ void help( void )
 	byte i;
 
 	version();
-	//printf( "xli version %s.%s.%s Copyright (c) 1989-2025 the xli developers\n", VERSION, PATCHLEVEL, REVISION);
+
 	printf( "usage: xli [general options]  {[image options] FILE}...\n" );
 	printf( "\n" );
 	printf( "General options:\n" );

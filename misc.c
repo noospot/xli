@@ -71,7 +71,7 @@ information about the error is available, sorry.\n" );
 
 void version( void )
 {	
-	printf( "xli version %s.%s.%s  Copyright (c) 1989-2025 xli developers\n", VERSION, PATCHLEVEL, REVISION);
+	printf( "xli version %s.%s.%s  Copyright (c) 1989-2026 xli developers\n", VERSION, PATCHLEVEL, REVISION);
 }
 
 void usage( strbyte* name )
