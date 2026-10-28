@@ -2,8 +2,8 @@
  * bmp.h - header file for Bmp files
  */
 
-#define C_WIN	1		/* Image bfType */
-#define C_OS2	2
+#define C_WIN		1		/* Image bfType */
+#define C_OS2		2
 #define C_OS2_V2	3
 #define C_WIN_V2	4
 #define C_WIN_V3	5
@@ -19,22 +19,23 @@
 #define BI_FIELDS 3 
 #define BI_JPEG 4
 #define BI_PNG  5
+#define BI_ALPHAFIELDS 6
 
 #define BI_HUFF1D 3         /* Compression type, OS/2 v2*/
 #define BI_RLE24 4
 
 // info header
 
-#define WIN_INFOHEADER_LEN	40
-#define OS2_INFOHEADER_LEN	12
-#define OS2_V2_INFOHEADER_MIN_LEN	16
-#define OS2_V2_INFOHEADER_MAX_LEN	64
-#define BMP_V2INFOHEADER_LEN	52
-#define BMP_V3INFOHEADER_LEN	56
-#define BMP_V4INFOHEADER_LEN	108
-#define BMP_V5INFOHEADER_LEN	124
+#define WIN_INFOHEADER_LEN	40         // Standard Windows 3.x / NT 
+#define OS2_INFOHEADER_LEN	12         // OS/2 1.x / Windows 2.x core 
+#define OS2_V2_INFOHEADER_MIN_LEN	16 // OS/2 2.x minimum size 
+#define OS2_V2_INFOHEADER_MAX_LEN	64 // OS/2 2.x full/maximum 
+#define BMP_V2INFOHEADER_LEN	52         // Adobe Photoshop / Windows CE extension adding RGB masks
+#define BMP_V3INFOHEADER_LEN	56         // Adobe Photoshop / Windows CE extension adding Alpha mask
+#define BMP_V4INFOHEADER_LEN	108        // Windows 95 / NT 4.0  with color spaces
+#define BMP_V5INFOHEADER_LEN	124        // Windows 98 / 2000  with ICC color profiles
 
-// d: definition for maximum bit depth supporting a color palette
+// d: maximum depth supporting a color palette
 #define PAL_MAX 8
 
 /* Header structure definition. */

@@ -279,17 +279,26 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		fprintf( stderr, "bmpLoad: %s - image PixelSize error\n", hp->name );
 		return FALSE;
 	}
-	if ( ( hp->biCompression != BI_RGB
+	if  ( hp->biCompression != BI_RGB
 	        && hp->biCompression != BI_RLE8
 	        && hp->biCompression != BI_RLE4
-	        && hp->biCompression != BI_FIELDS
-	        && hp->biCompression != BI_JPEG
-	        && hp->biCompression != BI_PNG )
-	        || ( hp->biCompression == BI_RLE8 && hp->biPixelSize != 8 )
-	        || ( hp->biCompression == BI_RLE4 && hp->biPixelSize != 4 ) ) {
+	        && hp->biCompression != BI_FIELDS  // !! also BI_HUFF1D
+	        && hp->biCompression != BI_JPEG    // !! also BI_RLE24
+	        && hp->biCompression != BI_PNG 
+		&& hp->biCompression != BI_ALPHAFIELDS	) {
 		fprintf( stderr, "bmpLoad: %s - image compression type error\n", hp->name );
 		return FALSE;
 	}
+
+	if  ( ( hp->bfType == C_OS2_V2 && hp->biCompression == BI_HUFF1D && hp->biPixelSize != 1 ) 
+	        || ( hp->biCompression == BI_RLE4 && hp->biPixelSize != 4 ) 	
+		|| ( hp->biCompression == BI_RLE8 && hp->biPixelSize != 8 )
+		|| ( hp->bfType == C_OS2_V2 && hp->biCompression == BI_RLE24 && hp->biPixelSize != 24 ) 
+	) {
+		fprintf( stderr, "bmpLoad: %s - image compression/depth mismatch error\n", hp->name );
+		return FALSE;
+	}
+	
 	/* top to bottom images cannot be RLE */
 	if ( hp->biHeight < 0 && ( hp->biCompression == BI_RLE8 || hp->biCompression == BI_RLE4 ) ) {
 		fprintf( stderr, "bmpLoad: %s - top to bottom with RLE not supported\n", hp->name );
@@ -375,15 +384,21 @@ static void tell_about_bmp( bmpHeader* hp )
 
 	const strbyte* complabel = "";
 	if ( hp->biCompression == BI_RLE8 || hp->biCompression == BI_RLE4 ) {
-		complabel = "Run length compressed, ";
-	} else if ( hp->biCompression == BI_JPEG ) {
-		complabel = "JPEG compressed, ";
+		complabel = "RLE, ";
+	} else if ( ( hp->bfType != C_OS2 && hp->bfType != C_OS2_V2 ) && hp->biCompression == BI_JPEG ) {
+		complabel = "includes JPEG, ";
+	} else if ( ( hp->bfType == C_OS2 || hp->bfType == C_OS2_V2 ) && hp->biCompression == BI_RLE24 ) {
+		complabel = "RLE24, ";			
 	} else if ( hp->biCompression == BI_PNG ) {
-		complabel = "PNG compressed, ";
-	} else if ( hp->biCompression == BI_FIELDS ) {
-		complabel = "Bitfields, ";
+		complabel = "includes PNG, ";
+	} else if ( ( hp->bfType != C_OS2 && hp->bfType != C_OS2_V2 ) && hp->biCompression == BI_FIELDS ) {
+		complabel = "Fields Masks, ";
+	} else if ( ( hp->bfType == C_OS2 || hp->bfType == C_OS2_V2 ) && hp->biCompression == BI_HUFF1D ) {
+		complabel = "Huff1d, ";	
+	} else if (  hp->biCompression == BI_ALPHAFIELDS ) {
+		complabel = "Alpha fields Masks, ";		
 	} else if ( hp->biCompression == BI_RGB ) {
-		complabel = "Uncompressed, ";
+		complabel = "";
 	}
 
 	printf( "%s is a %lux%lu %d bit deep, %s%s%s %s BMP image\n", hp->name,
@@ -413,19 +428,26 @@ static void print_bmp_hdr( bmpHeader* hp )
 	unsigned long abs_height = ( hp->biHeight < 0 ) ? ( unsigned long )( -hp->biHeight ) : ( unsigned long )hp->biHeight;
 	const strbyte* topbot = ( hp->biHeight < 0 ) ? "top-bot" : "bot-top";
 
-	const strbyte* complabel = "Unknown";
-	if ( hp->biCompression == BI_RGB ) {
-		complabel = "Uncompressed (BI_RGB)";
-	} else if ( hp->biCompression == BI_RLE8 ) {
-		complabel = "RLE 8-bit (BI_RLE8)";
-	} else if ( hp->biCompression == BI_RLE4 ) {
-		complabel = "RLE 4-bit (BI_RLE4)";
-	} else if ( hp->biCompression == BI_FIELDS ) {
-		complabel = "Bitfields (BI_FIELDS)";
-	} else if ( hp->biCompression == BI_JPEG ) {
-		complabel = "JPEG (BI_JPEG)";
+
+	const strbyte* complabel = "";
+	if ( hp->biCompression == BI_RLE8 || hp->biCompression == BI_RLE4 ) {
+		complabel = "RLE4 ";
+	} else if (hp->biCompression == BI_RLE8 ) {
+		complabel = "RLE8 ";
+	} else if ( ( hp->bfType != C_OS2 && hp->bfType != C_OS2_V2 ) && hp->biCompression == BI_JPEG ) {
+		complabel = "JPEG ";
+	} else if ( ( hp->bfType == C_OS2 || hp->bfType == C_OS2_V2 ) && hp->biCompression == BI_RLE24 ) {
+		complabel = "RLE24 ";			
 	} else if ( hp->biCompression == BI_PNG ) {
-		complabel = "PNG (BI_PNG)";
+		complabel = "PNG ";
+	} else if ( ( hp->bfType != C_OS2 && hp->bfType != C_OS2_V2 ) && hp->biCompression == BI_FIELDS ) {
+		complabel = "Fields Masks ";
+	} else if ( ( hp->bfType == C_OS2 || hp->bfType == C_OS2_V2 ) && hp->biCompression == BI_HUFF1D ) {
+		complabel = "Huff1d ";	
+	} else if (  hp->biCompression == BI_ALPHAFIELDS ) {
+		complabel = "Alpha fields Masks ";		
+	} else if ( hp->biCompression == BI_RGB ) {
+		complabel = "None ";
 	}
 
 	printf( " File Name name:                      %s\n", hp->name );
