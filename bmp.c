@@ -212,22 +212,27 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		hp->biClrImportant = GULONG4( &infobuf[36] );
 	}
 
-	/* Read or extract bitmasks if BI_FIELDS */
-	if ( hp->biCompression == BI_FIELDS && hp->bfType != C_OS2 && hp->bfType != C_OS2_V2 ) {
+	/* Read or extract bitmasks if BI_FIELDS or BI_ALPHAFIELDS */
+	if ( ( hp->biCompression == BI_FIELDS || hp->biCompression == BI_ALPHAFIELDS ) && hp->bfType != C_OS2 && hp->bfType != C_OS2_V2 ) {
 		if ( hp->biInfoHeaderSize == WIN_INFOHEADER_LEN ) {
-			byte maskbuf[12];
-			if ( zread( zf, maskbuf, 12 ) != 12 ) {
+			unsigned int mask_bytes = ( hp->biCompression == BI_ALPHAFIELDS ) ? 16 : 12;
+			byte maskbuf[16];
+			if ( zread( zf, maskbuf, mask_bytes ) != ( int )mask_bytes ) {
 				return FALSE;
 			}
 			hp->redMask = GULONG4( &maskbuf[0] );
 			hp->greenMask = GULONG4( &maskbuf[4] );
 			hp->blueMask = GULONG4( &maskbuf[8] );
-			hp->alphaMask = 0;
+			if ( hp->biCompression == BI_ALPHAFIELDS ) {
+				hp->alphaMask = GULONG4( &maskbuf[12] );
+			} else {
+				hp->alphaMask = 0;
+			}
 		} else {
 			hp->redMask = GULONG4( &infobuf[40] );
 			hp->greenMask = GULONG4( &infobuf[44] );
 			hp->blueMask = GULONG4( &infobuf[48] );
-			if ( hp->biInfoHeaderSize >= BMP_V3INFOHEADER_LEN ) {
+			if ( hp->biInfoHeaderSize >= BMP_V3INFOHEADER_LEN || hp->biCompression == BI_ALPHAFIELDS ) {
 				hp->alphaMask = GULONG4( &infobuf[52] );
 			} else {
 				hp->alphaMask = 0;
@@ -318,6 +323,8 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 
 		if ( hp->biCompression == BI_FIELDS && hp->biInfoHeaderSize == WIN_INFOHEADER_LEN ) {
 			masks_header_len = 12;
+		} else if ( hp->biCompression == BI_ALPHAFIELDS && hp->biInfoHeaderSize == WIN_INFOHEADER_LEN ) {
+			masks_header_len = 16;
 		}
 
 		all_headers_len = BMP_FILEHEADER_LEN + hp->biInfoHeaderSize + masks_header_len;
@@ -326,24 +333,21 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		if ( hp->bfType == C_OS2 ) {
 			color_entry_len = 3; /* OS/2 v1 always uses 3-byte RGBTRIPLE entries */
 		} else if ( hp->bfType == C_OS2_V2 ) {
-			/* OS/2 v2 dynamically permits either 3-byte or 4-byte entries */
 			if ( palette_len > 0 && ( palette_len % 3 == 0 ) && ( palette_len / 3 <= ( 1UL << hp->biPixelSize ) ) ) {
 				color_entry_len = 3;
-				fprintf( stderr, "bmpLoad: %s - OS/2 v2 file handles 3-byte palette entries\n", hp->name );
 			} else if ( palette_len > 0 && ( palette_len % 4 == 0 ) && ( palette_len / 4 <= ( 1UL << hp->biPixelSize ) ) ) {
 				color_entry_len = 4;
 			} else {
-				color_entry_len = 3; /* Standard fallback for native OS/2 streams */
+				color_entry_len = 3;
 			}
 		} else {
-			color_entry_len = 4; /* Windows formats always use 4-byte RGBQUAD entries */
+			color_entry_len = 4;
 		}
 
 		/* Determine number of colors used for indexed color modes */
 		if ( hp->biPixelSize <= PAL_MAX ) {
 			unsigned long max_colors = ( 1UL << hp->biPixelSize );
 			
-			/* try to find number of colors with distance between header and image data */
 			if ( palette_len > 0 && color_entry_len > 0 && ( palette_len % color_entry_len == 0 ) ) {
 				unsigned long colors_num = palette_len / color_entry_len;
 				if ( colors_num <= max_colors ) {
@@ -351,13 +355,18 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 				} else {
 					hp->biClrUsed = max_colors;
 				}
-			} 
-			/* Fallback to header field or absolute bit-depth limit */
-			else if ( hp->biClrUsed == 0 || hp->biClrUsed > max_colors ) {
+			} else if ( hp->biClrUsed == 0 || hp->biClrUsed > max_colors ) {
 				hp->biClrUsed = max_colors;
 			}
+
+			if ( hp->bfImageOffset == 0 || hp->bfImageOffset < all_headers_len + ( hp->biClrUsed * color_entry_len ) ) {
+				hp->bfImageOffset = all_headers_len + ( hp->biClrUsed * color_entry_len );
+			}
 		} else {
-			hp->biClrUsed = 0; /* TrueColor/HighColor streams do not utilize a required palette */
+			hp->biClrUsed = 0;
+			if ( hp->bfImageOffset == 0 || hp->bfImageOffset < all_headers_len ) {
+				hp->bfImageOffset = all_headers_len;
+			}
 		}
 
 		hp->all_headers_len = all_headers_len;
@@ -368,7 +377,6 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 	
 	return TRUE;
 }
-
 /* Print a brief description of the image */
 static void tell_about_bmp( bmpHeader* hp )
 {
