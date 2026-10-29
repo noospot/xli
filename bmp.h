@@ -69,4 +69,6 @@ typedef struct {
 	unsigned long masks_header_len;	/* Size of BI_FIELDS mask header extension */
 	unsigned long palette_len;	/* Calculated byte length of color palette */
 	unsigned long color_entry_len;	/* Length of individual palette entry (3 or 4 bytes) */
+	unsigned long resolved_image_offset;	/* resolved absolute pixel data offset */
+	unsigned long resolved_clr_used;     /* Computed effective number of colormap entries */
 } bmpHeader;
