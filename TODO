@@ -1,34 +1,24 @@
+xli TODO file
 
-add test suites
+- add test suites
 
-make MIT-SHM and or mmap  conditional for systems that don't have it
+- make MIT-SHM and or mmap  conditional for systems that don't have it
 
-
-and NEVER MIND tweaking send.c for performance.  I mean, really, WHO ON
+- and NEVER MIND tweaking send.c for performance.  I mean, really, WHO ON
 EARTH CARES?  Except me, I mean.
 
-make fast image scaling a subfeature of -zoom, eliminate -iscale
+- make fast image scaling a subfeature of -zoom, eliminate -iscale
 fix crash on interactive zoom with -clip set
 zooming does really weird things. fix zooming.
 
+- use Xrender x11 extension to send rgba image directly to x11 instead of converting them to rgb
 
-use Xrender x11 extension to send rgba image directly to x11 instead of converting them to rgb
+- use <stdint.h> and change the code toward c99 like fixed length types
 
+- fix paletted 32 tga
 
-use <stdint.h> and change the code toward c99 like fixed length types
+- add ways to trigger the mirror function, keys, cli arg...
 
+- keep requested/window background color while merging alpha
 
-fix paletted 32 tga
-
-
-improve bmp handling
-
-add ways to trigger the mirror function, keys, cli arg...
-
-keep requested/window background color while merging alpha
-
-
-could be doing file gamma loaded if and only if required with the command line options.
-
-
-do test suites
+- do test suites
