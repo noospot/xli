@@ -27,7 +27,7 @@ version 1.18.0 supports:
   JFIF style jpeg Image
   WEBP Image
   Targa Image (TGA)
-  BMP Image  Windows, OS/2 RLE
+  BMP Image  Windows, OS/2
   Portable Bit Map (PNM, PBM, PGM, PPM)
   PC Paintbrush Image (PCX)
   X Pixmap XPM
