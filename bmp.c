@@ -314,7 +314,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		return FALSE;
 	}
 	
-	/* Calculate headers, masks, and palette lengths */
+	/* Calculate headers, masks, and palette lengths and validate resolved offset / overlaps */
 	{
 		unsigned long color_entry_len = 4;
 		unsigned long masks_header_len = 0;
@@ -328,6 +328,8 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		}
 
 		all_headers_len = BMP_FILEHEADER_LEN + hp->biInfoHeaderSize + masks_header_len;
+		
+		// **FIXME** there could be some other data between headers, palette and image 
 		palette_len = ( hp->bfImageOffset > all_headers_len ) ? ( hp->bfImageOffset - all_headers_len ) : 0;
 
 		if ( hp->bfType == C_OS2 ) {
@@ -369,13 +371,26 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		} else {
 			effective_clr_used = 0; /* TrueColor/HighColor streams do not utilize a required palette */
 		}
-
+		
+		// BMP_HDRFILESIZE_OK=1;
+		// if ( hp->bfFileSize > 0 &&  hp->bfFileSize !=  real_file_size ) {
+		// 	fprintf( stderr, "bmpLoad: %s - header file size value (%lu) does not match real file size\n", hp->name, resolved_offset, hp->bfFileSize );
+		// 	BMP_HDRFILESIZE_OK=0;
+		// }
+		
 		unsigned long resolved_offset = hp->bfImageOffset;
 		unsigned long min_pixel_offset = all_headers_len + ((hp->biPixelSize <= PAL_MAX) ? (effective_clr_used * color_entry_len) : 0);
 
 		if ( resolved_offset == 0 || resolved_offset < min_pixel_offset ) {
+			if ( hp->bfImageOffset > 0 && hp->bfImageOffset < min_pixel_offset ) {
+				fprintf( stderr, "bmpLoad: %s - bfImageOffset (%lu) overlaps header or colormap (minimum expected: %lu)\n", hp->name, hp->bfImageOffset, min_pixel_offset );
+			}
 			resolved_offset = min_pixel_offset;
 		}
+		//  else if ( hp->bfFileSize > 0 && BMP_HDRFILESIZE_OK && resolved_offset > hp->bfFileSize ) {
+		// 	fprintf( stderr, "bmpLoad: %s - resolved_image_offset (%lu) exceeds file size (%lu)\n", hp->name, resolved_offset, hp->bfFileSize );
+		// 	return FALSE;
+		// 
 
 		hp->all_headers_len = all_headers_len;
 		hp->masks_header_len = masks_header_len;
@@ -527,7 +542,6 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	bmpHeader hdr = {0};
 	Image* image;
 	bool data_bounds = FALSE;
-	unsigned long skip;
 	unsigned long abs_height;
 	bool top_bot;
 
@@ -545,7 +559,6 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	if ( globals._Xdebug ) {
 		print_bmp_hdr( &hdr );	
 	}
-	znocache( zf );
 
 	/* Report  64-bit files as identifiable but not displayable yet */
 	if (  hdr.biPixelSize == 64 ) {
@@ -559,18 +572,17 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 
 	/* Create the appropriate image and colormap */
 	if ( hdr.biPixelSize <= PAL_MAX ) {
-		/* must be 1, 2, 4 or 8 bit mapped type */
+
 		unsigned int i;
 		int n = ( int )hdr.color_entry_len;
 		byte buf[4];
 		/* maximum number of colors */
 		unsigned int used = ( 1 << hdr.biPixelSize );
 
-		if ( hdr.biPixelSize == 1 ) {	/* bitmap */
+		if ( hdr.biPixelSize == 1 ) {	// 2 colors  type
 			image = newBitImage( hdr.biWidth, abs_height );
-		} else {
-			image = newRGBImage( hdr.biWidth, abs_height,
-			                     hdr.biPixelSize );
+		} else {   // palette type, must be 1, 2, 4 or 8 bit mapped type
+			image = newRGBImage( hdr.biWidth, abs_height, hdr.biPixelSize );
 		}
 		image->title = dupString( hdr.name );
 
@@ -602,47 +614,31 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		image->title = dupString( hdr.name );
 	}
 
-	/* find amount of bytes to Skip to image offset */
+	/* Rewind file stream to offset 0 and strictly skip to bfImageOffset (or resolved fallback if 0) */
 	{
-		unsigned long palette_bytes;
+		unsigned long target_offset = ( hdr.bfImageOffset > 0 ) ? hdr.bfImageOffset : hdr.resolved_image_offset;
+		unsigned long skip_count = target_offset;
 
-		if ( hdr.biPixelSize <= PAL_MAX ) {
-			palette_bytes = hdr.color_entry_len * hdr.resolved_clr_used;
-		} else {
-			palette_bytes = 0;
-		}
-
-		unsigned long min_pixel_offset = hdr.all_headers_len + palette_bytes;
-
-		if ( hdr.resolved_image_offset < hdr.all_headers_len ) {
-			fprintf( stderr, "bmpLoad: %s - resolved_image_offset underflow or overlaps header\n", hdr.name );
+		if ( !zrewind( zf ) ) {
+			fprintf( stderr, "bmpLoad: %s - Failed to rewind file stream\n", hdr.name );
 			freeImage( image );
 			zclose( zf );
 			return NULL;
 		}
 
-		if ( hdr.biPixelSize <= PAL_MAX && hdr.resolved_image_offset < min_pixel_offset ) {
-			unsigned long available_palette_bytes = hdr.resolved_image_offset - hdr.all_headers_len;
-			if ( available_palette_bytes > 0 && ( available_palette_bytes % hdr.color_entry_len ) == 0 ) {
-				hdr.resolved_clr_used = available_palette_bytes / hdr.color_entry_len;
-				min_pixel_offset = hdr.resolved_image_offset;
-			} else {
-				fprintf( stderr, "bmpLoad: %s - resolved_image_offset overlaps header or invalid palette size\n", hdr.name );
+		while ( skip_count > 0 ) {
+			if ( zgetc( zf ) == EOF ) {
+				fprintf( stderr, "bmpLoad: %s - Short read while skipping to image data offset\n", hdr.name );
 				freeImage( image );
 				zclose( zf );
 				return NULL;
 			}
+			skip_count = skip_count - 1;
 		}
+	}
 
-		skip = hdr.resolved_image_offset - min_pixel_offset;
-	}
-	/* Skip to image offset, specified in file header */
-	while ( skip > 0 ) {
-		if ( zgetc( zf ) == EOF ) {
-			goto data_short;
-		}
-		skip = skip - 1;
-	}
+	/* Disable caching before reading pixel data */
+	znocache( zf );
 
 	/* Read the pixel data */
 	if ( hdr.biPixelSize == 1 ) {
