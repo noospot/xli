@@ -6,7 +6,7 @@
 **
 **	Version 0.1 --  4/25/91 -- Initial cut
 **	Version 0.2 -- 2001-12-15 -- Support 8bit color images with palette.
-**				     (Alexandre Duret-Lutz <duret_g@epita.fr>)
+**					(Alexandre Duret-Lutz <duret_g@epita.fr>)
 **
 **  Copyright (c) 1991 Tim Northrup
 **	(see file "tgncpyrght.h" for complete copyright information)
@@ -40,14 +40,8 @@ static bool PCX_LoadImage( ZFILE* zf, int in_bpr, int img_bpr,
                            Image* image, int rows, bool readpal );
 
 
-/*
-**  pcxIdent
-**
-**	Identify passed file as a PC Paintbrush image or not
-**
-**	Returns 1 if file is a PCX file, 0 otherwise
-*/
-
+// Identify passed file as a PC Paintbrush image or not
+// Returns 1 if file is a PCX file, 0 otherwise
 int pcxIdent( strbyte* fullname, strbyte* name )
 {
 	ZFILE* zf;
@@ -210,8 +204,9 @@ Image* pcxLoad ( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	xmax = xmax - xmin + 1;
 	ymax = ymax - ymin + 1;
 	in_bpr = pcxhd[66] + ( 256 * pcxhd[67] );
-	img_bpr = ( xmax * pcxhd[3] + 7 )/8; /* Recompute the number of bytes
-					      per lines.  */
+
+	/*  number of bytes per lines.  */
+	img_bpr = ( xmax * pcxhd[3] + 7 )/8;
 
 	/* double check image */
 	if ( xmax < 0 || ymax < 0 || in_bpr < img_bpr ) {
@@ -241,7 +236,7 @@ Image* pcxLoad ( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	image->title = dupString( name );
 
 	/* Read compressed bitmap. */
-	if ( !PCX_LoadImage( zf, in_bpr, img_bpr, image, ymax, pcxhd[3] == 8 ) ) {
+	if ( !PCX_LoadImage( zf, in_bpr, img_bpr, image, ymax, (pcxhd[3] == 8) ) ) {
 		fprintf( stderr, "pcxLoad: %s - Short read of PCX file\n", name );
 		zclose( zf );
 		return( image );
@@ -253,14 +248,9 @@ Image* pcxLoad ( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 }
 
 
-/*
-**  PCX_LoadImage
-**
-**	Load PC Paintbrush file into the passed Image structure.
-**
-**	Returns FALSE if there was a short read.
-*/
 
+// Load PC Paintbrush file into the passed Image structure.
+// Returns FALSE if there was a short read.
 static bool PCX_LoadImage ( ZFILE* zf, int in_bpr, int img_bpr,
                             Image* image, int rows, bool readpal )
 {
@@ -272,14 +262,31 @@ static bool PCX_LoadImage ( ZFILE* zf, int in_bpr, int img_bpr,
 
 	register byte* ptr;
 	int row = 0;
-	int bytes_this_row = 0;
+	int row_bytes = 0;
 	int b, i, cnt;
-	/* For binary image we need to reverse all bits.  */
+	/* if a binary image set mask  */
 	int xor_mask = ( image->type == IBITMAP ) ? 0xff : 0;
-
+	
+	// set a default grayscale palette so if...
+	if ( readpal ) {
+		cnt = 0;
+		while ( cnt < 256 ) {
+			image->rgb.red[cnt] = cnt << 8;
+			image->rgb.green[cnt] = cnt << 8;
+			image->rgb.blue[cnt] = cnt << 8;
+			cnt = cnt + 1;
+		}
+		image->rgb.used = 256;
+	}
+	
+	
 	ptr = &( image->data[0] );
 
 	while ( row < rows && ( b = zgetc( zf ) ) != EOF ) {
+
+		if ( row >= rows ) {
+			break;
+		}
 
 		if ( ( b & 0xC0 ) == 0xC0 ) {
 			/* have a repetition count -- mask flag bits */
@@ -292,46 +299,52 @@ static bool PCX_LoadImage ( ZFILE* zf, int in_bpr, int img_bpr,
 			cnt = 1;		/* no repeating this one */
 		}
 
-		b ^= xor_mask;
+		// operator  '^' == XOR
+		b = b ^ xor_mask;
 
-		for ( i = 0; i < cnt; i++ ) {
-			if ( row >= rows ) {
-				break;
+		i = 0;
+		while ( i < cnt ) {
+			if ( row_bytes < img_bpr ) {
+				*ptr = ( byte ) b;
+				ptr = ptr + 1;
 			}
-			if ( bytes_this_row < img_bpr ) {
-				*ptr++ = ( byte ) b;
-			}
-			if ( ++bytes_this_row == in_bpr ) {
+			row_bytes = row_bytes + 1;
+			if ( row_bytes == in_bpr ) {
 				/* start of a new line */
-				row=row+1;
-				bytes_this_row = 0;
+				row = row + 1;
+				row_bytes = 0;
 			}
+			i = i + 1;
 		}
 	}
+
+
+
 	/* Read a palette if needed.  */
 	if ( readpal ) {
-		/* The palette is separated from the pixels data by dummy
-		   byte equal to 12.  */
-		if ( ( b = zgetc( zf ) ) == EOF || b != 12 ) {
-			return FALSE;
-		}
-		
-		cnt = 0;
-		while ( cnt < 256 ) {
-			int r, g, b;
-			if ( ( r = zgetc( zf ) ) == EOF
-			        || ( g = zgetc( zf ) ) == EOF
-			        || ( b = zgetc( zf ) ) == EOF ) {
-				return FALSE;
+		/* palette starts next pixels data, separated by 
+		   by a dummy byte equal to 12.  */
+		b = zgetc( zf );
+		if ( b == 12 ) {
+			cnt = 0;
+			while ( cnt < 256 ) {
+				int r, g, b;
+				if ( ( r = zgetc( zf ) ) == EOF
+					|| ( g = zgetc( zf ) ) == EOF
+					|| ( b = zgetc( zf ) ) == EOF ) {
+					image->rgb.used = cnt;	
+					return FALSE;
+				}
+				image->rgb.red[cnt] = r << 8;
+				image->rgb.green[cnt] = g << 8;
+				image->rgb.blue[cnt] = b << 8;
+				cnt = cnt + 1;
 			}
-			image->rgb.red[cnt] = r << 8;
-			image->rgb.green[cnt] = g << 8;
-			image->rgb.blue[cnt] = b << 8;
-			cnt=cnt+1;
-		}
-		image->rgb.used = 256;
+			image->rgb.used = 256;
+		} else if ( b == EOF ) {
+			return FALSE;	
+		} 	
 	}
-
-
+	
 	return TRUE;
 }
