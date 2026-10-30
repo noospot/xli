@@ -9,9 +9,13 @@
 //
 // 20261019-20261029 rno/noospot
 //
+//  TODO
+//   - find and report if data between header,palette and image
+//   - rgb32 with alpha,  images with invisible pixels, colors with 0x00 alpha
+//   - keep file found masks and resolved mask in distinct variables
+//   - use fixed width types
+//   - cleanup and optimise 
 //
-//
-
 
 #include <sys/stat.h>
 #include <math.h>
@@ -282,18 +286,18 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		}
 	}
 
-	if ( hp->biPixelSize != 1
+	if (       hp->biPixelSize != 1
 	        && hp->biPixelSize != 2
 	        && hp->biPixelSize != 4
 	        && hp->biPixelSize != 8
 	        && hp->biPixelSize != 16
 	        && hp->biPixelSize != 24
 	        && hp->biPixelSize != 32
-	        && hp->biPixelSize != 64 ) {
+	        && hp->biPixelSize != 64   ) {
 		fprintf( stderr, "bmpLoad: %s - image PixelSize error\n", hp->name );
 		return FALSE;
 	}
-	if  ( hp->biCompression != BI_RGB
+	if  (      hp->biCompression != BI_RGB
 	        && hp->biCompression != BI_RLE8
 	        && hp->biCompression != BI_RLE4
 	        && hp->biCompression != BI_FIELDS  // !! also BI_HUFF1D
@@ -304,7 +308,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		return FALSE;
 	}
 
-	if  ( ( hp->bfType == C_OS2_V2 && hp->biCompression == BI_HUFF1D && hp->biPixelSize != 1 )
+	if  (   ( hp->bfType == C_OS2_V2 && hp->biCompression == BI_HUFF1D && hp->biPixelSize != 1 )
 	        || ( hp->biCompression == BI_RLE4 && hp->biPixelSize != 4 )
 	        || ( hp->biCompression == BI_RLE8 && hp->biPixelSize != 8 )
 	        || ( hp->bfType == C_OS2_V2 && hp->biCompression == BI_RLE24 && hp->biPixelSize != 24 )
@@ -318,6 +322,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		fprintf( stderr, "bmpLoad: %s - top to bottom with RLE not supported\n", hp->name );
 		return FALSE;
 	}
+	
 	if ( hp->biPlanes != 1 ) {
 		fprintf( stderr, "bmpLoad: %s - image Planes value error\n", hp->name );
 		return FALSE;
