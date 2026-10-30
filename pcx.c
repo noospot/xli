@@ -37,7 +37,7 @@
 
 /* Routine to load a PCX file */
 static bool PCX_LoadImage( ZFILE* zf, int in_bpr, int img_bpr,
-                              Image* image, int rows, bool readpal );
+                           Image* image, int rows, bool readpal );
 
 
 /*
@@ -67,21 +67,98 @@ int pcxIdent( strbyte* fullname, strbyte* name )
 
 	/* Read .pcx header. */
 	if ( zread( zf,pcxhd,128 ) == 128 ) {
-		if ( pcxhd[0] == PCX_MAGIC ) {
-			/* Calculate raster header and swap bytes. */
-			xmin = pcxhd[4] + ( 256 * pcxhd[5] );
-			ymin = pcxhd[6] + ( 256 * pcxhd[7] );
-			xmax = pcxhd[8] + ( 256 * pcxhd[9] );
-			ymax = pcxhd[10] + ( 256 * pcxhd[11] );
-			xmax = xmax - xmin + 1;
-			ymax = ymax - ymin + 1;
 
-			printf( "%s is a %dx%d PC Paintbrush image\n",
-			        name,xmax,ymax );
-			ret = 1;
+		// pcx magic MUST be 10  0x0a
+		if ( pcxhd[0] != PCX_MAGIC ) {
+			goto ident_ret;
 		}
+
+		// version
+		if ( pcxhd[1]>5 || pcxhd[1]==1  ) {
+			goto ident_ret;
+		}
+
+		// encoding
+		const strbyte* encoding;
+		if ( pcxhd[2] == 1 ) {
+			encoding = "RLE,";
+		} else {
+			encoding = "";
+		}
+		if ( pcxhd[2] > 1 ) {
+			goto ident_ret;
+		}
+
+		// planar bpp 1, 2, 4, or 8
+		if ( pcxhd[3] > 8 ) {
+			goto ident_ret;
+		}
+
+		// reserved MUST be 0
+		if ( pcxhd[64]!=0  ) {
+			goto ident_ret;
+		}
+
+		// NPlane
+		if ( pcxhd[65] ==0  ) {
+			goto ident_ret;
+		}
+		// result bpp, max 255
+		int tmp = pcxhd[3]*pcxhd[65] ;
+		if ( tmp>0xFF ) {
+			goto ident_ret;
+		}
+		byte result_bpp = tmp;
+
+		// colormode
+		const strbyte* colormode;
+		if ( pcxhd[68]<1 || pcxhd[68]>2 ) {
+			colormode="";
+			// goto ident_ret; // many images  0
+		}
+		if ( pcxhd[68] == 1 ) {
+			colormode="Color/BW ";
+		}
+		if ( pcxhd[68] == 2 ) {
+			colormode="Grayscale ";
+		}
+
+		// blank
+		byte i=0;
+		while ( i<54 ) {
+			if ( pcxhd[74+i]!=0 ) {
+				goto ident_ret;
+			}
+			i=i+1;
+		}
+
+		const strbyte* version = "";
+		if ( pcxhd[1] == 0 ) {
+			version = "v2.5";
+		} else if ( pcxhd[1] == 2 ) {
+			version = "v2.8, with palette";
+		} else if ( pcxhd[1] == 3 ) {
+			version = "v2.8";
+		} else if ( pcxhd[1] == 4 ) {
+			version = "Windows version";
+		} else if ( pcxhd[1] == 5 ) {
+			version = "v3.x";
+		}
+
+		// Calculate raster header and swap bytes.
+		xmin = pcxhd[4] + ( 256 * pcxhd[5] );
+		ymin = pcxhd[6] + ( 256 * pcxhd[7] );
+		xmax = pcxhd[8] + ( 256 * pcxhd[9] );
+		ymax = pcxhd[10] + ( 256 * pcxhd[11] );
+		xmax = xmax - xmin + 1;
+		ymax = ymax - ymin + 1;
+
+		printf( "%s is a %dx%d PCX Paintbrush %simage, %s, %s depth %i \n", name,xmax,ymax, colormode, version, encoding, result_bpp );
+		ret = 1;
 	}
 
+ident_ret:
+	;
 	zclose( zf );
 	return( ret );
 }
@@ -104,11 +181,11 @@ Image* pcxLoad ( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	int xmax;
 	int ymin;
 	int ymax;
-	int in_bpr;		/* in input format bytes per row */
-	int img_bpr;	/* xli image format bytes per row */
+	int in_bpr;	/* in input format bytes per row */
+	int img_bpr;	/* xli image bytes per row */
 	register Image* image;
 
-	/* Open input file. */
+	/* Open file. */
 	if ( ! ( zf = zopen( fullname ) ) ) {
 		perror( "pcxLoad" );
 		return( ( Image* )NULL );
@@ -146,11 +223,9 @@ Image* pcxLoad ( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		printf( "%s is a %dx%d PC Paintbrush image\n",name,xmax,ymax );
 	}
 
-	/* Only monochorme or 8bits paletized images are supported.  */
+	/* Only monochrome or 8bits paletized images are supported.  */
 	if ( pcxhd[65] > 1 || !( pcxhd[3] == 1 || pcxhd[3] == 8 ) ) {
-		fprintf( stderr,
-		         "pcxLoad: %s - Unsupported PCX type\n",
-		         name );
+		fprintf( stderr, "pcxLoad: %s - Unsupported PCX type\n", name );
 		zclose( zf );
 		return( ( Image* )NULL );
 	}
@@ -167,7 +242,7 @@ Image* pcxLoad ( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 
 	/* Read compressed bitmap. */
 	if ( !PCX_LoadImage( zf, in_bpr, img_bpr, image, ymax, pcxhd[3] == 8 ) ) {
-		fprintf( stderr,"pcxLoad: %s - Short read of PCX file\n",name );
+		fprintf( stderr, "pcxLoad: %s - Short read of PCX file\n", name );
 		zclose( zf );
 		return( image );
 	}
@@ -187,7 +262,7 @@ Image* pcxLoad ( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 */
 
 static bool PCX_LoadImage ( ZFILE* zf, int in_bpr, int img_bpr,
-                               Image* image, int rows, bool readpal )
+                            Image* image, int rows, bool readpal )
 {
 	/* Goes like this: Read a byte.  If the two high bits are set,
 	** then the low 6 bits contain a repeat count, and the byte to
@@ -228,7 +303,7 @@ static bool PCX_LoadImage ( ZFILE* zf, int in_bpr, int img_bpr,
 			}
 			if ( ++bytes_this_row == in_bpr ) {
 				/* start of a new line */
-				row++;
+				row=row+1;
 				bytes_this_row = 0;
 			}
 		}
@@ -240,17 +315,19 @@ static bool PCX_LoadImage ( ZFILE* zf, int in_bpr, int img_bpr,
 		if ( ( b = zgetc( zf ) ) == EOF || b != 12 ) {
 			return FALSE;
 		}
-
-		for ( cnt = 0; cnt < 256; ++cnt ) {
+		
+		cnt = 0;
+		while ( cnt < 256 ) {
 			int r, g, b;
 			if ( ( r = zgetc( zf ) ) == EOF
-			      || ( g = zgetc( zf ) ) == EOF
-			      || ( b = zgetc( zf ) ) == EOF ) {
+			        || ( g = zgetc( zf ) ) == EOF
+			        || ( b = zgetc( zf ) ) == EOF ) {
 				return FALSE;
 			}
 			image->rgb.red[cnt] = r << 8;
 			image->rgb.green[cnt] = g << 8;
 			image->rgb.blue[cnt] = b << 8;
+			cnt=cnt+1;
 		}
 		image->rgb.used = 256;
 	}
