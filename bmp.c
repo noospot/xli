@@ -7,7 +7,7 @@
 // description, and bmptoppm.c by David W. Sanderson.
 //
 //
-// 20261021-20261029 rno/noospot
+// 20261019-20261029 rno/noospot
 //
 //
 //
@@ -458,16 +458,16 @@ static void tell_about_bmp( bmpHeader* hp )
 	} else if ( hp->biCompression == BI_PNG ) {
 		complabel = "includes PNG, ";
 	} else if ( ( hp->bfType != C_OS2 && hp->bfType != C_OS2_V2 ) && hp->biCompression == BI_FIELDS ) {
-		complabel = "Fields Masks, ";
+		complabel = "fields masks, ";
 	} else if ( ( hp->bfType == C_OS2 || hp->bfType == C_OS2_V2 ) && hp->biCompression == BI_HUFF1D ) {
 		complabel = "Huff1d, ";
 	} else if (  hp->biCompression == BI_ALPHAFIELDS ) {
-		complabel = "Alpha fields Masks, ";
+		complabel = "fields masks with alpha, ";
 	} else if ( hp->biCompression == BI_RGB ) {
 		complabel = "";
 	}
 
-	printf( "%s is a %lux%lu %d bit deep, %s%s%s %s BMP image\n", hp->name,
+	printf( "%s is a %lux%lu depth %d, %s%s%s %s BMP image\n", hp->name,
 	        hp->biWidth, abs_height, hp->biPixelSize, topbot, complabel, colormode,
 	        typelabel );
 }
@@ -507,22 +507,23 @@ static void print_bmp_hdr( bmpHeader* hp )
 	} else if ( hp->biCompression == BI_PNG ) {
 		complabel = "PNG ";
 	} else if ( ( hp->bfType != C_OS2 && hp->bfType != C_OS2_V2 ) && hp->biCompression == BI_FIELDS ) {
-		complabel = "Fields Masks ";
+		complabel = "fields masks ";
 	} else if ( ( hp->bfType == C_OS2 || hp->bfType == C_OS2_V2 ) && hp->biCompression == BI_HUFF1D ) {
 		complabel = "Huff1d ";
 	} else if (  hp->biCompression == BI_ALPHAFIELDS ) {
-		complabel = "Alpha fields Masks ";
+		complabel = "fields masks with alpha";
 	} else if ( hp->biCompression == BI_RGB ) {
 		complabel = "None ";
 	}
 
 	printf( " file name name:                      %s\n", hp->name );
+	printf( " file header:                           \n" );
 	printf( " file type identifier bfType:         %i (0x%04X) [%s]\n", hp->bfType, hp->bfType, typelabel );
 	printf( " total file size bfFileSize:          %lu bytes\n", hp->bfFileSize );
 	printf( " x hot spot bfxHotSpot:               %u\n", hp->bfxHotSpot );
 	printf( " y hot spot bfyHotSpot:               %u\n", hp->bfyHotSpot );
 	printf( " pixel data offset bfImageOffset:     %lu bytes\n", hp->bfImageOffset );
-	printf( " resolved pixel offset (Internal):    %lu bytes\n", hp->resolved_image_offset );
+	printf( " info header:                           \n" );
 	printf( " info header size biInfoHeaderSize:   %lu bytes\n", hp->biInfoHeaderSize );
 	printf( " image width biWidth:                 %lu pixels\n", hp->biWidth );
 	printf( " image height biHeight:               %i pixels (abs: %lu, orientation: %s)\n", hp->biHeight, abs_height, topbot );
@@ -533,12 +534,19 @@ static void print_bmp_hdr( bmpHeader* hp )
 	printf( " horizontal resolution biXPels/Meter: %lu\n", hp->biXPelsPerMeter );
 	printf( " vertical resolution biYPels/Meter:   %lu\n", hp->biYPelsPerMeter );
 	printf( " colormap entries used biClrUsed:     %lu\n", hp->biClrUsed );
-	printf( " resolved colormap entries (Internal):%lu\n", hp->resolved_clr_used );
 	printf( " important colors biClrImportant:     %lu\n", hp->biClrImportant );
+	printf( " masks:                                  \n" );
 	printf( " red channel mask redMask:            0x%08lx\n", hp->redMask );
 	printf( " green Channel mask greenMask:        0x%08lx\n", hp->greenMask );
 	printf( " blue channel mask blueMask:          0x%08lx\n", hp->blueMask );
 	printf( " alpha channel mask alphaMask:        0x%08lx\n", hp->alphaMask );
+	printf( " resolved:                               \n" );	
+	printf( " resolved image offset:               %lu bytes\n", hp->resolved_image_offset );	
+	printf( " resolved colormap entries:           %lu\n", hp->resolved_clr_used );	
+	printf( " resolved palette length:             %lu bytes\n", hp->palette_len );
+	printf( " resolved color entry length:         %lu bytes\n", hp->color_entry_len );
+
+	
 }
 
 int bmpIdent( strbyte* fullname, strbyte* name )
