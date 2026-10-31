@@ -54,42 +54,42 @@ int rleIdent( strbyte* fullname, strbyte* name )
 			printf( "%s is a %dx%d", name, x_len, y_len );
 			switch ( sv_globals.sv_ncolors ) {
 				case 0:
-					printf( " RLE image with an no color planes\n" );
+					printf( " Utah RLE image with no color planes\n" );
 					return 0;
 				case 1:
 					switch ( sv_globals.sv_ncmap ) {
 						case 0:
 							/* black and white, no map */
-							printf( " 8 bit grey scale RLE image with no map\n" );
+							printf( " 8 bit grey scale Utah RLE image with no map\n" );
 							break;
 						case 1:
 							/* black and white with a map */
-							printf( " 8 bit grey scale RLE image with map\n" );
+							printf( " 8 bit grey scale Utah RLE image with map\n" );
 							break;
 						case 3:
 							/* single channel encoded color with decoding map */
-							printf( " 8 bit color RLE image with color map\n" );
+							printf( " 8 bit color Utah RLE image with color map\n" );
 							break;
 						default:
-							printf( " 8 bit RLE image with an illegal color map\n" );
+							printf( " 8 bit Utah RLE image with an illegal color map\n" );
 							return 0;
 					}
 					break;
 				case 3:
 					switch ( sv_globals.sv_ncmap ) {
 						case 0:
-							printf( " 24 bit color RLE image with no map\n" );
+							printf( " 24 bit color Utah RLE image with no map\n" );
 							break;
 						case 3:
-							printf( " 24 bit color RLE image with color map\n" );
+							printf( " 24 bit color Utah RLE image with color map\n" );
 							break;
 						default:
-							printf( " 24 bit color RLE image with an illegal color map\n" );
+							printf( " 24 bit color Utah RLE image with an illegal color map\n" );
 							return 0;
 					}
 					break;
 				default:
-					printf( " RLE image with an illegal number (%d)of color planes\n", sv_globals.sv_ncolors );
+					printf( " Utah RLE image with an illegal number (%d)of color planes\n", sv_globals.sv_ncolors );
 					return 0;
 			}
 			return 1;
@@ -215,19 +215,19 @@ Image* rleLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		printf( "%s is a %dx%d", name, x_len, y_len );
 		switch ( ptype ) {
 			case BW_NM:
-				printf( " 8 bit grey scale RLE image with no map" );
+				printf( " 8 bit grey scale Utah RLE image with no map" );
 				break;
 			case BW_M:
-				printf( " 8 bit grey scale RLE image with map" );
+				printf( " 8 bit grey scale Utah RLE image with map" );
 				break;
 			case SC_M:
-				printf( " 8 bit RLE image with color map" );
+				printf( " 8 bit Utah RLE image with color map" );
 				break;
 			case C_NM:
-				printf( " 24 bit RLE image with no map" );
+				printf( " 24 bit Utah RLE image with no map" );
 				break;
 			case C_M:
-				printf( " 24 bit RLE image with color map" );
+				printf( " 24 bit Utah RLE image with color map" );
 				break;
 		}
 		if ( img_gam != UNSET_GAMMA ) {
