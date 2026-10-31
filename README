@@ -40,7 +40,7 @@ version 1.18.0 supports:
   G3 FAX Image
   FBM Image
   Utah RLE Image (RLE)
-  GEM Image (IMG)
+  GEM raster Image (IMG)
   MacPaint Image
 
 A variety of options are available to modify images prior to viewing:

@@ -1,5 +1,5 @@
 /*
-** img.h - structures/definitions for GEM Bit Image format conversion
+** img.h - GEM Raster Image structures/definitions
 **
 **	Tim Northrup <tim@BRS.Com>
 **
@@ -21,12 +21,12 @@
 
 typedef struct {
 	unsigned short	vers,		/* image version number */
-	            hlen,			/* header length (in words) */
-	            colors,			/* number of color planes (1=mono) */
-	            patlen,			/* pattern length (for encoding) */
+	            hlen,		/* header length (in words) 8 or 9 */
+	            colors,		/* number of color planes 1=mono 4=16 colors 8=greyscale */
+	            patlen,		/* pattern length (for encoding) 1-8 */
 	            pixw, pixh,		/* pixel dimensions (in microns) */
-	            llen, 			/* pixels/line, line width in pixels*/
-	            lines;			/* number of lines */
+	            llen, 		/* pixels/line, line width in pixels*/
+	            lines;		/* number of lines */
 } IMG_Header;
 
 /*
@@ -57,15 +57,15 @@ typedef struct {
 #define BYTE_LITERAL	0x80		/* byte 80h - flag literal string */
 
 #define BYTE_BLACK	0xFF		/* byte is all 1's */
-#define BIT_BLACK	1		/* single black bit */
+#define BLACK	1			/* black, single */
 #define BYTE_WHITE	0x00		/* byte is all 0's */
-#define BIT_WHITE	0		/* single white bit */
+#define WHITE	0			/* white, single */
 
-#define RUN_BLACK	0x80		/* bit flag for run of all 0's or 1's */
+#define RUN_BLACK	0x80		/* run of all 0's or 1's */
 #define RUN_WHITE	0x00
 
 #define RUN_LENGTH(X)   ((X) & 0x7F)
-#define RUN_COLOR(X)	((((X) & RUN_BLACK) == RUN_BLACK)?BIT_BLACK:BIT_WHITE)
-#define PIXEL_COLOR(X)	((((X) & 0x01) == 1)?BIT_BLACK:BIT_WHITE)
+#define RUN_COLOR(X)	((((X) & RUN_BLACK) == RUN_BLACK)?BLACK:WHITE)
+#define PIXEL_COLOR(X)	((((X) & 0x01) == 1)?BLACK:WHITE)
 
 #endif /* GEM_H */

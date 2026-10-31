@@ -1,5 +1,5 @@
 /*
-** img.c - load a GEM Bit Image file for use inside xli
+** img.c - load a GEM Raster Image file for use inside xli
 **
 **	Tim Northrup <tim@BRS.Com>
 **
@@ -14,7 +14,7 @@
 #include "imagetypes.h"
 #include "img.h"
 
-static int Debug = 0;				/* Set to 1 for info */
+
 
 static byte* BitRow;			/* working row of bits */
 static int RowRepeat;				/* number of repititons */
@@ -27,7 +27,7 @@ static void IMG_WriteByte( byte c, register int cols, unsigned int bpl );			/* W
 /*
 **  imgIdent
 **
-**	Identify passed file as a GEM Bit Image or not
+**	Identify passed file as a GEM Raster Image or not
 **
 **	Returns 1 if file is a GEM Image, 0 otherwise
 */
@@ -43,7 +43,7 @@ int imgIdent ( strbyte* fullname, strbyte* name )
 	}
 
 	if ( IMG_ReadHeader( zf,&header ) == 0 ) {
-		printf( "%s is a %dx%d GEM Bit Image\n", fullname,
+		printf( "%s is a %dx%d GEM Raster Image\n", fullname,
 		        header.llen, header.lines );
 		ret = 1;
 	}
@@ -84,16 +84,20 @@ Image* imgLoad ( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 			case 1: /* short read in header */
 			case 2: /* not a GEM image */
 				break;
-			case 3:
+			case 3: // image is color (unsupported)
 				fprintf( stderr,"imgLoad: %s - Color images are not supported (yet)\n",name );
 				break;
-			case 4:
+			case 4: // image is too wide ( > 8K bits!!)
 				fprintf( stderr,"imgLoad: %s - image is too large\n",name );
 				break;
-			default:
+			case 5:
 				fprintf( stderr,"imgLoad: %s - Unsupported image pattern length\n",name );
 				break;
+			default:
+				fprintf( stderr,"imgLoad: %s - Unknown error\n",name );
+				break;		
 		}
+		
 		return( ( Image* )NULL );
 	}
 
@@ -130,7 +134,7 @@ Image* imgLoad ( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 			}
 			if ( i == BYTE_SLREPEAT ) {	/* repeat scanline */
 				if ( ColCount != 0 ) {
-					printf( "GEM Image Failure: corrupted\n" );
+					printf( "GEM Raster Image Failure: corrupted\n" );
 					fprintf( stderr,"imgLoad: %s - premature EOF\n",name );
 					break;
 				}
@@ -169,6 +173,7 @@ Image* imgLoad ( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	return( image );
 }
 
+
 /*
 **  IMG_ReadHeader
 **
@@ -181,7 +186,6 @@ Image* imgLoad ( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 **		4 if image is too wide ( > 8K bits!!)
 **		5 if pattern length is too big ( > 255)
 */
-
 static int IMG_ReadHeader ( ZFILE* zf, IMG_Header* h )
 {
 	register int tlen;			/* total to read in */
@@ -194,7 +198,6 @@ static int IMG_ReadHeader ( ZFILE* zf, IMG_Header* h )
 	}
 
 	/* convert from big-endian to machine specific */
-
 	h->vers   = junkbuffer[1] + ( 256 * junkbuffer[0] );
 	h->hlen   = junkbuffer[3] + ( 256 * junkbuffer[2] );
 	h->colors = junkbuffer[5] + ( 256 * junkbuffer[4] );
@@ -204,10 +207,8 @@ static int IMG_ReadHeader ( ZFILE* zf, IMG_Header* h )
 	h->llen   = junkbuffer[13] + ( 256 * junkbuffer[12] );
 	h->lines  = junkbuffer[15] + ( 256 * junkbuffer[14] );
 
-	/* sanity check; if fields don't look right, it's probably not a GEM
-	 * image.
-	 */
-
+	// sanity check; 
+	// if fields don't look right, it's probably not a GEM image.
 	if ( ( h->vers != DEF_VERSION ) ||
 	      ( h->hlen < DEF_HLEN ) ||
 	      ( h->colors > 256 ) ||
@@ -219,21 +220,17 @@ static int IMG_ReadHeader ( ZFILE* zf, IMG_Header* h )
 		return( 2 );
 	}
 
-	if ( Debug ) {
+	if ( globals._Xdebug ) {
 		fprintf( stderr,"Header Information:\n" );
 		fprintf( stderr,"\tIMG Version:  %d\n",h->vers );
 		fprintf( stderr,"\t Header Len:  %d\n",h->hlen );
 		fprintf( stderr,"\t     Colors:  %d\n",h->colors );
 		fprintf( stderr,"\tPattern Len:  %d\n",h->patlen );
-		fprintf( stderr,"\t Pixel Size:  %d x %d (microns=1000th mm)\n",
-		         h->pixw,h->pixh );
-		fprintf( stderr,"\t Image Size:  %d x %d (pixels)\n",
-		         h->llen,h->lines );
+		fprintf( stderr,"\t Pixel Size:  %d x %d (microns=1000th mm)\n", h->pixw,h->pixh );
+		fprintf( stderr,"\t Image Size:  %d x %d (pixels)\n", h->llen,h->lines );
 	}
 
-	/* validity check on particular fields
-	 */
-
+	// validity check on particular fields
 	if ( h->colors != 1 ) {
 		return( 3 );
 	}
@@ -247,14 +244,14 @@ static int IMG_ReadHeader ( ZFILE* zf, IMG_Header* h )
 	/* make life easier if not on an even boundary */
 	if ( h->llen % 8 ) {
 		h->llen += ( 8 - ( h->llen % 8 ) );
-		if ( Debug )
+		if ( globals._Xdebug )
 			fprintf( stderr,"Image expanded to %d pixels wide\n", h->llen );
 	}
 
 	/* skip additional header information if present */
 	if ( h->hlen > DEF_HLEN ) {
 		tlen = ( ( h->hlen - DEF_HLEN ) * 2 );
-		if ( Debug ) {
+		if ( globals._Xdebug ) {
 			fprintf( stderr,"imgLoad: %d bytes of extra header skipped",tlen );
 		}
 		for ( ; tlen > 0 ; tlen -= rlen ) {

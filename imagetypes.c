@@ -49,7 +49,7 @@ static struct {
 	{g3Ident,	g3Load,		"G3 FAX Image"},
 	{fbmIdent,	fbmLoad, 	"FBM Image"},
 	{rleIdent,	rleLoad,	"Utah RLE Image (RLE)"},
-	{imgIdent,	imgLoad,	"GEM Image (IMG)"},
+	{imgIdent,	imgLoad,	"GEM Raster Image (IMG)"},
 	{macIdent,	macLoad,	"MacPaint Image"},
 	{NULL,		NULL,		NULL}
 };

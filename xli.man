@@ -537,7 +537,7 @@ system\-wide file if a personal configuration file exists.
   G3 FAX Image
   FBM Image
   Utah RLE Image (RLE)
-  GEM Image (IMG)
+  GEM Raster Image (IMG)
   MacPaint Image
 
 .fi
