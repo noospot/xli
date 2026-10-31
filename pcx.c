@@ -35,12 +35,7 @@
 
 #define PCX_MAGIC 0x0a			/* first byte in a PCX image file */
 
-/* Routine to load a PCX file */
-static bool PCX_LoadImage( ZFILE* zf, int in_bpr, int img_bpr,
-                           Image* image, int rows, bool readpal );
-
-
-// Identify passed file as a PC Paintbrush image or not
+// d: identify file 
 // Returns 1 if file is a PCX file, 0 otherwise
 int pcxIdent( strbyte* fullname, strbyte* name )
 {
@@ -189,6 +184,7 @@ static bool pcx_load_trailer_palette( ZFILE* zf, Image* image )
 	return TRUE;
 }
 
+
 // d: load file header 16-color EGA/CGA palette
 static void pcx_load_header_palette( byte* pcxhd , Image* image )
 {
@@ -205,103 +201,14 @@ static void pcx_load_header_palette( byte* pcxhd , Image* image )
 }
 
 
-// d: Load PCX Paintbrush file into an Image structure.
-//	Returns pointer to allocated struct if successful, NULL otherwise
-Image* pcxLoad ( strbyte* fullname, ImageOptions* image_ops, bool verbose )
-{
-	ZFILE* zf;
-	strbyte* name = image_ops->name;
-	byte pcxhd[128];
-	int xmin;
-	int xmax;
-	int ymin;
-	int ymax;
-	int in_bpr;	/* in input format bytes per row */
-	int img_bpr;	/* xli image bytes per row */
-	register Image* image;
-
-	/* Open file. */
-	if ( ! ( zf = zopen( fullname ) ) ) {
-		perror( "pcxLoad" );
-		return( ( Image* )NULL );
-	}
-
-	/* Read .pcx header. */
-	if ( zread( zf,pcxhd,128 ) != 128 ) {
-		zclose( zf );
-		return( ( Image* )NULL );
-	}
-
-	if ( ( pcxhd[0] != PCX_MAGIC ) || ( pcxhd[1] > 5 ) ) {
-		zclose( zf );
-		return( ( Image* )NULL );
-	}
-
-	/* Calculate raster header and swap bytes. */
-	xmin = pcxhd[4] + ( 256 * pcxhd[5] );
-	ymin = pcxhd[6] + ( 256 * pcxhd[7] );
-	xmax = pcxhd[8] + ( 256 * pcxhd[9] );
-	ymax = pcxhd[10] + ( 256 * pcxhd[11] );
-	xmax = xmax - xmin + 1;
-	ymax = ymax - ymin + 1;
-	in_bpr = pcxhd[66] + ( 256 * pcxhd[67] );
-
-	/*  number of bytes per lines.  */
-	img_bpr = ( xmax * pcxhd[3] + 7 )/8;
-
-	/* double check image */
-	if ( xmax < 0 || ymax < 0 || in_bpr < img_bpr ) {
-		zclose( zf );
-		return( ( Image* )NULL );
-	}
-
-	if ( verbose ) {
-		printf( "%s is a %dx%d PC Paintbrush image\n",name,xmax,ymax );
-	}
-
-	/* Only monochrome or 8bits paletized images are supported.  */
-	if ( pcxhd[65] > 1 || !( pcxhd[3] == 1 || pcxhd[3] == 8 ) ) {
-		fprintf( stderr, "pcxLoad: %s - Unsupported PCX type\n", name );
-		zclose( zf );
-		return( ( Image* )NULL );
-	}
-
-	znocache( zf );
-
-	/* Allocate image. */
-	if ( pcxhd[3] == 1 ) {
-		image = newBitImage( xmax, ymax );
-	} else {
-		image = newRGBImage( xmax, ymax, pcxhd[3] );
-		pcx_load_header_palette(  pcxhd, image );
-	}
-	image->title = dupString( name );
-
-	
-	
-	/* Read compressed bitmap. */
-	if ( !PCX_LoadImage( zf, in_bpr, img_bpr, image, ymax, (pcxhd[3] == 8) ) ) {
-		fprintf( stderr, "pcxLoad: %s - Short read of PCX file\n", name );
-		zclose( zf );
-		return( image );
-	}
-
-
-	zclose( zf );
-	return( image );
-}
-
-
-
-// d: Load PC Paintbrush file into the passed Image structure.
+// d: load image data
 // Returns FALSE if there was a short read.
-static bool PCX_LoadImage ( ZFILE* zf, int in_bpr, int img_bpr,
-                            Image* image, int rows, bool readpal )
+static bool PCX_LoadImage ( ZFILE* zf, int in_bpr, int img_bpr, Image* image, int rows, bool readpal )
 {
 	/* Goes like this: Read a byte.  If the two high bits are set,
 	** then the low 6 bits contain a repeat count, and the byte to
 	** repeat is the next byte in the file.  If the two high bits are
-	** not set, then this is the byte to write.
+	** not set, then it is a byte to write.
 	*/
 
 	register byte* ptr;
@@ -370,3 +277,90 @@ static bool PCX_LoadImage ( ZFILE* zf, int in_bpr, int img_bpr,
 
 	return TRUE;
 }
+
+
+// d: Load PCX Paintbrush file into an Image structure.
+// Returns pointer to allocated struct if successful, NULL otherwise
+Image* pcxLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
+{
+	ZFILE* zf;
+	strbyte* name = image_ops->name;
+	byte pcxhd[128];
+	int xmin;
+	int xmax;
+	int ymin;
+	int ymax;
+	int in_bpr;	/* in input format bytes per row */
+	int img_bpr;	/* xli image bytes per row */
+	register Image* image;
+
+	/* Open file. */
+	if ( ! ( zf = zopen( fullname ) ) ) {
+		perror( "pcxLoad" );
+		return( ( Image* )NULL );
+	}
+
+	/* Read .pcx header. */
+	if ( zread( zf,pcxhd,128 ) != 128 ) {
+		zclose( zf );
+		return( ( Image* )NULL );
+	}
+
+	if ( ( pcxhd[0] != PCX_MAGIC ) || ( pcxhd[1] > 5 ) ) {
+		zclose( zf );
+		return( ( Image* )NULL );
+	}
+
+	/* Calculate raster header and swap bytes. */
+	xmin = pcxhd[4] + ( 256 * pcxhd[5] );
+	ymin = pcxhd[6] + ( 256 * pcxhd[7] );
+	xmax = pcxhd[8] + ( 256 * pcxhd[9] );
+	ymax = pcxhd[10] + ( 256 * pcxhd[11] );
+	xmax = xmax - xmin + 1;
+	ymax = ymax - ymin + 1;
+	in_bpr = pcxhd[66] + ( 256 * pcxhd[67] );
+
+	/*  number of bytes per lines.  */
+	img_bpr = ( xmax * pcxhd[3] + 7 )/8;
+
+	/* double check image */
+	if ( xmax < 0 || ymax < 0 || in_bpr < img_bpr ) {
+		zclose( zf );
+		return( ( Image* )NULL );
+	}
+
+	if ( verbose ) {
+		printf( "%s is a %dx%d PC Paintbrush image\n",name,xmax,ymax );
+	}
+
+	/* Only monochrome or 8bits paletized images are supported.  */
+	if ( pcxhd[65] > 1 || !( pcxhd[3] == 1 || pcxhd[3] == 8 ) ) {
+		fprintf( stderr, "pcxLoad: %s - Unsupported PCX type\n", name );
+		zclose( zf );
+		return( ( Image* )NULL );
+	}
+
+	znocache( zf );
+
+	/* Allocate image. */
+	if ( pcxhd[3] == 1 ) {
+		image = newBitImage( xmax, ymax );
+	} else {
+		image = newRGBImage( xmax, ymax, pcxhd[3] );
+		pcx_load_header_palette(  pcxhd, image );
+	}
+	image->title = dupString( name );
+	
+	
+	/* Read compressed bitmap. */
+	if ( !PCX_LoadImage( zf, in_bpr, img_bpr, image, ymax, (pcxhd[3] == 8) ) ) {
+		fprintf( stderr, "pcxLoad: %s - Short read of PCX file\n", name );
+		zclose( zf );
+		return( image );
+	}
+
+
+	zclose( zf );
+	return( image );
+}
+
