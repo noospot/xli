@@ -75,7 +75,7 @@ int pcxIdent( strbyte* fullname, strbyte* name )
 		// encoding
 		const strbyte* encoding;
 		if ( pcxhd[2] == 1 ) {
-			encoding = "RLE,";
+			encoding = "RLE, ";
 		} else {
 			encoding = "";
 		}
@@ -83,27 +83,29 @@ int pcxIdent( strbyte* fullname, strbyte* name )
 			goto ident_ret;
 		}
 
-		// planar bpp 1, 2, 4, or 8
+		// bpp of each plane 1, 2, 4, or 8
 		if ( pcxhd[3] > 8 ) {
 			goto ident_ret;
 		}
 
 		// reserved MUST be 0
 		if ( pcxhd[64]!=0  ) {
-			goto ident_ret;
+			//goto ident_ret; // many images with noise
 		}
 
-		// NPlane
-		if ( pcxhd[65] ==0  ) {
+		// NPlane  1, 3 or 4
+		if ( pcxhd[65] == 0 || pcxhd[65]>4 ) {
 			goto ident_ret;
 		}
+		
 		// result bpp, max 255
 		int tmp = pcxhd[3]*pcxhd[65] ;
 		if ( tmp>0xFF ) {
 			goto ident_ret;
 		}
 		byte result_bpp = tmp;
-
+		
+	
 		// colormode
 		const strbyte* colormode;
 		if ( pcxhd[68]<1 || pcxhd[68]>2 ) {
@@ -121,7 +123,7 @@ int pcxIdent( strbyte* fullname, strbyte* name )
 		byte i=0;
 		while ( i<54 ) {
 			if ( pcxhd[74+i]!=0 ) {
-				goto ident_ret;
+				// goto ident_ret; // many images with noise
 			}
 			i=i+1;
 		}
@@ -147,7 +149,8 @@ int pcxIdent( strbyte* fullname, strbyte* name )
 		xmax = xmax - xmin + 1;
 		ymax = ymax - ymin + 1;
 
-		printf( "%s is a %dx%d PCX Paintbrush %simage, %s, %s depth %i \n", name,xmax,ymax, colormode, version, encoding, result_bpp );
+		printf( "%s is a %dx%d PCX Paintbrush %simage, %s, %s%i planes, depth %i\n", 
+		         name,xmax,ymax, colormode, version, encoding, pcxhd[65], result_bpp );
 		ret = 1;
 	}
 
@@ -158,14 +161,52 @@ ident_ret:
 }
 
 
-/*
-**  pcxLoad
-**
-**	Load PCX Paintbrush file into an Image structure.
-**
-**	Returns pointer to allocated struct if successful, NULL otherwise
-*/
+// d: load file trailer 256-color VGA palette
+static bool pcx_load_trailer_palette( ZFILE* zf, Image* image )
+{
+	int b = zgetc( zf );
+	// byte 12 0x0C 
+	if ( b == 12 ) {
+		int cnt = 0;
+		while ( cnt < 256 ) {
+			int r, g, bval;
+			r = zgetc( zf );
+			g = zgetc( zf );
+			bval = zgetc( zf );
+			if ( r == EOF || g == EOF || bval == EOF ) {
+				image->rgb.used = cnt;
+				return ( cnt > 0 );
+			}
+			image->rgb.red[cnt] = r << 8;
+			image->rgb.green[cnt] = g << 8;
+			image->rgb.blue[cnt] = bval << 8;
+			cnt = cnt + 1;
+		}
+		image->rgb.used = 256;
+	} else if ( b == EOF ) {
+		return FALSE;
+	}
+	return TRUE;
+}
 
+// d: load file header 16-color EGA/CGA palette
+static void pcx_load_header_palette( byte* pcxhd , Image* image )
+{
+	/* Load 16-color palette from header bytes 16 to 47 */
+	int palette_idx = 0;
+	while ( palette_idx < 16 ) {
+		int header_offset = 16 + ( palette_idx * 3 );
+		image->rgb.red[palette_idx] = pcxhd[header_offset] << 8;
+		image->rgb.green[palette_idx] = pcxhd[header_offset + 1] << 8;
+		image->rgb.blue[palette_idx] = pcxhd[header_offset + 2] << 8;
+		palette_idx = palette_idx + 1;
+	}
+	image->rgb.used = 16;
+}
+
+
+// d: Load PCX Paintbrush file into an Image structure.
+//	Returns pointer to allocated struct if successful, NULL otherwise
 Image* pcxLoad ( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 {
 	ZFILE* zf;
@@ -232,9 +273,12 @@ Image* pcxLoad ( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		image = newBitImage( xmax, ymax );
 	} else {
 		image = newRGBImage( xmax, ymax, pcxhd[3] );
+		pcx_load_header_palette(  pcxhd, image );
 	}
 	image->title = dupString( name );
 
+	
+	
 	/* Read compressed bitmap. */
 	if ( !PCX_LoadImage( zf, in_bpr, img_bpr, image, ymax, (pcxhd[3] == 8) ) ) {
 		fprintf( stderr, "pcxLoad: %s - Short read of PCX file\n", name );
@@ -249,7 +293,7 @@ Image* pcxLoad ( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 
 
 
-// Load PC Paintbrush file into the passed Image structure.
+// d: Load PC Paintbrush file into the passed Image structure.
 // Returns FALSE if there was a short read.
 static bool PCX_LoadImage ( ZFILE* zf, int in_bpr, int img_bpr,
                             Image* image, int rows, bool readpal )
@@ -318,33 +362,11 @@ static bool PCX_LoadImage ( ZFILE* zf, int in_bpr, int img_bpr,
 		}
 	}
 
-
-
-	/* Read a palette if needed.  */
 	if ( readpal ) {
-		/* palette starts next pixels data, separated by 
-		   by a dummy byte equal to 12.  */
-		b = zgetc( zf );
-		if ( b == 12 ) {
-			cnt = 0;
-			while ( cnt < 256 ) {
-				int r, g, b;
-				if ( ( r = zgetc( zf ) ) == EOF
-					|| ( g = zgetc( zf ) ) == EOF
-					|| ( b = zgetc( zf ) ) == EOF ) {
-					image->rgb.used = cnt;	
-					return FALSE;
-				}
-				image->rgb.red[cnt] = r << 8;
-				image->rgb.green[cnt] = g << 8;
-				image->rgb.blue[cnt] = b << 8;
-				cnt = cnt + 1;
-			}
-			image->rgb.used = 256;
-		} else if ( b == EOF ) {
-			return FALSE;	
-		} 	
+		if ( !pcx_load_trailer_palette( zf, image ) ) {
+			return FALSE;
+		}
 	}
-	
+
 	return TRUE;
 }
