@@ -34,8 +34,12 @@
 #define BMP_V4INFOHEADER_LEN		108 // Windows 95 / NT 4.0 with color spaces
 #define BMP_V5INFOHEADER_LEN		124 // Windows 98 / 2000 with ICC
 
-// maximum depth supporting a color palette
-#define PAL_MAX 8
+// limits 
+// depth supporting a color palette
+#define PAL_MAX_DEPTH 8
+// dimesions 
+#define MAX_WIDTH  65535
+#define MAX_HEIGHT 65535
 
 typedef struct {
 	     strbyte* name;		// image name
@@ -48,7 +52,7 @@ typedef struct {
 // info header
 	unsigned long biInfoHeaderSize;	// size of info header in bytes
 	unsigned long biWidth;		// image width in pixels
-	      int32_t biHeight;		// image height in pixels
+	      int32_t biHeight;		// image height in pixels  !! can be negative !!
 	 unsigned int biPlanes;		// planes. must == 1
 	 unsigned int biPixelSize;	// bits per pixels. must be one of 1 2 4 8 16 24 32 64
 	unsigned long biCompression;	// compression type
@@ -57,16 +61,17 @@ typedef struct {
 	unsigned long biYPelsPerMeter;	// y pixels per meter
 	unsigned long biClrUsed;	// colormap entries number (0 == max)
 	unsigned long biClrImportant;	// important colors number
-// masks
+// masks header
 	unsigned long redMask;		// red channel mask   
 	unsigned long greenMask;	// green channel mask 
 	unsigned long blueMask;		// blue channel mask  
 	unsigned long alphaMask;	// alpha channel mask 
-// resoved
-	unsigned long all_headers_len;	// cumulative size of all headers and masks
-	unsigned long masks_header_len;	// size of bi_fields mask header extension
-	unsigned long palette_len;	// calculated byte length of color palette
-	unsigned long color_entry_len;	// length of individual palette entry (3 or 4 bytes)
-	unsigned long resolved_image_offset;	// resolved absolute pixel data offset
-	unsigned long resolved_clr_used;	// resolved effective number of colormap entries
+// resolved
+	unsigned long masks_header_len;		// mask header size
+	unsigned long all_headers_len;		// headers and masks cumulative size
+	unsigned long palette_len;		// calculated byte length of color palette
+	unsigned long color_entry_len;		// length of individual palette entry (3 or 4 bytes)
+	unsigned long resolved_clr_used;	// colormap entries number
+	unsigned long resolved_image_offset;	// image data offset
+	unsigned long abs_height;               // image absolute height
 } bmpHeader;
