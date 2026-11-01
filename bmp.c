@@ -7,7 +7,7 @@
 // description, and bmptoppm.c by David W. Sanderson.
 //
 //
-// 20261019-20261029 rno/noospot
+// 20261019-20261031 rno/noospot
 //
 //  TODO
 //   - find and report if data between header,palette and image
@@ -15,7 +15,8 @@
 //   - keep file found masks and resolved mask in distinct variables
 //   - use fixed width types
 //   - cleanup and optimise 
-//
+//   - support OS/2 files with magics BA IC PT
+//   - support bmp v4 v5 and OS/2 extra fields, load gamma value
 
 #include <sys/stat.h>
 #include <math.h>
@@ -157,7 +158,8 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		hp->bfType = C_WIN_V2; // **FIXME** also could be OS/2 v2
 	} else if ( hp->biInfoHeaderSize == BMP_V3INFOHEADER_LEN ) {
 		hp->bfType = C_WIN_V3; // **FIXME** also could be OS/2 v2		
-	} else if ( hp->biInfoHeaderSize >= OS2_V2_INFOHEADER_MIN_LEN && hp->biInfoHeaderSize <= OS2_V2_INFOHEADER_MAX_LEN ) {
+	} else if ( hp->biInfoHeaderSize >= OS2_V2_INFOHEADER_MIN_LEN 
+	       &&   hp->biInfoHeaderSize <= OS2_V2_INFOHEADER_MAX_LEN ) {
 		hp->bfType = C_OS2_V2;
 	} else if ( hp->biInfoHeaderSize == BMP_V4INFOHEADER_LEN ) {
 		hp->bfType = C_WIN_V4;
@@ -170,8 +172,8 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 	// read in the rest of info header depending on type
 	if ( hp->bfType == C_OS2 ) {  
 		// OS/2 v1.x
-		if ( zread( zf, infobuf + 4, OS2_INFOHEADER_LEN - 4 )
-		        != OS2_INFOHEADER_LEN - 4 ) {
+		if ( zread( zf, infobuf + 4, OS2_INFOHEADER_LEN - 4 ) 
+			!= OS2_INFOHEADER_LEN - 4 ) {
 			return FALSE;
 		}
 
@@ -239,7 +241,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		return FALSE;
 	}	
 	
-	
+	//
 	if (       hp->biPixelSize != 1
 	        && hp->biPixelSize != 2
 	        && hp->biPixelSize != 4
@@ -251,6 +253,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		fprintf( stderr, "bmpLoad: %s - image PixelSize error\n", hp->name );
 		return FALSE;
 	}
+	//
 	if  (      hp->biCompression != BI_RGB
 	        && hp->biCompression != BI_RLE8
 	        && hp->biCompression != BI_RLE4
