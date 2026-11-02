@@ -207,16 +207,6 @@ static int IMG_ReadHeader ( ZFILE* zf, IMG_Header* h )
 	h->llen   = junkbuffer[13] + ( 256 * junkbuffer[12] );
 	h->lines  = junkbuffer[15] + ( 256 * junkbuffer[14] );
 
-	if ( globals._Xdebug ) {
-		fprintf( stderr,"Header Information:\n" );
-		fprintf( stderr,"\tIMG Version:  %d\n",h->vers );
-		fprintf( stderr,"\t Header Len:  %d\n",h->hlen );
-		fprintf( stderr,"\t     Colors:  %d\n",h->colors );
-		fprintf( stderr,"\tPattern Len:  %d\n",h->patlen );
-		fprintf( stderr,"\t Pixel Size:  %d x %d (microns=1000th mm)\n", h->pixw,h->pixh );
-		fprintf( stderr,"\t Image Size:  %d x %d (pixels)\n", h->llen,h->lines );
-	}
-	
 	// sanity check; 
 	// if fields don't look right, it's probably not a GEM image.
 	if ( ( h->vers != DEF_VERSION ) 
@@ -232,17 +222,30 @@ static int IMG_ReadHeader ( ZFILE* zf, IMG_Header* h )
 		return( 2 );
 	}
 
-
-	// validity check on particular fields
-	if ( h->colors != 1 ) {
-		return( 3 );
-	}
+	
 	if ( h->llen > ( MAX_SCANLINE * 8 ) ) {
 		return( 4 );
 	}
 	if ( h->patlen > MAX_LITERAL ) {
 		return( 5 );
 	}
+
+	
+	if ( globals._Xdebug ) {
+		fprintf( stderr,"Header Information:\n" );
+		fprintf( stderr,"\tIMG Version:  %d\n",h->vers );
+		fprintf( stderr,"\t Header Len:  %d\n",h->hlen );
+		fprintf( stderr,"\t     Colors:  %d\n",h->colors );
+		fprintf( stderr,"\tPattern Len:  %d\n",h->patlen );
+		fprintf( stderr,"\t Pixel Size:  %d x %d (microns=1000th mm)\n", h->pixw,h->pixh );
+		fprintf( stderr,"\t Image Size:  %d x %d (pixels)\n", h->llen,h->lines );
+	}
+	
+	// validity check on particular fields
+	if ( h->colors != 1 ) {
+		return( 3 );
+	}	
+
 
 	/* make life easier if not on an even boundary */
 	if ( h->llen % 8 ) {
