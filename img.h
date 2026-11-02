@@ -46,9 +46,9 @@ typedef struct {
 
 #define MAX_SCANLINE	2048		/* max bytes for 1 scanline */
 
-#define MAX_SLREPEAT	255		/* max repititions of scanline */
-#define MAX_PATREPEAT	255		/* max repititions of pattern */
-#define MAX_BYTEREPEAT	127		/* max repititions of byte value */
+#define MAX_SLREPEAT	255		/* max repetitions of scanline */
+#define MAX_PATREPEAT	255		/* max repetitions of pattern */
+#define MAX_BYTEREPEAT	127		/* max repetitions of byte value */
 #define MAX_LITERAL	255		/* max literal length allowed */
 
 #define BYTE_FLAG	0x00		/* first byte 0 the ... */

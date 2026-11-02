@@ -1,5 +1,5 @@
 /*
-** img.c - load a GEM Raster Image file for use inside xli
+** img.c - load a GEM Raster Image
 **
 **	Tim Northrup <tim@BRS.Com>
 **
@@ -207,19 +207,6 @@ static int IMG_ReadHeader ( ZFILE* zf, IMG_Header* h )
 	h->llen   = junkbuffer[13] + ( 256 * junkbuffer[12] );
 	h->lines  = junkbuffer[15] + ( 256 * junkbuffer[14] );
 
-	// sanity check; 
-	// if fields don't look right, it's probably not a GEM image.
-	if ( ( h->vers != DEF_VERSION ) ||
-	      ( h->hlen < DEF_HLEN ) ||
-	      ( h->colors > 256 ) ||
-	      ( h->patlen > MAX_LITERAL ) ||
-	      ( h->pixw < 1 ) ||
-	      ( h->pixh < 1 ) ||
-	      ( h->llen < 1 ) || ( h->llen > ( MAX_SCANLINE * 8 ) ) ||
-	      ( h->lines < 1 ) || ( h->lines > 8192 ) ) {
-		return( 2 );
-	}
-
 	if ( globals._Xdebug ) {
 		fprintf( stderr,"Header Information:\n" );
 		fprintf( stderr,"\tIMG Version:  %d\n",h->vers );
@@ -229,6 +216,22 @@ static int IMG_ReadHeader ( ZFILE* zf, IMG_Header* h )
 		fprintf( stderr,"\t Pixel Size:  %d x %d (microns=1000th mm)\n", h->pixw,h->pixh );
 		fprintf( stderr,"\t Image Size:  %d x %d (pixels)\n", h->llen,h->lines );
 	}
+	
+	// sanity check; 
+	// if fields don't look right, it's probably not a GEM image.
+	if ( ( h->vers != DEF_VERSION ) 
+	|| ( h->hlen != DEF_HLEN ) 
+	|| ( h->colors > 256 ) 
+	|| ( h->patlen > MAX_LITERAL )
+	|| ( h->pixw < 1 ) 
+	|| ( h->pixh < 1 ) 
+	|| ( h->llen < 1 ) 
+	|| ( h->llen > ( MAX_SCANLINE * 8 ) ) 
+	|| ( h->lines < 1 ) 
+	|| ( h->lines > 8192 ) ) {
+		return( 2 );
+	}
+
 
 	// validity check on particular fields
 	if ( h->colors != 1 ) {
