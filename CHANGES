@@ -1,10 +1,16 @@
-20261025
+20261031
+improved pcx identification
+identify GEM as GEM Raster Images, so it's obvious it's not a vector .GEM 
+GEM Raster Images, use xli debug flag to print debug
+rle.c identify as Utah RLE image
+
+
+20261029
 command line options also can be used with two hyphens as --help
 accept -h -v and -q cli options
 fixed out of memory error while loading some bmp
 improved bmp identification
 support recent bmp images: top-to-bottom, depth 2, 16 and 32, rle24
-improved pcx identification
 
 
 20260505
