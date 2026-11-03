@@ -74,4 +74,10 @@ typedef struct {
 	unsigned long resolved_clr_used;	// colormap entries number
 	unsigned long resolved_image_offset;	// image data offset
 	unsigned long abs_height;               // image absolute height
+	
+	unsigned long resolved_redMask;		// red channel mask   
+	unsigned long resolved_greenMask;	// green channel mask 
+	unsigned long resolved_blueMask;	// blue channel mask  
+	unsigned long resolved_alphaMask;	// alpha channel mask 	
+	
 } bmpHeader;

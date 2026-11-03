@@ -15,7 +15,7 @@
 //   - keep file found masks and resolved mask in distinct variables
 //   - use fixed width types
 //   - cleanup and optimise 
-//   - support OS/2 files with magics BA IC PT
+//   - support OS/2 files with magics BA CI CP IC PT
 //   - support bmp v4 v5 and OS/2 extra fields, load gamma value
 
 #include <sys/stat.h>
@@ -122,12 +122,12 @@ static inline byte colorreg_applyalpha( byte colorreg, byte alpha )
 }
 
 
-/* Read the header of the file, and */
-/* Return TRUE if this looks like a bmp file */
+// Read the header of the file, and
+// Return TRUE if this looks like a bmp file
 static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 {
 	hp->name = name;
-	byte infobuf[BMP_V5INFOHEADER_LEN];	/* largest we'll need */
+	byte infobuf[BMP_V5INFOHEADER_LEN];	// largest we'll need
 
 	// get file header
 	if ( zread( zf, infobuf, BMP_FILEHEADER_LEN ) != BMP_FILEHEADER_LEN ) {
@@ -135,7 +135,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 	}
 
 	if ( infobuf[0] != 'B' || infobuf[1] != 'M' ) {
-		return FALSE;      /* bad magic number */
+		return FALSE;      // bad magic number
 	}
 
 	hp->bfFileSize = GULONG4( &infobuf[2] );
@@ -194,16 +194,56 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 			return FALSE;
 		}
 
-		hp->biWidth = ( hp->biInfoHeaderSize >= 8 ) ? GULONG4( &infobuf[4] ) : 0;
-		hp->biHeight = ( hp->biInfoHeaderSize >= 12 ) ? GSINT4( &infobuf[8] ) : 0;
-		hp->biPlanes = ( hp->biInfoHeaderSize >= 14 ) ? GUINT2( &infobuf[12] ) : 1;
-		hp->biPixelSize = ( hp->biInfoHeaderSize >= 16 ) ? GUINT2( &infobuf[14] ) : 1;
-		hp->biCompression = ( hp->biInfoHeaderSize >= 20 ) ? GULONG4( &infobuf[16] ) : BI_RGB;
-		hp->biSizeImage = ( hp->biInfoHeaderSize >= 24 ) ? GULONG4( &infobuf[20] ) : 0;
-		hp->biXPelsPerMeter = ( hp->biInfoHeaderSize >= 28 ) ? GULONG4( &infobuf[24] ) : 0;
-		hp->biYPelsPerMeter = ( hp->biInfoHeaderSize >= 32 ) ? GULONG4( &infobuf[28] ) : 0;
-		hp->biClrUsed = ( hp->biInfoHeaderSize >= 36 ) ? GULONG4( &infobuf[32] ) : 0;
-		hp->biClrImportant = ( hp->biInfoHeaderSize >= 40 ) ? GULONG4( &infobuf[36] ) : 0;
+		if ( hp->biInfoHeaderSize >= 8 ) {
+			hp->biWidth = GULONG4( &infobuf[4] );
+		} else {
+			hp->biWidth = 0;
+		}
+		if ( hp->biInfoHeaderSize >= 12 ) {
+			hp->biHeight = GSINT4( &infobuf[8] );
+		} else {
+			hp->biHeight = 0;
+		}
+		if ( hp->biInfoHeaderSize >= 14 ) {
+			hp->biPlanes = GUINT2( &infobuf[12] );
+		} else {
+			hp->biPlanes = 1;
+		}
+		if ( hp->biInfoHeaderSize >= 16 ) {
+			hp->biPixelSize = GUINT2( &infobuf[14] );
+		} else {
+			hp->biPixelSize = 1;
+		}
+		if ( hp->biInfoHeaderSize >= 20 ) {
+			hp->biCompression = GULONG4( &infobuf[16] );
+		} else {
+			hp->biCompression = BI_RGB;
+		}
+		if ( hp->biInfoHeaderSize >= 24 ) {
+			hp->biSizeImage = GULONG4( &infobuf[20] );
+		} else {
+			hp->biSizeImage = 0;
+		}
+		if ( hp->biInfoHeaderSize >= 28 ) {
+			hp->biXPelsPerMeter = GULONG4( &infobuf[24] );
+		} else {
+			hp->biXPelsPerMeter = 0;
+		}
+		if ( hp->biInfoHeaderSize >= 32 ) {
+			hp->biYPelsPerMeter = GULONG4( &infobuf[28] );
+		} else {
+			hp->biYPelsPerMeter = 0;
+		}
+		if ( hp->biInfoHeaderSize >= 36 ) {
+			hp->biClrUsed = GULONG4( &infobuf[32] );
+		} else {
+			hp->biClrUsed = 0;
+		}
+		if ( hp->biInfoHeaderSize >= 40 ) {
+			hp->biClrImportant = GULONG4( &infobuf[36] );
+		} else {
+			hp->biClrImportant = 0;
+		}
 		hp->redMask = 0;
 		hp->greenMask = 0;
 		hp->blueMask = 0;
@@ -225,9 +265,6 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		hp->biYPelsPerMeter = GULONG4( &infobuf[28] );
 		hp->biClrUsed = GULONG4( &infobuf[32] );
 		hp->biClrImportant = GULONG4( &infobuf[36] );
-		// **FIXME**  OS/2 v2 has multiple other fields
-		// **FIXME**  bmp v4 has multiple other fields
-		// **FIXME**  bmp v5 has multiple other fields
 	}
 	
 	// PNG compression could not have image dimensions in bmp header
@@ -265,12 +302,17 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		return FALSE;
 	}
 	
-	// Read or extract bitmasks if BI_FIELDS or BI_ALPHAFIELDS */
+	// Read or extract bitmasks if BI_FIELDS or BI_ALPHAFIELDS
 	if ( ( hp->biCompression == BI_FIELDS || hp->biCompression == BI_ALPHAFIELDS ) 
 	&& hp->bfType != C_OS2 
 	&& hp->bfType != C_OS2_V2 ) {
 		if ( hp->biInfoHeaderSize == WIN_INFOHEADER_LEN ) {
-			unsigned int mask_bytes = ( hp->biCompression == BI_ALPHAFIELDS ) ? 16 : 12;
+			unsigned int mask_bytes;
+			if ( hp->biCompression == BI_ALPHAFIELDS ) {
+				mask_bytes = 16;
+			} else {
+				mask_bytes = 12;
+			}
 			byte maskbuf[16];
 			if ( zread( zf, maskbuf, mask_bytes ) != ( int )mask_bytes ) {
 				return FALSE;
@@ -354,20 +396,24 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		return FALSE;
 	}	
 	
-	/* top to bottom images cannot be RLE */
+	// top to bottom images cannot be RLE
 	if ( hp->biHeight < 0 && ( hp->biCompression == BI_RLE8 || hp->biCompression == BI_RLE4 ) ) {
 		fprintf( stderr, "bmpLoad: %s - top to bottom with RLE not supported\n", hp->name );
 		return FALSE;
 	}
 
-	/* Calculate headers, masks, and palette lengths and validate resolved offset / overlaps */
+	// Calculate headers, masks, and palette lengths and validate resolved offset / overlaps
 	{
 		unsigned long color_entry_len = 4;
 		unsigned long masks_header_len = 0;
 		unsigned long all_headers_len = 0;
 		unsigned long palette_len = 0;
 		
-		hp->abs_height = ( hp->biHeight < 0 ) ? ( unsigned long )( -hp->biHeight ) : ( unsigned long )hp->biHeight;
+		if ( hp->biHeight < 0 ) {
+			hp->abs_height = ( unsigned long )( -hp->biHeight );
+		} else {
+			hp->abs_height = ( unsigned long )hp->biHeight;
+		}
 		
 		if ( hp->biWidth > MAX_WIDTH || hp->abs_height > MAX_HEIGHT ) {
 			fprintf( stderr, "bmpLoad: %s - Image dimensions exceed bounds\n", hp->name );
@@ -383,27 +429,31 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		all_headers_len = BMP_FILEHEADER_LEN + hp->biInfoHeaderSize + masks_header_len;
 
 		// **FIXME** there could be some other data between headers, palette and image
-		palette_len = ( hp->bfImageOffset > all_headers_len ) ? ( hp->bfImageOffset - all_headers_len ) : 0;
+		if ( hp->bfImageOffset > all_headers_len ) {
+			palette_len = hp->bfImageOffset - all_headers_len;
+		} else {
+			palette_len = 0;
+		}
 
 		if ( hp->bfType == C_OS2 ) {
-			color_entry_len = 3; /* OS/2 v1 always uses 3-byte RGBTRIPLE entries */
+			color_entry_len = 3; // OS/2 v1 always uses 3-byte RGBTRIPLE entries
 		} else if ( hp->bfType == C_OS2_V2 ) {
-			/* OS/2 v2 dynamically permits either 3-byte or 4-byte entries */
+			// OS/2 v2 dynamically permits either 3-byte or 4-byte entries
 			if ( palette_len > 0 && ( palette_len % 3 == 0 ) && ( palette_len / 3 <= ( 1UL << hp->biPixelSize ) ) ) {
 				color_entry_len = 3;
 				fprintf( stderr, "bmpLoad: %s - OS/2 v2 file handles 3-byte palette entries\n", hp->name );
 			} else if ( palette_len > 0 && ( palette_len % 4 == 0 ) && ( palette_len / 4 <= ( 1UL << hp->biPixelSize ) ) ) {
 				color_entry_len = 4;
 			} else {
-				color_entry_len = 3; /* Standard fallback for native OS/2 streams */
+				color_entry_len = 3; // Standard fallback for native OS/2 streams
 			}
 		} else {
-			color_entry_len = 4; /* Windows formats always use 4-byte RGBQUAD entries */
+			color_entry_len = 4; // Windows formats always use 4-byte RGBQUAD entries
 		}
 
 		unsigned long effective_clr_used = 0;
 
-		/* Determine number of colors used for indexed color modes */
+		// Determine number of colors used for indexed color modes
 		if ( hp->biPixelSize <= PAL_MAX_DEPTH ) {
 			unsigned long max_colors = ( 1UL << hp->biPixelSize );
 			effective_clr_used = hp->biClrUsed;
@@ -413,7 +463,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 				effective_clr_used = max_colors;
 			}
 			
-			/* Try to find number of colors with distance between header and image data */
+			// Try to find number of colors with distance between header and image data
 			if ( palette_len > 0 && color_entry_len > 0 && ( palette_len % color_entry_len == 0 ) ) {
 				unsigned long colors_num = palette_len / color_entry_len;
 				if ( colors_num <= max_colors ) {
@@ -422,15 +472,15 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 					effective_clr_used = max_colors;
 				}
 			} 
-			/* Fallback to header field or absolute bit-depth limit */
+			// Fallback to header field or absolute bit-depth limit
 			else if ( effective_clr_used == 0 ) {
 				effective_clr_used = max_colors;
 			}
 		} else {
-			effective_clr_used = 0; /* TrueColor/HighColor streams do not utilize a required palette */
+			effective_clr_used = 0; // TrueColor/HighColor streams do not utilize a required palette
 		}
 
-		/* Determine real file size via fstat for standard file streams */
+		// Determine real file size via fstat for standard file streams
 		unsigned long real_file_size = 0;
 		if ( zf->type == ZSTANDARD && zf->stream != NULL ) {
 			struct stat st;
@@ -447,14 +497,16 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 
 
 		unsigned long resolved_offset = hp->bfImageOffset;
-		unsigned long min_pixel_offset = all_headers_len + ( ( hp->biPixelSize <= PAL_MAX_DEPTH ) ? ( effective_clr_used * color_entry_len ) : 0 );
+		unsigned long pixel_depth_colors_len;
+		if ( hp->biPixelSize <= PAL_MAX_DEPTH ) {
+			pixel_depth_colors_len = effective_clr_used * color_entry_len;
+		} else {
+			pixel_depth_colors_len = 0;
+		}
+		unsigned long min_pixel_offset = all_headers_len + pixel_depth_colors_len;
 
-		
-		
-		
 		if ( resolved_offset < all_headers_len ) {
 			fprintf( stderr, "bmpLoad: %s - bfImageOffset (%lu) overlaps header (minimum expected: %lu)\n", hp->name, hp->bfImageOffset, all_headers_len );
-			
 		} else if ( resolved_offset < min_pixel_offset ) {
 			if ( hp->bfImageOffset > 0 && hp->bfImageOffset < min_pixel_offset ) {
 				fprintf( stderr, "bmpLoad: %s - bfImageOffset (%lu) overlaps colormap (minimum expected: %lu)\n", hp->name, hp->bfImageOffset, min_pixel_offset );
@@ -476,7 +528,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 	return TRUE;
 }
 
-/* Print a brief description of the image */
+// Print a brief description of the image
 static void tell_about_bmp( bmpHeader* hp )
 {
 	const strbyte* typelabel = "Windows";
@@ -494,8 +546,19 @@ static void tell_about_bmp( bmpHeader* hp )
 		typelabel = "Windows V5";
 	}
 
-	const strbyte* colormode = ( hp->biPixelSize <= PAL_MAX_DEPTH ) ? "palette" : "TrueColor";
-	const strbyte* topbot = ( hp->biHeight < 0 ) ? "top-bot, " : "";
+	const strbyte* colormode;
+	if ( hp->biPixelSize <= PAL_MAX_DEPTH ) {
+		colormode = "palette";
+	} else {
+		colormode = "TrueColor";
+	}
+
+	const strbyte* topbot;
+	if ( hp->biHeight < 0 ) {
+		topbot = "top-bot, ";
+	} else {
+		topbot = "";
+	}
 
 	const strbyte* complabel = "";
 	if ( hp->biCompression == BI_RLE8 || hp->biCompression == BI_RLE4 ) {
@@ -539,9 +602,19 @@ static void print_bmp_hdr( bmpHeader* hp )
 		typelabel = "Windows V5";
 	}
 
-	const strbyte* colormode = ( hp->biPixelSize <= PAL_MAX_DEPTH ) ? "palette" : "TrueColor";
-	const strbyte* topbot = ( hp->biHeight < 0 ) ? "top-bot" : "bot-top";
+	const strbyte* colormode;
+	if ( hp->biPixelSize <= PAL_MAX_DEPTH ) {
+		colormode = "palette";
+	} else {
+		colormode = "TrueColor";
+	}
 
+	const strbyte* topbot;
+	if ( hp->biHeight < 0 ) {
+		topbot = "top-bot";
+	} else {
+		topbot = "bot-top";
+	}
 
 	const strbyte* complabel = "";
 	if ( hp->biCompression == BI_RLE8 || hp->biCompression == BI_RLE4 ) {
@@ -597,8 +670,6 @@ static void print_bmp_hdr( bmpHeader* hp )
 	printf( " resolved colormap entries:           %lu\n", hp->resolved_clr_used );	
 	printf( " resolved palette length:             %lu bytes\n", hp->palette_len );
 	printf( " resolved color entry length:         %lu bytes\n", hp->color_entry_len );
-
-	
 }
 
 int bmpIdent( strbyte* fullname, strbyte* name )
@@ -612,20 +683,840 @@ int bmpIdent( strbyte* fullname, strbyte* name )
 	}
 	if ( !read_bmpHeader( zf, &hdr, name ) ) {
 		zclose( zf );
-		return 0;	/* Nope, not a BMP file */
+		return 0;	// Nope, not a BMP file
 	}
 	tell_about_bmp( &hdr );
 	zclose( zf );
 	return 1;
 }
 
+// d: get image data, depth 1  
+static bool get_bmp_pixels_depth1( ZFILE* zf, Image* image, bmpHeader* hp )
+{
+	byte data_bytes[4];
+	byte* memblock;
+	int src_row_bytelen = ( ( int )image->width + 7 ) / 8;
+	int src_padlen = ( ( ( ( int )image->width + 31 ) / 32 ) * 4 ) - src_row_bytelen;
+	bool top_bot = ( hp->biHeight < 0 );
+	int rowcount = ( int )hp->abs_height;
+	long dest_row_stride;
+	if ( top_bot ) {
+		dest_row_stride = ( long )src_row_bytelen;
+		memblock = image->data;
+	} else {
+		dest_row_stride = -( long )src_row_bytelen;
+		memblock = image->data + ( ( unsigned long )hp->abs_height - 1 ) * ( unsigned long )src_row_bytelen;
+	}
+
+	while ( rowcount > 0 ) {
+		if ( zread( zf, memblock, src_row_bytelen ) != src_row_bytelen
+		        || zread( zf, data_bytes, src_padlen ) != src_padlen ) {
+			return FALSE;
+		}
+		rowcount = rowcount - 1;
+		memblock = memblock + dest_row_stride;
+	}
+	return TRUE;
+}
+
+// d: get image data, depth 2 
+static bool get_bmp_pixels_depth2( ZFILE* zf, Image* image, bmpHeader* hp )
+{
+	byte* memblock;
+	unsigned int src_row_bytelen;
+	unsigned int src_padlen;
+	unsigned int rowcount;
+	unsigned int i;
+	unsigned int padbytes;
+	unsigned int packedbyte;
+	long dest_row_stride;
+	bool top_bot = ( hp->biHeight < 0 );
+
+	src_row_bytelen = ( image->width * 2 + 7 ) / 8;
+	src_padlen = ( ( ( image->width * 2 + 31 ) / 32 ) * 4 ) - src_row_bytelen;
+
+	if ( top_bot ) {
+		dest_row_stride = ( long )image->width;
+		memblock = image->data;
+	} else {
+		dest_row_stride = -( long )image->width;
+		memblock = image->data + ( ( unsigned long )hp->abs_height - 1 ) * image->width;
+	}
+
+	rowcount = ( unsigned int )hp->abs_height;
+
+	while ( rowcount > 0 ) {
+		i = 0;
+		while ( i < image->width ) {
+			packedbyte = ( unsigned int )zgetc( zf );
+			if ( packedbyte == ( unsigned int )EOF ) {
+				return FALSE;
+			}
+			if ( i < image->width ) {
+				memblock[i] = ( byte )( ( packedbyte >> 6 ) & 0x3 );
+				i = i + 1;
+			}
+			if ( i < image->width ) {
+				memblock[i] = ( byte )( ( packedbyte >> 4 ) & 0x3 );
+				i = i + 1;
+			}
+			if ( i < image->width ) {
+				memblock[i] = ( byte )( ( packedbyte >> 2 ) & 0x3 );
+				i = i + 1;
+			}
+			if ( i < image->width ) {
+				memblock[i] = ( byte )( packedbyte & 0x3 );
+				i = i + 1;
+			}
+		}
+		padbytes = 0;
+		while ( padbytes < src_padlen ) {
+			if ( zgetc( zf ) == EOF ) {
+				return FALSE;
+			}
+			padbytes = padbytes + 1;
+		}
+		rowcount = rowcount - 1;
+		memblock = memblock + dest_row_stride;
+	}
+	return TRUE;
+}
+
+// d: get image data, depth 4  with or without RLE4
+static bool get_bmp_pixels_depth4( ZFILE* zf, Image* image, bmpHeader* hp, bool* data_bounds )
+{
+	byte* memblock;
+	unsigned int src_row_bytelen;
+	unsigned int x;
+	unsigned int y;
+	bool top_bot = ( hp->biHeight < 0 );
+
+	src_row_bytelen = image->width;
+	*data_bounds = FALSE;
+
+	if ( hp->biCompression == BI_RLE4 ) {
+		int d;
+		int e;
+		memset( ( byte* )image->data, 0, ( size_t )image->width * ( size_t )image->height );
+		x = 0;
+		y = 0;
+		memblock = image->data + ( hp->abs_height - 1 ) * src_row_bytelen;
+		while ( 1 ) {
+			int i;
+			int f;
+			d = zgetc( zf );
+			if ( d == EOF ) {
+				return FALSE;
+			}
+			if ( d != 0 ) {
+				unsigned int start_x = x;
+				unsigned int run_len = ( unsigned int )d;
+				x = x + run_len;
+				if ( y > hp->abs_height ) {
+					*data_bounds = TRUE;
+					goto skip_iter_rle4;
+				}
+				if ( x > image->width ) {
+					if ( start_x < image->width ) {
+						run_len = image->width - start_x;
+					} else {
+						run_len = 0;
+					}
+					x = image->width;
+				}
+				e = zgetc( zf );
+				if ( e == EOF ) {
+					return FALSE;
+				}
+				f = e & 0xf;
+				e = e >> 4;
+				i = ( int )( run_len / 2 );
+				while ( i > 0 ) {
+					*memblock = ( byte )e;
+					memblock = memblock + 1;
+					*memblock = ( byte )f;
+					memblock = memblock + 1;
+					i = i - 1;
+				}
+				if ( ( run_len & 1 ) != 0 ) {
+					*memblock = ( byte )e;
+					memblock = memblock + 1;
+				}
+				goto skip_iter_rle4;
+			}
+			d = zgetc( zf );
+			if ( d == EOF ) {
+				return FALSE;
+			}
+			if ( d == 0 ) {
+				memblock = memblock - ( x + src_row_bytelen );
+				x = 0;
+				y = y + 1;
+				goto skip_iter_rle4;
+			}
+			if ( d == 1 ) {
+				break;
+			}
+			if ( d == 2 ) {
+				d = zgetc( zf );
+				e = zgetc( zf );
+				if ( d == EOF || e == EOF ) {
+					return FALSE;
+				}
+				x = x + ( unsigned int )d;
+				y = y + ( unsigned int )e;
+				if ( x > image->width || y > hp->abs_height ) {
+					*data_bounds = TRUE;
+					x = x - ( unsigned int )d;
+					y = y - ( unsigned int )e;
+					goto skip_iter_rle4;
+				}
+				memblock = memblock + d - ( e * src_row_bytelen );
+				goto skip_iter_rle4;
+			}
+			{
+				unsigned int start_x = x;
+				unsigned int run_len = ( unsigned int )d;
+				int total_bytes = d / 2 + ( d & 1 ) + ( ( ( d + 1 ) & 2 ) >> 1 );
+				int bytes_read = 0;
+
+				x = x + run_len;
+				if ( y > hp->abs_height ) {
+					*data_bounds = TRUE;
+					goto skip_iter_rle4;
+				}
+				if ( x > image->width ) {
+					if ( start_x < image->width ) {
+						run_len = image->width - start_x;
+					} else {
+						run_len = 0;
+					}
+					x = image->width;
+				}
+
+				i = ( int )( run_len / 2 );
+				while ( i > 0 ) {
+					e = zgetc( zf );
+					if ( e == EOF ) {
+						return FALSE;
+					}
+					bytes_read = bytes_read + 1;
+					*memblock = ( byte )( e >> 4 );
+					memblock = memblock + 1;
+					*memblock = ( byte )( e & 0xf );
+					memblock = memblock + 1;
+					i = i - 1;
+				}
+				if ( ( run_len & 1 ) != 0 ) {
+					e = zgetc( zf );
+					if ( e == EOF ) {
+						return FALSE;
+					}
+					bytes_read = bytes_read + 1;
+					*memblock = ( byte )( e >> 4 );
+					memblock = memblock + 1;
+				}
+
+				while ( bytes_read < total_bytes ) {
+					if ( zgetc( zf ) == EOF ) {
+						return FALSE;
+					}
+					bytes_read = bytes_read + 1;
+				}
+			}
+			skip_iter_rle4:
+			;
+		}
+	} else {
+		int d;
+		int s;
+		int p;
+		int i;
+		int e;
+		byte* dest_row_madress;
+		long dest_row_stride;
+
+		d = ( int )image->width / 2;
+		s = ( int )image->width & 1;
+		p = ( 4 - ( d + s ) ) & 0x3;
+
+		if ( top_bot ) {
+			dest_row_stride = ( long )src_row_bytelen;
+			dest_row_madress = image->data;
+		} else {
+			dest_row_stride = -( long )src_row_bytelen;
+			dest_row_madress = image->data + ( hp->abs_height - 1 ) * src_row_bytelen;
+		}
+
+		y = ( int )hp->abs_height;
+
+		while ( y > 0 ) {
+			byte* row_data = dest_row_madress;
+			i = d;
+			while ( i > 0 ) {
+				e = zgetc( zf );
+				if ( e == EOF ) {
+					return FALSE;
+				}
+				*row_data = ( byte )( e >> 4 );
+				row_data = row_data + 1;
+				*row_data = ( byte )( e & 0xf );
+				row_data = row_data + 1;
+				i = i - 1;
+			}
+			if ( s != 0 ) {
+				e = zgetc( zf );
+				if ( e == EOF ) {
+					return FALSE;
+				}
+				*row_data = ( byte )( e >> 4 );
+				row_data = row_data + 1;
+			}
+			i = p;
+			while ( i > 0 ) {
+				if ( zgetc( zf ) == EOF ) {
+					return FALSE;
+				}
+				i = i - 1;
+			}
+			y = y - 1;
+			dest_row_madress = dest_row_madress + dest_row_stride;
+		}
+	}
+	return TRUE;
+}
+
+// d: get image data, depth 8  with or without RLE8 
+static bool get_bmp_pixels_depth8( ZFILE* zf, Image* image, bmpHeader* hp, bool* data_bounds )
+{
+	byte* memblock;
+	unsigned int src_row_bytelen;
+	unsigned int x;
+	unsigned int y;
+	bool top_bot = ( hp->biHeight < 0 );
+
+	src_row_bytelen = image->width;
+	*data_bounds = FALSE;
+
+	if ( hp->biCompression == BI_RLE8 ) {
+		int d;
+		int e;
+		memset( ( byte* )image->data, 0, ( size_t )image->width * ( size_t )image->height );
+		x = 0;
+		y = 0;
+		memblock = image->data + ( hp->abs_height - 1 ) * src_row_bytelen;
+		while ( 1 ) {
+			d = zgetc( zf );
+			if ( d == EOF ) {
+				return FALSE;
+			}
+			if ( d != 0 ) {
+				unsigned int start_x = x;
+				unsigned int run_len = ( unsigned int )d;
+				x = x + run_len;
+				if ( y > hp->abs_height ) {
+					*data_bounds = TRUE;
+					goto skip_iter_rle8;
+				}
+				if ( x > image->width ) {
+					if ( start_x < image->width ) {
+						run_len = image->width - start_x;
+					} else {
+						run_len = 0;
+					}
+					x = image->width;
+				}
+				e = zgetc( zf );
+				if ( e == EOF ) {
+					return FALSE;
+				}
+				memset( memblock, ( byte )e, run_len );
+				memblock = memblock + run_len;
+				goto skip_iter_rle8;
+			}
+			d = zgetc( zf );
+			if ( d == EOF ) {
+				return FALSE;
+			}
+			if ( d == 0 ) {
+				memblock = memblock - ( x + src_row_bytelen );
+				x = 0;
+				y = y + 1;
+				goto skip_iter_rle8;
+			}
+			if ( d == 1 ) {
+				break;
+			}
+			if ( d == 2 ) {
+				int delta_x;
+				int delta_y;
+				delta_x = zgetc( zf );
+				delta_y = zgetc( zf );
+				if ( delta_x == EOF || delta_y == EOF ) {
+					return FALSE;
+				}
+				x = x + ( unsigned int )delta_x;
+				y = y + ( unsigned int )delta_y;
+				if ( x > image->width || y > hp->abs_height ) {
+					*data_bounds = TRUE;
+					x = x - ( unsigned int )delta_x;
+					y = y - ( unsigned int )delta_y;
+					goto skip_iter_rle8;
+				}
+				memblock = memblock + delta_x - ( delta_y * ( int )src_row_bytelen );
+				goto skip_iter_rle8;
+			}
+			{
+				unsigned int start_x = x;
+				unsigned int run_len = ( unsigned int )d;
+				int total_bytes = d + ( d & 1 );
+				int bytes_read = 0;
+
+				x = x + run_len;
+				if ( y > hp->abs_height ) {
+					*data_bounds = TRUE;
+					goto skip_iter_rle8;
+				}
+				if ( x > image->width ) {
+					if ( start_x < image->width ) {
+						run_len = image->width - start_x;
+					} else {
+						run_len = 0;
+					}
+					x = image->width;
+				}
+
+				while ( bytes_read < ( int )run_len ) {
+					int pixel_v = zgetc( zf );
+					if ( pixel_v == EOF ) {
+						return FALSE;
+					}
+					*memblock = ( byte )pixel_v;
+					memblock = memblock + 1;
+					bytes_read = bytes_read + 1;
+				}
+
+				while ( bytes_read < total_bytes ) {
+					if ( zgetc( zf ) == EOF ) {
+						return FALSE;
+					}
+					bytes_read = bytes_read + 1;
+				}
+			}
+			skip_iter_rle8:
+			;
+		}
+	} else {
+		byte pad[4];
+		int src_padlen;
+		long dest_row_stride;
+
+		src_padlen = ( ( ( int )image->width + 3 ) & ~3 ) - ( int )src_row_bytelen;
+		
+		if ( top_bot ) {
+			dest_row_stride = ( long )src_row_bytelen;
+			memblock = image->data;
+		} else {
+			dest_row_stride = -( long )src_row_bytelen;
+			memblock = image->data + ( hp->abs_height - 1 ) * src_row_bytelen;
+		}
+
+		y = ( unsigned int )hp->abs_height;
+
+		while ( y > 0 ) {
+			if ( zread( zf, memblock, src_row_bytelen ) != ( int )src_row_bytelen
+			        || zread( zf, pad, src_padlen ) != src_padlen ) {
+				return FALSE;
+			}
+			y = y - 1;
+			memblock = memblock + dest_row_stride;
+		}
+	}
+	return TRUE;
+}
+
+// d: read 16-bit truecolor
+static bool get_bmp_pixels_depth16( ZFILE* zf, Image* image, bmpHeader* hp )
+{
+	byte* pixel_row;
+	byte* src_madress;
+	byte* dst_madress;
+	byte pad_bytes[4];
+	int dest_row_bytelen = ( int )image->width * ( int )image->pixlen;
+	int src_row_bytelen = ( int )image->width * 2;
+	int src_padlen = ( ( src_row_bytelen + 3 ) & ~3 ) - src_row_bytelen;
+	bool top_bot = ( hp->biHeight < 0 );
+	long dest_row_stride;
+	if ( top_bot ) {
+		dest_row_stride = ( long )dest_row_bytelen;
+		dst_madress = image->data;
+	} else {
+		dest_row_stride = -( long )dest_row_bytelen;
+		dst_madress = image->data + ( ( unsigned long )hp->abs_height - 1 ) * ( unsigned long )dest_row_bytelen;
+	}
+
+	unsigned int red_shift = get_mask_shift( hp->redMask );
+	unsigned int green_shift = get_mask_shift( hp->greenMask );
+	unsigned int blue_shift = get_mask_shift( hp->blueMask );
+	unsigned int alpha_shift = get_mask_shift( hp->alphaMask );
+	unsigned int red_flags = get_mask_factors( hp->redMask );
+	unsigned int green_flags = get_mask_factors( hp->greenMask );
+	unsigned int blue_flags = get_mask_factors( hp->blueMask );
+	unsigned int alpha_flags = get_mask_factors( hp->alphaMask );
+	int y = ( int )hp->abs_height;
+
+	pixel_row = ( byte* )calloc( ( size_t )src_row_bytelen + 4, 1 );
+	if ( pixel_row == NULL ) {
+		return FALSE;
+	}
+
+	while ( y > 0 ) {
+		if ( zread( zf, pixel_row, src_row_bytelen ) != src_row_bytelen
+		|| ( src_padlen > 0 && zread( zf, pad_bytes, src_padlen ) != src_padlen ) ) {
+			free( pixel_row );
+			return FALSE;
+		}
+		
+		{
+			unsigned int x = 0;
+			src_madress = pixel_row;
+			byte* dest_row_madress = dst_madress;
+			while ( x < image->width ) {
+				unsigned long pixelval = ( unsigned long )GUINT2( src_madress );
+				unsigned long r_v = 0;
+				unsigned long g_v = 0;
+				unsigned long b_v = 0;
+				unsigned long a_v = 0;
+				byte r = 0;
+				byte g = 0;
+				byte b = 0;
+				byte a = 0xff;
+
+				if ( red_flags > 0 ) {
+					r_v = ( pixelval & hp->redMask ) >> red_shift;
+					r = ( byte )( ( r_v * 255 ) / ( ( 1 << red_flags ) - 1 ) );
+				}
+				if ( green_flags > 0 ) {
+					g_v = ( pixelval & hp->greenMask ) >> green_shift;
+					g = ( byte )( ( g_v * 255 ) / ( ( 1 << green_flags ) - 1 ) );
+				}
+				if ( blue_flags > 0 ) {
+					b_v = ( pixelval & hp->blueMask ) >> blue_shift;
+					b = ( byte )( ( b_v * 255 ) / ( ( 1 << blue_flags ) - 1 ) );
+				}
+				if ( alpha_flags > 0 ) {
+					a_v = ( pixelval & hp->alphaMask ) >> alpha_shift;
+					a = ( byte )( ( a_v * 255 ) / ( ( 1 << alpha_flags ) - 1 ) );
+				}
+
+				if ( alpha_flags == 0 || a == 0x00 ) {
+					a = 0xff;
+				}
+
+				dest_row_madress[0] = colorreg_applyalpha( r, a );
+				dest_row_madress[1] = colorreg_applyalpha( g, a );
+				dest_row_madress[2] = colorreg_applyalpha( b, a );
+
+				src_madress = src_madress + 2;
+				dest_row_madress = dest_row_madress + 3;
+				x = x + 1;
+			}
+		}
+		y = y - 1;
+		dst_madress = dst_madress + dest_row_stride;
+	}
+	free( pixel_row );
+	return TRUE;
+}
+
+// d: get image data, depth 24  with or without RLE24
+static bool get_bmp_pixels_depth24( ZFILE* zf, Image* image, bmpHeader* hp, bool* data_bounds )
+{
+	byte* memblock;
+	byte pad[4];
+	int src_row_bytelen;
+	bool top_bot = ( hp->biHeight < 0 );
+
+	src_row_bytelen = ( int )image->width * ( int )image->pixlen;
+	*data_bounds = FALSE;
+
+	if ( hp->biCompression == BI_RLE24 ) {
+		int d;
+		unsigned int x;
+		unsigned int y;
+		byte triplet[3];
+		memset( ( byte* )image->data, 0, ( size_t )image->width * ( size_t )image->height * ( size_t )image->pixlen );
+		x = 0;
+		y = 0;
+		memblock = image->data + ( hp->abs_height - 1 ) * ( unsigned long )src_row_bytelen;
+		while ( 1 ) {
+			int i;
+			d = zgetc( zf );
+			if ( d == EOF ) {
+				return FALSE;
+			}
+			if ( d != 0 ) {
+				unsigned int start_x = x;
+				unsigned int run_len = ( unsigned int )d;
+				x = x + run_len;
+				if ( y > hp->abs_height ) {
+					*data_bounds = TRUE;
+					goto skip_iter_rle24;
+				}
+				if ( x > image->width ) {
+					if ( start_x < image->width ) {
+						run_len = image->width - start_x;
+					} else {
+						run_len = 0;
+					}
+					x = image->width;
+				}
+				if ( zread( zf, triplet, 3 ) != 3 ) {
+					return FALSE;
+				}
+				i = ( int )run_len;
+				while ( i > 0 ) {
+					*( memblock + 0 ) = triplet[2];
+					*( memblock + 1 ) = triplet[1];
+					*( memblock + 2 ) = triplet[0];
+					memblock = memblock + 3;
+					i = i - 1;
+				}
+				goto skip_iter_rle24;
+			}
+			d = zgetc( zf );
+			if ( d == EOF ) {
+				return FALSE;
+			}
+			if ( d == 0 ) {
+				memblock = memblock - ( ( x * image->pixlen ) + ( unsigned int )src_row_bytelen );
+				x = 0;
+				y = y + 1;
+				goto skip_iter_rle24;
+			}
+			if ( d == 1 ) {
+				break;
+			}
+			if ( d == 2 ) {
+				int delta_x;
+				int delta_y;
+				delta_x = zgetc( zf );
+				delta_y = zgetc( zf );
+				if ( delta_x == EOF || delta_y == EOF ) {
+					return FALSE;
+				}
+				x = x + ( unsigned int )delta_x;
+				y = y + ( unsigned int )delta_y;
+				if ( x > image->width || y > hp->abs_height ) {
+					*data_bounds = TRUE;
+					x = x - ( unsigned int )delta_x;
+					y = y - ( unsigned int )delta_y;
+					goto skip_iter_rle24;
+				}
+				memblock = memblock + ( delta_x * ( int )image->pixlen ) - ( delta_y * src_row_bytelen );
+				goto skip_iter_rle24;
+			}
+			{
+				unsigned int start_x = x;
+				unsigned int run_len = ( unsigned int )d;
+				int total_bytes = d * 3;
+				int padded_bytes = ( total_bytes + 1 ) & ~1;
+				int bytes_read = 0;
+
+				x = x + run_len;
+				if ( y > hp->abs_height ) {
+					*data_bounds = TRUE;
+					goto skip_iter_rle24;
+				}
+				if ( x > image->width ) {
+					if ( start_x < image->width ) {
+						run_len = image->width - start_x;
+					} else {
+						run_len = 0;
+					}
+					x = image->width;
+				}
+
+				i = ( int )run_len;
+				while ( i > 0 ) {
+					if ( zread( zf, triplet, 3 ) != 3 ) {
+						return FALSE;
+					}
+					bytes_read = bytes_read + 3;
+					*( memblock + 0 ) = triplet[2];
+					*( memblock + 1 ) = triplet[1];
+					*( memblock + 2 ) = triplet[0];
+					memblock = memblock + 3;
+					i = i - 1;
+				}
+
+				while ( bytes_read < padded_bytes ) {
+					if ( zgetc( zf ) == EOF ) {
+						return FALSE;
+					}
+					bytes_read = bytes_read + 1;
+				}
+			}
+			skip_iter_rle24:
+			;
+		}
+	} else {
+		int src_padlen;
+		int y;
+		long dest_row_stride;
+		src_padlen = ( ( ( ( int )image->width * 3 ) + 3 ) & ~3 ) - src_row_bytelen;
+
+		if ( top_bot ) {
+			dest_row_stride = ( long )src_row_bytelen;
+			memblock = image->data;
+		} else {
+			dest_row_stride = -( long )src_row_bytelen;
+			memblock = image->data + ( hp->abs_height - 1 ) * ( unsigned long )src_row_bytelen;
+		}
+
+		y = ( int )hp->abs_height;
+
+		while ( y > 0 ) {
+			int i;
+			if ( zread( zf, memblock, src_row_bytelen ) != src_row_bytelen
+			|| zread( zf, pad, src_padlen ) != src_padlen ) {
+				return FALSE;
+			}
+			i = 3 * ( int )image->width - 1;
+			while ( i > 0 ) {
+				int t = memblock[i];
+				memblock[i] = memblock[i - 2];
+				memblock[i - 2] = ( byte )t;
+				i = i - 3;
+			}
+			y = y - 1;
+			memblock = memblock + dest_row_stride;
+		}
+	}
+	return TRUE;
+}
+
+// d: get image data, depth 32 
+static bool get_bmp_pixels_depth32( ZFILE* zf, Image* image, bmpHeader* hp )
+{
+	byte* memblock;
+	byte* src_row;
+	byte pad[4];
+	int dest_row_bytelen;
+	int src_row_bytelen;
+	int src_padlen;
+	int y;
+	long dest_row_stride;
+	bool top_bot = ( hp->biHeight < 0 );
+	unsigned int red_shift = get_mask_shift( hp->redMask );
+	unsigned int green_shift = get_mask_shift( hp->greenMask );
+	unsigned int blue_shift = get_mask_shift( hp->blueMask );
+	unsigned int alpha_shift = get_mask_shift( hp->alphaMask );
+	unsigned int red_flags = get_mask_factors( hp->redMask );
+	unsigned int green_flags = get_mask_factors( hp->greenMask );
+	unsigned int blue_flags = get_mask_factors( hp->blueMask );
+	unsigned int alpha_flags = get_mask_factors( hp->alphaMask );
+
+	dest_row_bytelen = ( int )image->width * ( int )image->pixlen;
+	src_row_bytelen = ( int )image->width * 4;
+	src_padlen = ( ( src_row_bytelen + 3 ) & ~3 ) - src_row_bytelen;
+
+	if ( top_bot ) {
+		dest_row_stride = ( long )dest_row_bytelen;
+		memblock = image->data;
+	} else {
+		dest_row_stride = -( long )dest_row_bytelen;
+		memblock = image->data + ( hp->abs_height - 1 ) * ( unsigned long )dest_row_bytelen;
+	}
+
+	src_row = ( byte* )calloc( ( size_t )src_row_bytelen + 4, 1 );
+	if ( src_row == NULL ) {
+		return FALSE;
+	}
+
+	y = ( int )hp->abs_height;
+	while ( y > 0 ) {
+		if ( zread( zf, src_row, src_row_bytelen ) != src_row_bytelen
+		        || ( src_padlen > 0 && zread( zf, pad, src_padlen ) != src_padlen ) ) {
+			free( src_row );
+			return FALSE;
+		}
+		{
+			unsigned int x = 0;
+			byte* src_madress = src_row;
+			byte* dst_madress = memblock;
+			while ( x < image->width ) {
+				unsigned long pixelval = GULONG4( src_madress );
+				unsigned long r_v;
+				unsigned long g_v;
+				unsigned long b_v;
+				unsigned long a_v;
+				byte r;
+				byte g;
+				byte b;
+				byte a;
+				
+				if ( red_flags > 0 ) {
+					r_v = ( pixelval & hp->redMask ) >> red_shift;
+					r = ( byte )( ( r_v * 255 ) / ( ( 1 << red_flags ) - 1 ) );
+				} else {
+					r_v = 0;
+					r = src_madress[2];
+				}
+
+				if ( green_flags > 0 ) {
+					g_v = ( pixelval & hp->greenMask ) >> green_shift;
+					g = ( byte )( ( g_v * 255 ) / ( ( 1 << green_flags ) - 1 ) );
+				} else {
+					g_v = 0;
+					g = src_madress[1];
+				}
+
+				if ( blue_flags > 0 ) {
+					b_v = ( pixelval & hp->blueMask ) >> blue_shift;
+					b = ( byte )( ( b_v * 255 ) / ( ( 1 << blue_flags ) - 1 ) );
+				} else {
+					b_v = 0;
+					b = src_madress[0];
+				}
+
+				if ( alpha_flags > 0 ) {
+					a_v = ( pixelval & hp->alphaMask ) >> alpha_shift;
+					a = ( byte )( ( a_v * 255 ) / ( ( 1 << alpha_flags ) - 1 ) );
+				} else {
+					a_v = 0;
+					a = src_madress[3];
+				}
+
+
+				if ( alpha_flags == 0 || a == 0x00 ) {
+					a = 0xff;
+				}
+
+				dst_madress[0] = colorreg_applyalpha( r, a );
+				dst_madress[1] = colorreg_applyalpha( g, a );
+				dst_madress[2] = colorreg_applyalpha( b, a );
+
+				src_madress = src_madress + 4;
+				dst_madress = dst_madress + 3;
+				x = x + 1;
+			}
+		}
+		y = y - 1;
+		memblock = memblock + dest_row_stride;
+	}
+	free( src_row );
+	return TRUE;
+}
+
+
+// d: load BMP image, xli interface
 Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 {
 	ZFILE* zf;
 	bmpHeader hdr = {0};
 	Image* image;
 	bool data_bounds = FALSE;
-	bool top_bot;
 
 	if ( !( zf = zopen( fullname ) ) ) {
 		perror( "bmpIdent" );
@@ -633,7 +1524,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	}
 	if ( !read_bmpHeader( zf, &hdr, image_ops->name ) ) {
 		zclose( zf );
-		return NULL;	/* Nope, not a BMP file */
+		return NULL;	// Nope, not a BMP file
 	}
 	if ( verbose ) {
 		tell_about_bmp( &hdr );
@@ -642,22 +1533,20 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		print_bmp_hdr( &hdr );
 	}
 
-	/* Report  64-bit files as identifiable but not displayable yet */
+	// Report  64-bit files as identifiable but not displayable yet
 	if (  hdr.biPixelSize == 64 ) {
 		fprintf( stderr, "bmpLoad: %s - %d-bit BMP loading not supported\n", hdr.name, ( int )hdr.biPixelSize );
 		zclose( zf );
 		return NULL;
 	}
 
-	top_bot = ( hdr.biHeight < 0 );
-
-	/* Create the appropriate image and colormap */
+	// Create the appropriate image and colormap
 	if ( hdr.biPixelSize <= PAL_MAX_DEPTH ) {
 
 		unsigned int i;
 		int n = ( int )hdr.color_entry_len;
 		byte buf[4];
-		/* maximum number of colors */
+		// maximum number of colors
 		unsigned int used = ( 1 << hdr.biPixelSize );
 
 		if ( hdr.biPixelSize == 1 ) {	// 2 colors  type
@@ -681,23 +1570,28 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 			i = i + 1;
 		}
 
-		/* init rest of colormap (if any) */
+		// init rest of colormap (if any)
 		while ( i < used ) {
 			image->rgb.red[i] = 0;
 			image->rgb.green[i] = 0;
 			image->rgb.blue[i] = 0;
 			i = i + 1;
 		}
-		/* Don't know how many colors are actually used. */
+		// Don't know how many colors are actually used.
 		image->rgb.used = used;
-	} else {		/* else must be a true color image */
+	} else {		// else must be a true color image
 		image = newTrueImage( hdr.biWidth, hdr.abs_height );
 		image->title = dupString( hdr.name );
 	}
 
-	/* Rewind file stream to offset 0 and strictly skip to bfImageOffset (or resolved fallback if 0) */
+	// Rewind file stream to offset 0 and strictly skip to bfImageOffset (or resolved fallback if 0)
 	{
-		unsigned long skip_offset = ( hdr.bfImageOffset > 0 ) ? hdr.bfImageOffset : hdr.resolved_image_offset;
+		unsigned long skip_offset;
+		if ( hdr.bfImageOffset > 0 ) {
+			skip_offset = hdr.bfImageOffset;
+		} else {
+			skip_offset = hdr.resolved_image_offset;
+		}
 		unsigned long skip_count = skip_offset;
 
 		if ( !zrewind( zf ) ) {
@@ -718,667 +1612,42 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		}
 	}
 
-	/* Disable caching before reading pixel data */
+	// disable caching next header
 	znocache( zf );
 
-	/* Read the pixel data */
+	// get image pixels data
 	if ( hdr.biPixelSize == 1 ) {
-		byte* data, pad[4];
-		int illen, padlen, rowcount;
-		long row_stride;
-
-		/* round to byte */
-		illen = ( image->width + 7 ) / 8;
-		/* extra bytes to word boundary */
-		padlen = ( ( ( image->width + 31 ) / 32 ) * 4 ) - illen;
-		row_stride = top_bot ? ( long )illen : -( long )illen;
-		data = top_bot ? image->data : image->data + ( hdr.abs_height - 1 ) * illen;
-		rowcount = ( int )hdr.abs_height;
-
-		while ( rowcount > 0 ) {
-			if ( zread( zf, data, illen ) != illen
-			        || zread( zf, pad, padlen ) != padlen ) {
-				goto data_short;
-			}
-			rowcount = rowcount - 1;
-			data = data + row_stride;
+		if ( !get_bmp_pixels_depth1( zf, image, &hdr ) ) {
+			goto data_short;
 		}
 	} else if ( hdr.biPixelSize == 2 ) {
-		byte* data;
-		unsigned int illen, padlen, rowcount, i, padbytes, packedbyte;
-		long row_stride;
-
-		illen = ( image->width * 2 + 7 ) / 8;
-		padlen = ( ( ( image->width * 2 + 31 ) / 32 ) * 4 ) - illen;
-		row_stride = top_bot ? ( long )image->width : -( long )image->width;
-		data = top_bot ? image->data : image->data + ( hdr.abs_height - 1 ) * image->width;
-		rowcount = ( int )hdr.abs_height;
-
-		while ( rowcount > 0 ) {
-			i = 0;
-			while ( i < image->width ) {
-				packedbyte = zgetc( zf );
-				if ( packedbyte == ( unsigned int )EOF ) {
-					goto data_short;
-				}
-				if ( i < image->width ) {
-					data[i] = ( packedbyte >> 6 ) & 0x3;
-					i = i + 1;
-				}
-				if ( i < image->width ) {
-					data[i] = ( packedbyte >> 4 ) & 0x3;
-					i = i + 1;
-				}
-				if ( i < image->width ) {
-					data[i] = ( packedbyte >> 2 ) & 0x3;
-					i = i + 1;
-				}
-				if ( i < image->width ) {
-					data[i] = packedbyte & 0x3;
-					i = i + 1;
-				}
-			}
-			padbytes = 0;
-			while ( padbytes < padlen ) {
-				if ( zgetc( zf ) == EOF ) {
-					goto data_short;
-				}
-				padbytes = padbytes + 1;
-			}
-			rowcount = rowcount - 1;
-			data = data + row_stride;
+		if ( !get_bmp_pixels_depth2( zf, image, &hdr ) ) {
+			goto data_short;
 		}
 	} else if ( hdr.biPixelSize == 4 ) {
-		byte* data;
-		unsigned int illen, x, y;
-
-		illen = image->width;
-
-		if ( hdr.biCompression == BI_RLE4 ) {
-			int d, e;
-			memset( ( byte* ) image->data, 0, ( size_t )image->width * ( size_t )image->height );
-			x = 0;
-			y = 0;
-			data = image->data + ( hdr.abs_height - 1 ) * illen;
-			while ( 1 ) {
-				int i, f;
-				if ( ( d = zgetc( zf ) ) == EOF ) {
-					goto data_short;
-				}
-				if ( d != 0 ) {	/* run of pixels */
-					unsigned int start_x = x;
-					unsigned int run_len = ( unsigned int )d;
-					x = x + run_len;
-					if ( y > hdr.abs_height ) {
-						data_bounds = TRUE;
-						goto skip_iter_rle4;
-					}
-					if ( x > image->width ) {
-						if ( start_x < image->width ) {
-							run_len = image->width - start_x;
-						} else {
-							run_len = 0;
-						}
-						x = image->width;
-					}
-					if ( ( e = zgetc( zf ) ) == EOF ) {
-						goto data_short;
-					}
-					f = e & 0xf;
-					e = e >> 4;
-					i = ( int )( run_len / 2 );
-					while ( i > 0 ) {
-						*( data ) = e;
-						data = data + 1;
-						*( data ) = f;
-						data = data + 1;
-						i = i - 1;
-					}
-					if ( run_len & 1 ) {
-						*( data ) = e;
-						data = data + 1;
-					}
-					goto skip_iter_rle4;
-				}
-				if ( ( d = zgetc( zf ) ) == EOF ) {
-					goto data_short;
-				}
-				if ( d == 0 ) {	/* end of line */
-					data = data - ( x + illen );
-					x = 0;
-					y = y + 1;
-					goto skip_iter_rle4;
-				}
-				if ( d == 1 ) {	/* end of bitmap */
-					break;
-				}
-				if ( d == 2 ) {	/* delta */
-					if ( ( d = zgetc( zf ) ) == EOF ||
-					        ( e = zgetc( zf ) ) == EOF ) {
-						goto data_short;
-					}
-					x = x + d;
-					y = y + e;
-					if ( x > image->width || y > hdr.abs_height ) {
-						data_bounds = TRUE;
-						x = x - d;
-						y = y - e;
-						goto skip_iter_rle4;
-					}
-					data = data + d - ( e * illen );
-					goto skip_iter_rle4;
-				}
-				/* Absolute / unencoded run (d >= 3) */
-				{
-					unsigned int start_x = x;
-					unsigned int run_len = ( unsigned int )d;
-					int total_bytes = d / 2 + ( d & 1 ) + ( ( ( d + 1 ) & 2 ) >> 1 );
-					int bytes_read = 0;
-
-					x = x + run_len;
-					if ( y > hdr.abs_height ) {
-						data_bounds = TRUE;
-						goto skip_iter_rle4;
-					}
-					if ( x > image->width ) {
-						if ( start_x < image->width ) {
-							run_len = image->width - start_x;
-						} else {
-							run_len = 0;
-						}
-						x = image->width;
-					}
-
-					i = ( int )( run_len / 2 );
-					while ( i > 0 ) {
-						if ( ( e = zgetc( zf ) ) == EOF ) {
-							goto data_short;
-						}
-						bytes_read = bytes_read + 1;
-						*( data ) = e >> 4;
-						data = data + 1;
-						*( data ) = e & 0xf;
-						data = data + 1;
-						i = i - 1;
-					}
-					if ( run_len & 1 ) {
-						if ( ( e = zgetc( zf ) ) == EOF ) {
-							goto data_short;
-						}
-						bytes_read = bytes_read + 1;
-						*( data ) = e >> 4;
-						data = data + 1;
-					}
-
-					while ( bytes_read < total_bytes ) {
-						if ( zgetc( zf ) == EOF ) {
-							goto data_short;
-						}
-						bytes_read = bytes_read + 1;
-					}
-				}
-skip_iter_rle4:
-				;
-			}
-		} else {	/* No 4 bit rle compression */
-			int d, s, p;
-			int i, e;
-			byte* row_ptr;
-			long row_stride;
-			d = image->width / 2;
-			s = image->width & 1;
-			p = ( 4 - ( d + s ) ) & 0x3;
-
-			row_stride = top_bot ? ( long )illen : -( long )illen;
-			row_ptr = top_bot ? image->data : image->data + ( hdr.abs_height - 1 ) * illen;
-			y = ( int )hdr.abs_height;
-
-			while ( y > 0 ) {
-				byte* row_data = row_ptr;
-				i = d;
-				while ( i > 0 ) {
-					if ( ( e = zgetc( zf ) ) == EOF ) {
-						goto data_short;
-					}
-					*( row_data ) = e >> 4;
-					row_data = row_data + 1;
-					*( row_data ) = e & 0xf;
-					row_data = row_data + 1;
-					i = i - 1;
-				}
-				if ( s ) {
-					if ( ( e = zgetc( zf ) ) == EOF ) {
-						goto data_short;
-					}
-					*( row_data ) = e >> 4;
-					row_data = row_data + 1;
-				}
-				i = p;
-				while ( i > 0 ) {
-					if ( zgetc( zf ) == EOF ) {
-						goto data_short;
-					}
-					i = i - 1;
-				}
-				y = y - 1;
-				row_ptr = row_ptr + row_stride;
-			}
+		if ( !get_bmp_pixels_depth4( zf, image, &hdr, &data_bounds ) ) {
+			goto data_short;
 		}
 	} else if ( hdr.biPixelSize == 8 ) {
-		byte* data;
-		int illen;
-		unsigned int x, y;
-
-		illen = image->width;
-
-		if ( hdr.biCompression == BI_RLE8 ) {
-			int d, e;
-			memset( ( byte* ) image->data, 0, ( size_t )image->width * ( size_t )image->height );
-			x = 0;
-			y = 0;
-			data = image->data + ( hdr.abs_height - 1 ) * illen;
-			while ( 1 ) {
-				if ( ( d = zgetc( zf ) ) == EOF ) {
-					goto data_short;
-				}
-				if ( d != 0 ) {	/* run of pixels */
-					unsigned int start_x = x;
-					unsigned int run_len = ( unsigned int )d;
-					x = x + run_len;
-					if ( y > hdr.abs_height ) {
-						data_bounds = TRUE;
-						goto skip_iter_rle8;
-					}
-					if ( x > image->width ) {
-						if ( start_x < image->width ) {
-							run_len = image->width - start_x;
-						} else {
-							run_len = 0;
-						}
-						x = image->width;
-					}
-					if ( ( e = zgetc( zf ) ) == EOF ) {
-						goto data_short;
-					}
-					memset( data, e, run_len );
-					data = data + run_len;
-					goto skip_iter_rle8;
-				}
-				if ( ( d = zgetc( zf ) ) == EOF ) {
-					goto data_short;
-				}
-				if ( d == 0 ) {	/* end of line */
-					data = data - ( x + illen );
-					x = 0;
-					y = y + 1;
-					goto skip_iter_rle8;
-				}
-				if ( d == 1 ) {	/* end of bitmap */
-					break;
-				}
-				if ( d == 2 ) {	/* delta */
-					int delta_x, delta_y;
-					if ( ( delta_x = zgetc( zf ) ) == EOF ||
-					        ( delta_y = zgetc( zf ) ) == EOF ) {
-						goto data_short;
-					}
-					x = x + delta_x;
-					y = y + delta_y;
-					if ( x > image->width || y > hdr.abs_height ) {
-						data_bounds = TRUE;
-						x = x - delta_x;
-						y = y - delta_y;
-						goto skip_iter_rle8;
-					}
-					data = data + delta_x - ( delta_y * illen );
-					goto skip_iter_rle8;
-				}
-				/* Absolute / unencoded run (d >= 3) */
-				{
-					unsigned int start_x = x;
-					unsigned int run_len = ( unsigned int )d;
-					int total_bytes = d + ( d & 1 );
-					int bytes_read = 0;
-
-					x = x + run_len;
-					if ( y > hdr.abs_height ) {
-						data_bounds = TRUE;
-						goto skip_iter_rle8;
-					}
-					if ( x > image->width ) {
-						if ( start_x < image->width ) {
-							run_len = image->width - start_x;
-						} else {
-							run_len = 0;
-						}
-						x = image->width;
-					}
-
-					while ( bytes_read < ( int )run_len ) {
-						int pixel_val = zgetc( zf );
-						if ( pixel_val == EOF ) {
-							goto data_short;
-						}
-						*( data ) = ( byte )pixel_val;
-						data = data + 1;
-						bytes_read = bytes_read + 1;
-					}
-
-					while ( bytes_read < total_bytes ) {
-						if ( zgetc( zf ) == EOF ) {
-							goto data_short;
-						}
-						bytes_read = bytes_read + 1;
-					}
-				}
-skip_iter_rle8:
-				;
-			}
-		} else {	/* No 8 bit rle compression */
-			byte pad[4];
-			int padlen;
-			long row_stride;
-
-			padlen = ( ( image->width + 3 ) & ~3 ) - illen;
-			row_stride = top_bot ? ( long )illen : -( long )illen;
-			data = top_bot ? image->data : image->data + ( hdr.abs_height - 1 ) * illen;
-			y = ( int )hdr.abs_height;
-
-			while ( y > 0 ) {
-				if ( zread( zf, data, illen ) != illen
-				        || zread( zf, pad, padlen ) != padlen ) {
-					goto data_short;
-				}
-				y = y - 1;
-				data = data + row_stride;
-			}
+		if ( !get_bmp_pixels_depth8( zf, image, &hdr, &data_bounds ) ) {
+			goto data_short;
 		}
-	} else if ( hdr.biPixelSize == 24 ) {		/* hdr.biPixelSize == 24 */
-		byte* data, pad[4];
-		int illen;
-
-		illen = image->width * image->pixlen;
-
-		if ( hdr.biCompression == BI_RLE24 ) {
-			int d;
-			unsigned int x,y;
-			byte triplet[3];
-			memset( ( byte* ) image->data, 0, ( size_t )image->width * ( size_t )image->height * ( size_t )image->pixlen );
-			x = 0;
-			y = 0;
-			data = image->data + ( hdr.abs_height - 1 ) * illen;
-			while ( 1 ) {
-				int i;
-				if ( ( d = zgetc( zf ) ) == EOF ) {
-					goto data_short;
-				}
-				if ( d != 0 ) {	/* run of pixels */
-					unsigned int start_x = x;
-					unsigned int run_len = ( unsigned int )d;
-					x = x + run_len;
-					if ( y > hdr.abs_height ) {
-						data_bounds = TRUE;
-						goto skip_iter_rle24;
-					}
-					if ( x > image->width ) {
-						if ( start_x < image->width ) {
-							run_len = image->width - start_x;
-						} else {
-							run_len = 0;
-						}
-						x = image->width;
-					}
-					if ( zread( zf, triplet, 3 ) != 3 ) {
-						goto data_short;
-					}
-					i = ( int )run_len;
-					while ( i > 0 ) {
-						*( data + 0 ) = triplet[2];
-						*( data + 1 ) = triplet[1];
-						*( data + 2 ) = triplet[0];
-						data = data + 3;
-						i = i - 1;
-					}
-					goto skip_iter_rle24;
-				}
-				if ( ( d = zgetc( zf ) ) == EOF ) {
-					goto data_short;
-				}
-				if ( d == 0 ) {	/* end of line */
-					data = data - ( ( x * image->pixlen ) + illen );
-					x = 0;
-					y = y + 1;
-					goto skip_iter_rle24;
-				}
-				if ( d == 1 ) {	/* end of bitmap */
-					break;
-				}
-				if ( d == 2 ) {	/* delta */
-					int delta_x, delta_y;
-					if ( ( delta_x = zgetc( zf ) ) == EOF ||
-					        ( delta_y = zgetc( zf ) ) == EOF ) {
-						goto data_short;
-					}
-					x = x + delta_x;
-					y = y + delta_y;
-					if ( x > image->width || y > hdr.abs_height ) {
-						data_bounds = TRUE;
-						x = x - delta_x;
-						y = y - delta_y;
-						goto skip_iter_rle24;
-					}
-					data = data + ( delta_x * image->pixlen ) - ( delta_y * illen );
-					goto skip_iter_rle24;
-				}
-				/* Absolute / unencoded run (d >= 3) */
-				{
-					unsigned int start_x = x;
-					unsigned int run_len = ( unsigned int )d;
-					int total_bytes = d * 3;
-					int padded_bytes = ( total_bytes + 1 ) & ~1;
-					int bytes_read = 0;
-
-					x = x + run_len;
-					if ( y > hdr.abs_height ) {
-						data_bounds = TRUE;
-						goto skip_iter_rle24;
-					}
-					if ( x > image->width ) {
-						if ( start_x < image->width ) {
-							run_len = image->width - start_x;
-						} else {
-							run_len = 0;
-						}
-						x = image->width;
-					}
-
-					i = ( int )run_len;
-					while ( i > 0 ) {
-						if ( zread( zf, triplet, 3 ) != 3 ) {
-							goto data_short;
-						}
-						bytes_read = bytes_read + 3;
-						*( data + 0 ) = triplet[2];
-						*( data + 1 ) = triplet[1];
-						*( data + 2 ) = triplet[0];
-						data = data + 3;
-						i = i - 1;
-					}
-
-					while ( bytes_read < padded_bytes ) {
-						if ( zgetc( zf ) == EOF ) {
-							goto data_short;
-						}
-						bytes_read = bytes_read + 1;
-					}
-				}
-skip_iter_rle24:
-				;
-			}
-		} else {                  // no rle24
-
-			int padlen;
-			int y;
-			long row_stride;
-			padlen = ( ( ( image->width * 3 ) + 3 ) & ~3 ) - illen;
-			row_stride = top_bot ? ( long )illen : -( long )illen;
-			data = top_bot ? image->data : image->data + ( hdr.abs_height - 1 ) * illen;
-			y = ( int )hdr.abs_height;
-
-			while ( y > 0 ) {
-				int i;
-				if ( zread( zf, data, illen ) != illen
-				        || zread( zf, pad, padlen ) != padlen ) {
-					goto data_short;
-				}
-				i = 3 * image->width - 1;
-				while ( i > 0 ) {
-					int t = data[i];
-					data[i] = data[i - 2];
-					data[i - 2] = t;
-					i = i - 3;
-				}
-				y = y - 1;
-				data = data + row_stride;
-			}
+	} else if ( hdr.biPixelSize == 16 ) {
+		if ( !get_bmp_pixels_depth16( zf, image, &hdr ) ) {
+			goto data_short;
 		}
-	} else if ( hdr.biPixelSize == 16 ) {		/* hdr.biPixelSize == 16 */
-		byte* pixel_row, *src_ptr, *dst_ptr, pad[4];
-		int illen, src_illen, src_padlen, y;
-		long row_stride;
-		unsigned int red_shift = get_mask_shift( hdr.redMask );
-		unsigned int green_shift = get_mask_shift( hdr.greenMask );
-		unsigned int blue_shift = get_mask_shift( hdr.blueMask );
-		unsigned int alpha_shift = get_mask_shift( hdr.alphaMask );
-		unsigned int red_c = get_mask_factors( hdr.redMask );
-		unsigned int green_c = get_mask_factors( hdr.greenMask );
-		unsigned int blue_c = get_mask_factors( hdr.blueMask );
-		unsigned int alpha_c = get_mask_factors( hdr.alphaMask );
-
-		illen = image->width * image->pixlen;
-		src_illen = image->width * 2;
-		src_padlen = ( ( src_illen + 3 ) & ~3 ) - src_illen;
-		row_stride = top_bot ? ( long )illen : -( long )illen;
-
-		pixel_row = ( byte* )calloc( ( size_t )src_illen + 4, 1 );
-		if ( pixel_row == NULL ) {
-			fprintf( stderr, "bmpLoad: %s - Out of memory\n", hdr.name );
-			freeImage( image );
-			zclose( zf );
-			return NULL;
+	} else if ( hdr.biPixelSize == 24 ) {
+		if ( !get_bmp_pixels_depth24( zf, image, &hdr, &data_bounds ) ) {
+			goto data_short;
 		}
-
-		dst_ptr = top_bot ? image->data : image->data + ( hdr.abs_height - 1 ) * illen;
-		y = ( int )hdr.abs_height;
-		while ( y > 0 ) {
-			if ( zread( zf, pixel_row, src_illen ) != src_illen
-			        || ( src_padlen > 0 && zread( zf, pad, src_padlen ) != src_padlen ) ) {
-				free( pixel_row );
-				goto data_short;
-			}
-			{
-				unsigned int x = 0;
-				src_ptr = pixel_row;
-				byte* row_dst_ptr = dst_ptr;
-				while ( x < image->width ) {
-					unsigned long pixelval = ( unsigned long )GUINT2( src_ptr );
-					unsigned long r_val = red_c > 0 ? ( ( pixelval & hdr.redMask ) >> red_shift ) : 0;
-					unsigned long g_val = green_c > 0 ? ( ( pixelval & hdr.greenMask ) >> green_shift ) : 0;
-					unsigned long b_val = blue_c > 0 ? ( ( pixelval & hdr.blueMask ) >> blue_shift ) : 0;
-					unsigned long a_val = alpha_c > 0 ? ( ( pixelval & hdr.alphaMask ) >> alpha_shift ) : 0;
-
-					byte r = red_c > 0 ? ( byte )( ( r_val * 255 ) / ( ( 1 << red_c ) - 1 ) ) : 0;
-					byte g = green_c > 0 ? ( byte )( ( g_val * 255 ) / ( ( 1 << green_c ) - 1 ) ) : 0;
-					byte b = blue_c > 0 ? ( byte )( ( b_val * 255 ) / ( ( 1 << blue_c ) - 1 ) ) : 0;
-					byte a = alpha_c > 0 ? ( byte )( ( a_val * 255 ) / ( ( 1 << alpha_c ) - 1 ) ) : 0xff;
-
-					if ( alpha_c == 0 || a == 0x00 ) {
-						a = 0xff;
-					}
-
-					row_dst_ptr[0] = colorreg_applyalpha( r, a );
-					row_dst_ptr[1] = colorreg_applyalpha( g, a );
-					row_dst_ptr[2] = colorreg_applyalpha( b, a );
-
-					src_ptr = src_ptr + 2;
-					row_dst_ptr = row_dst_ptr + 3;
-					x = x + 1;
-				}
-			}
-			y = y - 1;
-			dst_ptr = dst_ptr + row_stride;
+	} else if ( hdr.biPixelSize == 32 ) {
+		if ( !get_bmp_pixels_depth32( zf, image, &hdr ) ) {
+			goto data_short;
 		}
-		free( pixel_row );
-	} else if ( hdr.biPixelSize == 32 ) {		/* hdr.biPixelSize == 32 */
-		byte* data, *src_row, pad[4];
-		int illen, src_illen, src_padlen, y;
-		long row_stride;
-		unsigned int red_shift = get_mask_shift( hdr.redMask );
-		unsigned int green_shift = get_mask_shift( hdr.greenMask );
-		unsigned int blue_shift = get_mask_shift( hdr.blueMask );
-		unsigned int alpha_shift = get_mask_shift( hdr.alphaMask );
-		unsigned int red_c = get_mask_factors( hdr.redMask );
-		unsigned int green_c = get_mask_factors( hdr.greenMask );
-		unsigned int blue_c = get_mask_factors( hdr.blueMask );
-		unsigned int alpha_c = get_mask_factors( hdr.alphaMask );
-
-		illen = image->width * image->pixlen;
-		src_illen = image->width * 4;
-		src_padlen = ( ( src_illen + 3 ) & ~3 ) - src_illen;
-		row_stride = top_bot ? ( long )illen : -( long )illen;
-
-		src_row = ( byte* )calloc( ( size_t )src_illen + 4, 1 );
-		if ( src_row == NULL ) {
-			fprintf( stderr, "bmpLoad: %s - Out of memory\n", hdr.name );
-			freeImage( image );
-			zclose( zf );
-			return NULL;
-		}
-
-		data = top_bot ? image->data : image->data + ( hdr.abs_height - 1 ) * illen;
-		y = ( int )hdr.abs_height;
-		while ( y > 0 ) {
-			if ( zread( zf, src_row, src_illen ) != src_illen
-			        || ( src_padlen > 0 && zread( zf, pad, src_padlen ) != src_padlen ) ) {
-				free( src_row );
-				goto data_short;
-			}
-			{
-				unsigned int x = 0;
-				byte* src_ptr = src_row;
-				byte* dst_ptr = data;
-				while ( x < image->width ) {
-					unsigned long pixelval = GULONG4( src_ptr );
-					unsigned long r_val = red_c > 0 ? ( ( pixelval & hdr.redMask ) >> red_shift ) : 0;
-					unsigned long g_val = green_c > 0 ? ( ( pixelval & hdr.greenMask ) >> green_shift ) : 0;
-					unsigned long b_val = blue_c > 0 ? ( ( pixelval & hdr.blueMask ) >> blue_shift ) : 0;
-					unsigned long a_val = alpha_c > 0 ? ( ( pixelval & hdr.alphaMask ) >> alpha_shift ) : 0;
-
-					byte r = red_c > 0 ? ( byte )( ( r_val * 255 ) / ( ( 1 << red_c ) - 1 ) ) : src_ptr[2];
-					byte g = green_c > 0 ? ( byte )( ( g_val * 255 ) / ( ( 1 << green_c ) - 1 ) ) : src_ptr[1];
-					byte b = blue_c > 0 ? ( byte )( ( b_val * 255 ) / ( ( 1 << blue_c ) - 1 ) ) : src_ptr[0];
-					byte a = alpha_c > 0 ? ( byte )( ( a_val * 255 ) / ( ( 1 << alpha_c ) - 1 ) ) : src_ptr[3];
-
-					if ( alpha_c == 0 || a == 0x00 ) {
-						a = 0xff;
-					}
-
-					dst_ptr[0] = colorreg_applyalpha( r, a );
-					dst_ptr[1] = colorreg_applyalpha( g, a );
-					dst_ptr[2] = colorreg_applyalpha( b, a );
-
-					src_ptr = src_ptr + 4;
-					dst_ptr = dst_ptr + 3;
-					x = x + 1;
-				}
-			}
-			y = y - 1;
-			data = data + row_stride;
-		}
-		free( src_row );
 	} else {
-
+		// Unsupported bit depth
 	}
+
 	if ( data_bounds ) {
 		fprintf( stderr, "bmpLoad: %s - Data outside image area\n", hdr.name );
 	}
