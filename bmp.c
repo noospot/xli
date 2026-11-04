@@ -699,12 +699,12 @@ static bool get_bmp_pixels_depth1( ZFILE* zf, Image* image, bmpHeader* hp )
 	int src_padlen = ( ( ( ( int )image->width + 31 ) / 32 ) * 4 ) - src_row_bytelen;
 	bool top_bot = ( hp->biHeight < 0 );
 	int rowcount = ( int )hp->abs_height;
-	long dest_row_stride;
+	long dest_row_bytelen_signed;
 	if ( top_bot ) {
-		dest_row_stride = ( long )src_row_bytelen;
+		dest_row_bytelen_signed = ( long )src_row_bytelen;
 		memblock = image->data;
 	} else {
-		dest_row_stride = -( long )src_row_bytelen;
+		dest_row_bytelen_signed = -( long )src_row_bytelen;
 		memblock = image->data + ( ( unsigned long )hp->abs_height - 1 ) * ( unsigned long )src_row_bytelen;
 	}
 
@@ -714,7 +714,7 @@ static bool get_bmp_pixels_depth1( ZFILE* zf, Image* image, bmpHeader* hp )
 			return FALSE;
 		}
 		rowcount = rowcount - 1;
-		memblock = memblock + dest_row_stride;
+		memblock = memblock + dest_row_bytelen_signed;
 	}
 	return TRUE;
 }
@@ -729,17 +729,17 @@ static bool get_bmp_pixels_depth2( ZFILE* zf, Image* image, bmpHeader* hp )
 	unsigned int i;
 	unsigned int padbytes;
 	unsigned int packedbyte;
-	long dest_row_stride;
+	long dest_row_bytelen_signed;
 	bool top_bot = ( hp->biHeight < 0 );
 
 	src_row_bytelen = ( image->width * 2 + 7 ) / 8;
 	src_padlen = ( ( ( image->width * 2 + 31 ) / 32 ) * 4 ) - src_row_bytelen;
 
 	if ( top_bot ) {
-		dest_row_stride = ( long )image->width;
+		dest_row_bytelen_signed = ( long )image->width;
 		memblock = image->data;
 	} else {
-		dest_row_stride = -( long )image->width;
+		dest_row_bytelen_signed = -( long )image->width;
 		memblock = image->data + ( ( unsigned long )hp->abs_height - 1 ) * image->width;
 	}
 
@@ -777,7 +777,7 @@ static bool get_bmp_pixels_depth2( ZFILE* zf, Image* image, bmpHeader* hp )
 			padbytes = padbytes + 1;
 		}
 		rowcount = rowcount - 1;
-		memblock = memblock + dest_row_stride;
+		memblock = memblock + dest_row_bytelen_signed;
 	}
 	return TRUE;
 }
@@ -934,17 +934,17 @@ static bool get_bmp_pixels_depth4( ZFILE* zf, Image* image, bmpHeader* hp, bool*
 		int i;
 		int e;
 		byte* dest_row_madress;
-		long dest_row_stride;
+		long dest_row_bytelen_signed;
 
 		d = ( int )image->width / 2;
 		s = ( int )image->width & 1;
 		p = ( 4 - ( d + s ) ) & 0x3;
 
 		if ( top_bot ) {
-			dest_row_stride = ( long )src_row_bytelen;
+			dest_row_bytelen_signed = ( long )src_row_bytelen;
 			dest_row_madress = image->data;
 		} else {
-			dest_row_stride = -( long )src_row_bytelen;
+			dest_row_bytelen_signed = -( long )src_row_bytelen;
 			dest_row_madress = image->data + ( hp->abs_height - 1 ) * src_row_bytelen;
 		}
 
@@ -980,7 +980,7 @@ static bool get_bmp_pixels_depth4( ZFILE* zf, Image* image, bmpHeader* hp, bool*
 				i = i - 1;
 			}
 			y = y - 1;
-			dest_row_madress = dest_row_madress + dest_row_stride;
+			dest_row_madress = dest_row_madress + dest_row_bytelen_signed;
 		}
 	}
 	return TRUE;
@@ -1109,15 +1109,15 @@ static bool get_bmp_pixels_depth8( ZFILE* zf, Image* image, bmpHeader* hp, bool*
 	} else {
 		byte pad[4];
 		int src_padlen;
-		long dest_row_stride;
+		long dest_row_bytelen_signed;
 
 		src_padlen = ( ( ( int )image->width + 3 ) & ~3 ) - ( int )src_row_bytelen;
 		
 		if ( top_bot ) {
-			dest_row_stride = ( long )src_row_bytelen;
+			dest_row_bytelen_signed = ( long )src_row_bytelen;
 			memblock = image->data;
 		} else {
-			dest_row_stride = -( long )src_row_bytelen;
+			dest_row_bytelen_signed = -( long )src_row_bytelen;
 			memblock = image->data + ( hp->abs_height - 1 ) * src_row_bytelen;
 		}
 
@@ -1129,7 +1129,7 @@ static bool get_bmp_pixels_depth8( ZFILE* zf, Image* image, bmpHeader* hp, bool*
 				return FALSE;
 			}
 			y = y - 1;
-			memblock = memblock + dest_row_stride;
+			memblock = memblock + dest_row_bytelen_signed;
 		}
 	}
 	return TRUE;
@@ -1146,12 +1146,12 @@ static bool get_bmp_pixels_depth16( ZFILE* zf, Image* image, bmpHeader* hp )
 	int src_row_bytelen = ( int )image->width * 2;
 	int src_padlen = ( ( src_row_bytelen + 3 ) & ~3 ) - src_row_bytelen;
 	bool top_bot = ( hp->biHeight < 0 );
-	long dest_row_stride;
+	long dest_row_bytelen_signed;
 	if ( top_bot ) {
-		dest_row_stride = ( long )dest_row_bytelen;
+		dest_row_bytelen_signed = ( long )dest_row_bytelen;
 		dst_madress = image->data;
 	} else {
-		dest_row_stride = -( long )dest_row_bytelen;
+		dest_row_bytelen_signed = -( long )dest_row_bytelen;
 		dst_madress = image->data + ( ( unsigned long )hp->abs_height - 1 ) * ( unsigned long )dest_row_bytelen;
 	}
 
@@ -1223,7 +1223,7 @@ static bool get_bmp_pixels_depth16( ZFILE* zf, Image* image, bmpHeader* hp )
 			}
 		}
 		y = y - 1;
-		dst_madress = dst_madress + dest_row_stride;
+		dst_madress = dst_madress + dest_row_bytelen_signed;
 	}
 	free( pixel_row );
 	return TRUE;
@@ -1363,14 +1363,14 @@ static bool get_bmp_pixels_depth24( ZFILE* zf, Image* image, bmpHeader* hp, bool
 	} else {
 		int src_padlen;
 		int y;
-		long dest_row_stride;
+		long dest_row_bytelen_signed;
 		src_padlen = ( ( ( ( int )image->width * 3 ) + 3 ) & ~3 ) - src_row_bytelen;
 
 		if ( top_bot ) {
-			dest_row_stride = ( long )src_row_bytelen;
+			dest_row_bytelen_signed = ( long )src_row_bytelen;
 			memblock = image->data;
 		} else {
-			dest_row_stride = -( long )src_row_bytelen;
+			dest_row_bytelen_signed = -( long )src_row_bytelen;
 			memblock = image->data + ( hp->abs_height - 1 ) * ( unsigned long )src_row_bytelen;
 		}
 
@@ -1390,7 +1390,7 @@ static bool get_bmp_pixels_depth24( ZFILE* zf, Image* image, bmpHeader* hp, bool
 				i = i - 3;
 			}
 			y = y - 1;
-			memblock = memblock + dest_row_stride;
+			memblock = memblock + dest_row_bytelen_signed;
 		}
 	}
 	return TRUE;
@@ -1406,7 +1406,7 @@ static bool get_bmp_pixels_depth32( ZFILE* zf, Image* image, bmpHeader* hp )
 	int src_row_bytelen;
 	int src_padlen;
 	int y;
-	long dest_row_stride;
+	long dest_row_bytelen_signed;
 	bool top_bot = ( hp->biHeight < 0 );
 	unsigned int red_shift = get_mask_shift( hp->redMask );
 	unsigned int green_shift = get_mask_shift( hp->greenMask );
@@ -1422,10 +1422,10 @@ static bool get_bmp_pixels_depth32( ZFILE* zf, Image* image, bmpHeader* hp )
 	src_padlen = ( ( src_row_bytelen + 3 ) & ~3 ) - src_row_bytelen;
 
 	if ( top_bot ) {
-		dest_row_stride = ( long )dest_row_bytelen;
+		dest_row_bytelen_signed = ( long )dest_row_bytelen;
 		memblock = image->data;
 	} else {
-		dest_row_stride = -( long )dest_row_bytelen;
+		dest_row_bytelen_signed = -( long )dest_row_bytelen;
 		memblock = image->data + ( hp->abs_height - 1 ) * ( unsigned long )dest_row_bytelen;
 	}
 
@@ -1503,7 +1503,7 @@ static bool get_bmp_pixels_depth32( ZFILE* zf, Image* image, bmpHeader* hp )
 			}
 		}
 		y = y - 1;
-		memblock = memblock + dest_row_stride;
+		memblock = memblock + dest_row_bytelen_signed;
 	}
 	free( src_row );
 	return TRUE;
