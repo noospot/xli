@@ -31,13 +31,13 @@ static unsigned int Initialized = 0;
 
 #define BADREAD    0		/* read error */
 #define NOTPBM     1		/* not a pbm file */
-#define PBMPLAIN  2		/* pbm plain type file */
+#define PBMPLAIN   2		/* pbm plain type file */
 #define PBMCOMPACT 3		/* pbm compact type file */
 #define PBMRAW     4		/* pbm raw type file */
-#define PGMPLAIN  5		/* pgm plain type file */
-#define PGMRAW 6		/* pgm raw type file */
-#define PPMPLAIN  7		/* ppm plain type file */
-#define PPMRAW 8		/* ppm raw bytes type file */
+#define PGMPLAIN   5		/* pgm plain type file */
+#define PGMRAW     6		/* pgm raw type file */
+#define PPMPLAIN   7		/* ppm plain type file */
+#define PPMRAW     8		/* ppm raw bytes type file */
 
 static void initializeTable( void )
 {
@@ -111,18 +111,19 @@ static int pbmReadRawInt( ZFILE* zf, int depth )
 	int i, src, src2;
 
 	src = 0;
-	for ( i = 0; i < depth; i += 8 ) {
+	i = 0;
+	while ( i < depth ) {
 		if ( ( src2 = zgetc( zf ) ) == EOF ) {
 			return EOF;
 		}
 		src = ( src << 8 ) | src2;
+		i=i+8;
 	}
 
 	return src;
 }
 
-static int isPBM( ZFILE* zf, strbyte* name, int* width, int* height, int* maxval,
-                  unsigned int verbose )
+static int isPBM( ZFILE* zf, strbyte* name, int* width, int* height, int* maxval, unsigned int verbose )
 {
 	byte buf[4];
 
@@ -135,8 +136,8 @@ static int isPBM( ZFILE* zf, strbyte* name, int* width, int* height, int* maxval
 	}
 
 	if ( memToVal( ( byte* ) buf, 2 ) == memToVal( ( byte* ) "P1", 2 ) ) {
-		if ( ( ( *width = pbmReadStrInt( zf ) ) < 0 ) ||
-		      ( ( *height = pbmReadStrInt( zf ) ) < 0 ) ) {
+		if ( ( ( *width = pbmReadStrInt( zf ) ) < 0 ) 
+		||   ( ( *height = pbmReadStrInt( zf ) ) < 0 ) ) {
 			return ( NOTPBM );
 		}
 
@@ -149,8 +150,8 @@ static int isPBM( ZFILE* zf, strbyte* name, int* width, int* height, int* maxval
 	}
 
 	if ( memToVal( ( byte* ) buf, 2 ) == memToVal( ( byte* ) "P4", 2 ) ) {
-		if ( ( ( *width = pbmReadStrInt( zf ) ) < 0 ) ||
-		      ( ( *height = pbmReadStrInt( zf ) ) < 0 ) ) {
+		if ( ( ( *width = pbmReadStrInt( zf ) ) < 0 ) 
+		||   ( ( *height = pbmReadStrInt( zf ) ) < 0 ) ) {
 			return ( NOTPBM );
 		}
 
@@ -178,8 +179,8 @@ static int isPBM( ZFILE* zf, strbyte* name, int* width, int* height, int* maxval
 
 	if ( memToVal( buf, 2 ) == memToVal( ( byte* ) "P2", 2 ) ) {
 		if ( ( ( *width = pbmReadStrInt( zf ) ) < 0 )
-		      || ( ( *height = pbmReadStrInt( zf ) ) < 0 )
-		      || ( ( *maxval = pbmReadStrInt( zf ) ) < 0 ) ) {
+		||   ( ( *height = pbmReadStrInt( zf ) ) < 0 )
+		||   ( ( *maxval = pbmReadStrInt( zf ) ) < 0 ) ) {
 			return ( NOTPBM );
 		}
 
@@ -192,8 +193,8 @@ static int isPBM( ZFILE* zf, strbyte* name, int* width, int* height, int* maxval
 
 	if ( memToVal( buf, 2 ) == memToVal( ( byte* ) "P5", 2 ) ) {
 		if ( ( ( *width = pbmReadStrInt( zf ) ) < 0 )
-		      || ( ( *height = pbmReadStrInt( zf ) ) < 0 )
-		      || ( ( *maxval = pbmReadStrInt( zf ) ) < 0 ) ) {
+		||   ( ( *height = pbmReadStrInt( zf ) ) < 0 )
+		||   ( ( *maxval = pbmReadStrInt( zf ) ) < 0 ) ) {
 			return ( NOTPBM );
 		}
 
@@ -205,8 +206,8 @@ static int isPBM( ZFILE* zf, strbyte* name, int* width, int* height, int* maxval
 
 	if ( memToVal( buf, 2 ) == memToVal( ( byte* ) "P3", 2 ) ) {
 		if ( ( ( *width = pbmReadStrInt( zf ) ) < 0 )
-		      || ( ( *height = pbmReadStrInt( zf ) ) < 0 )
-		      || ( ( *maxval = pbmReadStrInt( zf ) ) < 0 ) ) {
+		||   ( ( *height = pbmReadStrInt( zf ) ) < 0 )
+		||   ( ( *maxval = pbmReadStrInt( zf ) ) < 0 ) ) {
 			return ( NOTPBM );
 		}
 
@@ -219,8 +220,8 @@ static int isPBM( ZFILE* zf, strbyte* name, int* width, int* height, int* maxval
 
 	if ( memToVal( buf, 2 ) == memToVal( ( byte* ) "P6", 2 ) ) {
 		if ( ( ( *width = pbmReadStrInt( zf ) ) < 0 )
-		      || ( ( *height = pbmReadStrInt( zf ) ) < 0 )
-		      || ( ( *maxval = pbmReadStrInt( zf ) ) < 0 ) ) {
+		||   ( ( *height = pbmReadStrInt( zf ) ) < 0 )
+		||   ( ( *maxval = pbmReadStrInt( zf ) ) < 0 ) ) {
 			return ( NOTPBM );
 		}
 
@@ -273,6 +274,13 @@ Image* pbmLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		zclose( zf );
 		return ( NULL );
 	}
+	
+	if ( width > XLI_MAX_WIDTH || height > XLI_MAX_HEIGHT) {
+		fprintf( stderr, "pbmLoad: %s -image too big\n", name );
+		zclose( zf );
+		return ( NULL );
+	}
+	
 	znocache( zf );
 
 	switch ( pbm_type ) {
