@@ -1,6 +1,6 @@
 /* pbm.c:
  *
- * portable bit map (pbm) format images
+ * portable anymap (pnm) format images: pbm, pgm, ppm
  *
  * jim frost 09.27.89
  *
@@ -9,6 +9,12 @@
  *
  * patched by Ian MacPhedran (macphed@dvinci.usask.ca) to support
  * PGM and PPM files (03-July-1990)
+ * 
+ * 
+ * 20261105 align terminology with netpbm manual pages
+ *
+ *
+ *
  */
 
 #include "xli.h"
@@ -25,13 +31,13 @@ static unsigned int Initialized = 0;
 
 #define BADREAD    0		/* read error */
 #define NOTPBM     1		/* not a pbm file */
-#define PBMNORMAL  2		/* pbm normal type file */
-#define PBMCOMPACT 3		/* pbm compacty type file */
-#define PBMRAWBITS 4		/* pbm raw bits type file */
-#define PGMNORMAL  5		/* pgm normal type file */
-#define PGMRAWBITS 6		/* pgm raw bytes type file */
-#define PPMNORMAL  7		/* ppm normal type file */
-#define PPMRAWBITS 8		/* ppm raw bytes type file */
+#define PBMPLAIN  2		/* pbm plain type file */
+#define PBMCOMPACT 3		/* pbm compact type file */
+#define PBMRAW     4		/* pbm raw type file */
+#define PGMPLAIN  5		/* pgm plain type file */
+#define PGMRAW 6		/* pgm raw type file */
+#define PPMPLAIN  7		/* ppm plain type file */
+#define PPMRAW 8		/* ppm raw bytes type file */
 
 static void initializeTable( void )
 {
@@ -136,10 +142,10 @@ static int isPBM( ZFILE* zf, strbyte* name, int* width, int* height, int* maxval
 
 		*maxval = 1;
 		if ( verbose ) {
-			printf( "%s is a %dx%d PBM image\n",
+			printf( "%s is a %dx%d plain PBM image, ascii\n",
 			        name, *width, *height );
 		}
-		return ( PBMNORMAL );
+		return ( PBMPLAIN );
 	}
 
 	if ( memToVal( ( byte* ) buf, 2 ) == memToVal( ( byte* ) "P4", 2 ) ) {
@@ -150,9 +156,9 @@ static int isPBM( ZFILE* zf, strbyte* name, int* width, int* height, int* maxval
 
 		*maxval = 1;
 		if ( verbose )
-			printf( "%s is a %dx%d RawBits PBM image\n",
+			printf( "%s is a %dx%d raw PBM image, binary\n",
 			        name, *width, *height );
-		return ( PBMRAWBITS );
+		return ( PBMRAW     );
 	}
 
 	if ( memToVal( buf, 2 ) == 0x2a17 ) {
@@ -164,7 +170,7 @@ static int isPBM( ZFILE* zf, strbyte* name, int* width, int* height, int* maxval
 		*height = memToVal( ( byte* ) ( buf + 2 ), 2 );
 		*maxval = 1;
 		if ( verbose ) {
-			printf( "%s is a %dx%d Compact PBM image\n",
+			printf( "%s is a %dx%d compact PBM image, ascii\n",
 			        name, *width, *height );
 		}
 		return ( PBMCOMPACT );
@@ -178,10 +184,10 @@ static int isPBM( ZFILE* zf, strbyte* name, int* width, int* height, int* maxval
 		}
 
 		if ( verbose ) {
-			printf( "%s is a %dx%d PGM image with %d levels\n",
+			printf( "%s is a %dx%d plain PGM image, ascii, with %d levels\n",
 			        name, *width, *height, ( *maxval + 1 ) );
 		}
-		return ( PGMNORMAL );
+		return ( PGMPLAIN );
 	}
 
 	if ( memToVal( buf, 2 ) == memToVal( ( byte* ) "P5", 2 ) ) {
@@ -192,9 +198,9 @@ static int isPBM( ZFILE* zf, strbyte* name, int* width, int* height, int* maxval
 		}
 
 		if ( verbose )
-			printf( "%s is a %dx%d Raw PGM image with %d levels\n",
+			printf( "%s is a %dx%d raw PGM image, binary, with %d levels\n",
 			        name, *width, *height, ( *maxval + 1 ) );
-		return ( PGMRAWBITS );
+		return ( PGMRAW );
 	}
 
 	if ( memToVal( buf, 2 ) == memToVal( ( byte* ) "P3", 2 ) ) {
@@ -205,10 +211,10 @@ static int isPBM( ZFILE* zf, strbyte* name, int* width, int* height, int* maxval
 		}
 
 		if ( verbose ) {
-			printf( "%s is a %dx%d PPM image with %d levels\n",
+			printf( "%s is a %dx%d plain PPM image, ascii, with %d levels\n",
 			        name, *width, *height, ( *maxval + 1 ) );
 		}
-		return ( PPMNORMAL );
+		return ( PPMPLAIN );
 	}
 
 	if ( memToVal( buf, 2 ) == memToVal( ( byte* ) "P6", 2 ) ) {
@@ -219,10 +225,10 @@ static int isPBM( ZFILE* zf, strbyte* name, int* width, int* height, int* maxval
 		}
 
 		if ( verbose ) {
-			printf( "%s is a %dx%d Raw PPM image with %d levels\n",
+			printf( "%s is a %dx%d raw PPM image, binary, with %d levels\n",
 			        name, *width, *height, ( *maxval + 1 ) );
 		}
-		return ( PPMRAWBITS );
+		return ( PPMRAW );
 	}
 	return ( NOTPBM );
 }
@@ -270,7 +276,7 @@ Image* pbmLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	znocache( zf );
 
 	switch ( pbm_type ) {
-		case PBMNORMAL:
+		case PBMPLAIN:
 			image = newBitImage( width, height );
 			image->title = dupString( name );
 			linelen = ( width / 8 ) + ( width % 8 ? 1 : 0 );
@@ -316,7 +322,7 @@ Image* pbmLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 			}
 			break;
 
-		case PBMRAWBITS:
+		case PBMRAW    :
 			image = newBitImage( width, height );
 			image->title = dupString( name );
 			destline = image->data;
@@ -398,7 +404,7 @@ Image* pbmLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 			}
 			break;
 
-		case PGMRAWBITS:
+		case PGMRAW:
 			fmaxval = maxval;
 			if ( maxval > 0xff ) {
 				maxval = 0xff;
@@ -438,7 +444,7 @@ Image* pbmLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 			}
 			break;
 
-		case PGMNORMAL:
+		case PGMPLAIN:
 			fmaxval = maxval;
 			if ( maxval > 0xff ) {
 				maxval = 0xff;
@@ -466,7 +472,7 @@ Image* pbmLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 			}
 			break;
 
-		case PPMRAWBITS:
+		case PPMRAW:
 			/* this is nice because the bit format is exactly what we want
 			 * except for scaling.
 			 */
@@ -501,7 +507,7 @@ Image* pbmLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 				}
 			}
 			break;
-		case PPMNORMAL:
+		case PPMPLAIN:
 			image = newTrueImage( width, height );
 			image->title = dupString( name );
 			size = height * width * 3;
