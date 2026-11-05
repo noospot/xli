@@ -31,6 +31,13 @@ typedef char strbyte;
 	#define TRUE (!FALSE)
 #endif
 
+// pixel max depth
+// some TIFF could have depth 256
+#define XLI_MAX_DEPTH  256
+// default, since image filetypes are having specific other limits
+#define XLI_MAX_WIDTH       32768
+#define XLI_MAX_HEIGHT      32768
+
 
 #include "ddxli.h"
 #include "image.h"
@@ -71,7 +78,7 @@ typedef struct {
 	int iscale;		/* image-dependent scaling factor */
 	bool iscale_auto;	/* automatically iscale to fit on screen */
 	bool zoom_auto;	        /* automatically zoom to fit on screen */
-	short reseerved0;       // padding
+	short reserved0;        // padding
 	int reserved1;          // padding
 } ImageOptions;
 
@@ -297,6 +304,7 @@ Image* merge( Image* idst, Image* isrc, int atx, int aty, ImageOptions* imgopp )
 extern unsigned long DepthToColorsTable[];
 unsigned long colorsToDepth( long unsigned int ncolors );
 strbyte* dupString( strbyte* s );
+unsigned int ovmul( unsigned int a, unsigned int b );
 Image* newBitImage( unsigned int width, unsigned int height );
 Image* newRGBImage( unsigned int width, unsigned int height, unsigned int depth );
 Image* newTrueImage( unsigned int width, unsigned int height );

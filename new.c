@@ -104,18 +104,28 @@ void freeRGBMapData( RGBMap* rgb )
 	lfree( ( byte* ) rgb->green );
 	lfree( ( byte* ) rgb->blue );
 }
-// avoid overflowing  multiplications
-static unsigned int ovmul( unsigned int a, unsigned int b )
+
+// avoid overflowing  unsigned int multiplications
+unsigned int ovmul( unsigned int a, unsigned int b )
 {
 	unsigned int r;
-	// if with gcc or clang:   bool overflow = __builtin_mul_overflow(a, b, &result);
-	r = a * b;
-	if ( a != 0 && ( r / a != b ) ) {
+	unsigned int result;
+
+	// see: https://gcc.gnu.org/onlinedocs/gcc/Integer-Overflow-Builtins.html
+#if defined( __GNUC__ ) || defined( __clang__ )
+	if ( __builtin_mul_overflow( a, b, &result ) ) {
 		memoryExhausted();
 	}
-	// https://gcc.gnu.org/onlinedocs/gcc/Integer-Overflow-Builtins.html
+	r = result;
+#else
+	r = a * b;
+	if ( (a != 0) && (( r / a ) != b) ) {
+		memoryExhausted();
+	}
+#endif
 	return r;
 }
+
 
 static Image* newImage( unsigned width, unsigned height )
 {
@@ -145,6 +155,10 @@ Image* newBitImage( unsigned width, unsigned height )
 	*( image->rgb.red + 1 ) = *( image->rgb.green + 1 ) = *( image->rgb.blue + 1 ) = 0;
 	image->rgb.used = 2;
 	image->depth = 1;
+	if ( width > XLI_MAX_WIDTH) {
+		width = XLI_MAX_WIDTH;
+		fprintf( stderr, "newBitImage: width should be <= %d\n",XLI_MAX_WIDTH );
+	}
 	linelen = ( ( width + 7 ) / 8 );
 	image->data = ( byte* ) lcalloc( ovmul( linelen, height ) );
 
@@ -163,6 +177,10 @@ Image* newRGBImage( unsigned int width, unsigned int height, unsigned int depth 
 	 */
 	if ( depth == 0 ) {
 		depth = 1;
+	}
+	if ( depth > XLI_MAX_DEPTH ) {
+		depth = XLI_MAX_DEPTH;
+		fprintf( stderr, "newRGBImage: depth should be <= 256\n" );
 	}
 	pixlen = ( ( depth + 7 ) / 8 );
 	numcolors = depthToColors( depth );
@@ -265,5 +283,5 @@ byte* lrealloc( byte* old, unsigned int size )
 void lfree( byte* area )
 {
 	free( area );
-	area=NULL;
+	area=NULL; // **FIXME** find a way to set area as NOTALLOC
 }
