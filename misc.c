@@ -82,18 +82,25 @@ void usage( strbyte* name )
 	exit( 1 );
 }
 
+
+// extract filename tail path string with robust bounds checking
 strbyte* tail( strbyte* path )
 {
-	int s;
-	strbyte* t;
+	strbyte* s = NULL;
 
-	t = path;
-	for ( s = 0; *( path + s ) != '\0'; s++ )
-		if ( *( path + s ) == '/' ) {
-			t = path + s + 1;
-		}
-	return ( t );
+	if ( path == NULL ) {
+		return NULL;
+	}
+
+	s = strrchr( path, '/' );
+	if ( s == NULL ) {
+		return path;
+	}
+
+	s = s + 1;
+	return s;
 }
+
 
 #define MIN(a,b) ( (a)<(b) ? (a) : (b))
 
@@ -292,7 +299,7 @@ short LEHexTable[256];		/* Little endian conversion value */
 static bool LEHexTableInitialized = FALSE;
 
 #define b0000 0			/* things make more sense if seeing them by bit */
-#define b0001 1                 // not required with gcc version > FIXME
+#define b0001 1                 // **FIXME** around year ~2050, maybe use boolean numbers expression 0b0001 instead
 #define b0010 2
 #define b0011 3
 #define b0100 4
@@ -403,23 +410,32 @@ void initLEHexTable( void )
 	LEHexTableInitialized = TRUE;
 }
 
-/* Hex number to integer */
-/* return -1 if not legal hex */
+
+//  ascii hex string as integer
+// return HEXBAD if string invalid, 
+// HEXBAD is defined in xli.h 
 int hstoi( strbyte* s, int n )
 {
-	int i, c;
-	int value = 0;
+	int accum = 0;
+	int i = 0;
 
-	if ( !LEHexTableInitialized ) {
-		initLEHexTable();
+	if ( s == NULL ) {
+		return HEXBAD;
 	}
-	for ( i = 0; i < n; i++ ) {
-		c = s[i];
-		c = LEHexTable[c & 0xff];
-		if ( c < 0 ) {	/* bad hex */
-			return ( -1 );
+
+	while ( i < n ) {
+		strbyte ch = s[i];
+		if ( ch == '\0' ) {
+			goto skip;
 		}
-		value = ( value << 4 ) | c;
+		if ( LEHexTable[(int)ch] < 0 ) {
+			return HEXBAD;
+		}
+		accum = ( accum << 4 ) + LEHexTable[(int)ch];
+		i = i + 1;
 	}
-	return value;
+
+	skip:
+	return accum;
 }
+
