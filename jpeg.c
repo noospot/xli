@@ -50,7 +50,7 @@ static void xli_jpg_init_src( j_decompress_ptr cinfo )
 static int xli_jpg_fill_buf( j_decompress_ptr cinfo )
 {
 	xli_jpg_src* src = ( xli_jpg_src* ) cinfo->src;
-	size_t n;
+	int n;
 
 	n = zread( src->zfp, src->buf, INPUT_BUF_SIZE );
 
@@ -62,7 +62,7 @@ static int xli_jpg_fill_buf( j_decompress_ptr cinfo )
 		n = 2;
 	}
 	src->pub.next_input_byte = src->buf;
-	src->pub.bytes_in_buffer = n;
+	src->pub.bytes_in_buffer = (size_t) n;
 
 	return TRUE;
 }
@@ -191,12 +191,12 @@ static int xli_jpg_com( j_decompress_ptr cinfo )
 		 */
 		if ( ch == '\r' ) {
 			printf( "\n" );
-		} else if ( ch == '\n' ) {
+		} else if ( ch == '\n' && lastch != '\r' ) {
 			if ( lastch != '\r' ) {
 				printf( "\n" );
 			}
 		} else {
-			putc( ch, stdout );
+			printf( "%c", ch );
 		}
 		lastch = ch;
 	}
@@ -255,20 +255,23 @@ Image* jpegLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	}
 
 	znocache( zfp );
-
+	
 	jpeg_start_decompress( &cinfo );
 
-	if ( JCS_GRAYSCALE == cinfo.out_color_space ) {
+	if ( cinfo.out_color_space == JCS_GRAYSCALE ) {
 		unsigned int i;
 
 		image = newRGBImage( cinfo.output_width, cinfo.output_height, 8 );
 		image->title = dupString( image_ops->name );
-		for ( i = 0; i < 256; i++ ) {
-			image->rgb.red[i] = image->rgb.green[i] =
-			                          image->rgb.blue[i] = i << 8;
+		i = 0;
+		while ( i < 256 ) {
+			image->rgb.red[i] = i << 8;
+			image->rgb.green[i] = i << 8;
+			image->rgb.blue[i] = i << 8;
+			i = i + 1;
 		}
 		image->rgb.used = 256;
-	} else if ( JCS_RGB == cinfo.out_color_space ) {
+	} else if ( cinfo.out_color_space == JCS_RGB ) {
 		image = newTrueImage( cinfo.output_width, cinfo.output_height );
 		image->title = dupString( image_ops->name );
 	} else {
