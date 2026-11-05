@@ -134,7 +134,20 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		return FALSE;
 	}
 
-	if ( infobuf[0] != 'B' || infobuf[1] != 'M' ) {
+	// magic
+	if ( infobuf[0] == 'B' && infobuf[1] == 'M' ) {
+		// standard bmp
+	} else if(infobuf[0] == 'B' && infobuf[1] == 'A' ) {
+		//  OS/2 bmp array, not supported
+	} else if(infobuf[0] == 'C' && infobuf[1] == 'I' ) {
+		//  OS/2 color icon
+	} else if(infobuf[0] == 'C' && infobuf[1] == 'P' ) {	
+		//  OS/2 color pointer
+	} else if(infobuf[0] == 'I' && infobuf[1] == 'C' ) {		
+		//  OS/2 icon
+	} else if(infobuf[0] == 'P' && infobuf[1] == 'T' ) {	
+		//  OS/2  pointer
+	} else {
 		return FALSE;      // bad magic number
 	}
 
