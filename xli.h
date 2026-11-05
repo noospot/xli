@@ -304,7 +304,6 @@ Image* merge( Image* idst, Image* isrc, int atx, int aty, ImageOptions* imgopp )
 extern unsigned long DepthToColorsTable[];
 unsigned long colorsToDepth( long unsigned int ncolors );
 strbyte* dupString( strbyte* s );
-unsigned int ovmul( unsigned int a, unsigned int b );
 Image* newBitImage( unsigned int width, unsigned int height );
 Image* newRGBImage( unsigned int width, unsigned int height, unsigned int depth );
 Image* newTrueImage( unsigned int width, unsigned int height );

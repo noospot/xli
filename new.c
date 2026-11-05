@@ -106,7 +106,7 @@ void freeRGBMapData( RGBMap* rgb )
 }
 
 // avoid overflowing  unsigned int multiplications
-unsigned int ovmul( unsigned int a, unsigned int b )
+static inline unsigned int ovmul( unsigned int a, unsigned int b )
 {
 	unsigned int r;
 	unsigned int result;
