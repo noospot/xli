@@ -73,57 +73,67 @@ static bool isXbitmap( ZFILE* zf, unsigned int* w, unsigned int* h, int* v10p, s
 	*title = NULL;
 	*w = 0;
 	*h = 0;
+	*v10p = 0;
+	name_and_type[0] = '\0';
 
 	/* get width/height values */
 
 	while ( zgets( ( strbyte* )line, MAX_SIZE, zf ) && maxlines-- > 0 ) {
-		if ( strlen( line ) >= MAX_SIZE-1 ) {
+
+		if ( strlen( line ) >= MAX_SIZE - 1 ) {
 			return FALSE;
 		}
 
-		/* width/height/hot_x/hot_y scanning
-		 */
+		/* find #define    width/height/hot_x/hot_y  */
+		if ( strncmp( line, "#define", 7 ) == 0 ) {
+			if ( sscanf( line, " #define %254s %d", name_and_type, &value ) == 2 ) {
+				// search last '_'
+				type = strrchr( name_and_type, '_' );
+				if ( !type ) {
+					type = name_and_type;
+				} else {
+					type = type+1;
+				}
 
-		if ( sscanf( line,"#define %254s %d", name_and_type, &value ) == 2 ) {
-			if ( !( type = strrchr( name_and_type, '_' ) ) ) {
-				type = name_and_type;
-			} else {
-				type++;
+				if ( strcmp( "width", type ) == 0 ) {
+					*w = ( unsigned int )value;
+				} else if ( strcmp( "height", type ) == 0 ) {
+					*h = ( unsigned int )value;
+				}
 			}
-
-			if ( !strcmp( "width", type ) ) {
-				*w = ( unsigned int )value;
-			}
-			if ( !strcmp( "height", type ) ) {
-				*h = ( unsigned int )value;
-			}
+			goto next_line;
 		}
 
-		/* if start of data, determine if it's X10 or X11 data and break
-		 */
-
-		if ( sscanf( line, "static short %254s = {", name_and_type ) == 1 ) {
+		// find if  X10 or X11 data
+		if ( ( sscanf( line, " static short %254s = {", name_and_type ) == 1 )
+		||   ( sscanf( line, " static unsigned short %254s = {", name_and_type ) == 1 )
+		) {
 			*v10p = 1;
 			break;
 		}
-		if ( ( sscanf( line,"static byte %254s = {", name_and_type ) == 1 ) 
-		||   ( sscanf( line, "static char %254s = {", name_and_type ) == 1 ) 
-		||   ( sscanf( line, "static unsigned char %254s = {", name_and_type ) == 1 ) 
+		if ( ( sscanf( line, " static byte %254s = {", name_and_type ) == 1 )
+		||   ( sscanf( line, " static BYTE %254s = {", name_and_type ) == 1 ) 
+		||   ( sscanf( line, " static uint8_t %254s = {", name_and_type ) == 1 ) 
+		||   ( sscanf( line, " static char %254s = {", name_and_type ) == 1 ) 
+		||   ( sscanf( line, " static unsigned char %254s = {", name_and_type ) == 1 ) 
 		) {
 			*v10p = 0;
 			break;
 		}
+
+		next_line:;
 	}
 
 	if ( !*w || !*h || *w>XLI_MAX_WIDTH || *h>XLI_MAX_HEIGHT ) {
 		return FALSE;
 	}
 
-	/* get title of bitmap if any
-	 */
-	type = strrchr( name_and_type, '_' );
-	if ( type != NULL && strcmp( "bits[]", type + 1 ) == 0 ) {
-		*type = '\0';
+	// get title if any
+	if ( name_and_type[0] != '\0' ) {
+		type = strstr( name_and_type, "_bits" );
+		if ( type != NULL ) {
+			*type = '\0';
+		}
 		*title = dupString( name_and_type );
 	}
 	return TRUE;
