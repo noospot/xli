@@ -10,6 +10,8 @@
  *
  * Copyright 1989 Jim Frost.  See included file "copyright.h" for complete
  * copyright information.
+ *
+ *
  */
 
 
@@ -75,14 +77,14 @@ static bool isXbitmap( ZFILE* zf, unsigned int* w, unsigned int* h, int* v10p, s
 	/* get width/height values */
 
 	while ( zgets( ( strbyte* )line, MAX_SIZE, zf ) && maxlines-- > 0 ) {
-		if ( strlen( line ) == MAX_SIZE-1 ) {
+		if ( strlen( line ) >= MAX_SIZE-1 ) {
 			return FALSE;
 		}
 
 		/* width/height/hot_x/hot_y scanning
 		 */
 
-		if ( sscanf( line,"#define %s %d", name_and_type, &value ) == 2 ) {
+		if ( sscanf( line,"#define %254s %d", name_and_type, &value ) == 2 ) {
 			if ( !( type = strrchr( name_and_type, '_' ) ) ) {
 				type = name_and_type;
 			} else {
@@ -100,27 +102,29 @@ static bool isXbitmap( ZFILE* zf, unsigned int* w, unsigned int* h, int* v10p, s
 		/* if start of data, determine if it's X10 or X11 data and break
 		 */
 
-		if ( sscanf( line, "static short %s = {", name_and_type ) == 1 ) {
+		if ( sscanf( line, "static short %254s = {", name_and_type ) == 1 ) {
 			*v10p = 1;
 			break;
 		}
-		if ( ( sscanf( line,"static byte %s = {", name_and_type ) == 1 ) ||
-		      ( sscanf( line, "static char %s = {", name_and_type ) == 1 ) ) {
+		if ( ( sscanf( line,"static byte %254s = {", name_and_type ) == 1 ) 
+		||   ( sscanf( line, "static char %254s = {", name_and_type ) == 1 ) 
+		||   ( sscanf( line, "static unsigned char %254s = {", name_and_type ) == 1 ) 
+		) {
 			*v10p = 0;
 			break;
 		}
 	}
 
-	if ( !*w || !*h ) {
+	if ( !*w || !*h || *w>XLI_MAX_WIDTH || *h>XLI_MAX_HEIGHT ) {
 		return FALSE;
 	}
 
 	/* get title of bitmap if any
 	 */
-
-	if ( ( type = strrchr( name_and_type, '_' ) ) && !strcmp( "bits[]", type + 1 ) ) {
-		*type= '\0';
-		*title= dupString( name_and_type );
+	type = strrchr( name_and_type, '_' );
+	if ( type != NULL && strcmp( "bits[]", type + 1 ) == 0 ) {
+		*type = '\0';
+		*title = dupString( name_and_type );
 	}
 	return TRUE;
 }
