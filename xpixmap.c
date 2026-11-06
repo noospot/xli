@@ -239,7 +239,7 @@ static bool isXpixmap( ZFILE* zf, unsigned int* w, unsigned int* h, unsigned int
 		*imagetitle = dupString( what );
 	}
 	// cpp > 4 would cause integer overflow in color lookup calculation
-	if ( !*format || !*w || !*h || !*ncolors || !*cpp || *cpp > 4 ) {
+	if ( !*format || !*w || !*h || !*ncolors || !*cpp || *cpp > 4 || *w > XLI_MAX_WIDTH || *h > XLI_MAX_HEIGHT) {
 		if ( *imagetitle ) {
 			lfree( ( byte* )*imagetitle );
 		}
@@ -377,15 +377,15 @@ Image* xpixmapLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		 */
 
 		znocache( zf );
-		ctable = ( strbyte** ) lmalloc( sizeof( strbyte* ) * ncolors );
-		memset( ctable, 0, sizeof( strbyte* ) * ncolors );
+		ctable = ( strbyte** ) lcalloc( sizeof( strbyte* ) * ncolors );
+
 		xcolor.flags = DoRed | DoGreen | DoBlue;
 		for ( a = 0; a < ncolors; a++ ) {
 
 			/* read pixel value
 			 */
 
-			*( ctable + a ) = ( strbyte* ) lmalloc( sizeof( strbyte* ) * ncolors );
+			*( ctable + a ) = ( strbyte* ) lcalloc( sizeof( strbyte* ) * ncolors );
 			/* Find the start of the next string */
 			while ( ( ( c = zgetc( zf ) ) != EOF ) && ( c != '"' ) );
 			if ( c == EOF ) {
@@ -395,7 +395,7 @@ Image* xpixmapLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 				zclose( zf );
 				return NULL;
 			}
-			/* Read cpp strbyteacters in as the color symbol */
+			/* Read cpp characters in as the color symbol */
 			for ( b = 0; b < cpp; b++ ) {
 				if ( ( c = zgetc( zf ) ) == '\\' ) {
 					c = zgetc( zf );
@@ -531,8 +531,8 @@ Image* xpixmapLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		cmin=0;      /* should not happen  */
 		cmax=1;
 	}
-	clookup = ( int* ) lmalloc( sizeof( int ) * ( cmax - cmin ) );
-	memset( clookup, 0, sizeof( int ) * ( cmax - cmin ) );
+	clookup = ( int* ) lcalloc( sizeof( int ) * ( cmax - cmin ) );
+	
 	for ( a = 0; a < ncolors; a++ ) {
 		int val;
 		for ( b = 0, val = 0; b < cpp; b++ ) {
