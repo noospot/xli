@@ -28,7 +28,7 @@ version 1.18.0 supports:
   WEBP Image
   Targa Image (TGA)
   BMP Image  Windows, OS/2
-  Portable Bit Map (PNM, PBM, PGM, PPM)
+  Portable aNymap iMages (PBM, PGM, PPM)
   PC Paintbrush Image (PCX)
   X Pixmap XPM
   X Bitmap XBM
@@ -40,7 +40,7 @@ version 1.18.0 supports:
   G3 FAX Image
   FBM Image
   Utah RLE Image (RLE)
-  GEM raster Image (IMG)
+  GEM raster Image ( early digital research IMG )
   MacPaint Image
 
 A variety of options are available to modify images prior to viewing:
