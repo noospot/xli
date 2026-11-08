@@ -195,26 +195,11 @@ static inline int gifin_load_cmap( byte ( *cmap )[256], int ncolors )
  */
 static inline int verify_boundaries( int rwidth, int rheight )
 {
-	if ( rwidth < MIN_GIF_WIDTH || rwidth > MAX_GIF_WIDTH ) {
-		return GIFIN_ERR_BAD_DES;
+	if ( rwidth <= MIN_GIF_WIDTH || rwidth > MAX_GIF_WIDTH ) {
+		return GIFIN_ERR_BAD_DIM;
 	}
-	if ( rheight < MIN_GIF_HEIGHT || rheight > MAX_GIF_HEIGHT ) {
-		return GIFIN_ERR_BAD_DES;
-	}
-	return GIFIN_OK;
-}
-
-
-/*
- * verify code size and color table bounds
- */
-static inline int verify_codesize_and_colors( int csize, int ccount )
-{
-	if ( csize < MIN_GIF_CODESIZE || csize > MAX_GIF_CODESIZE ) {
-		return GIFIN_ERR_BAD_DES;
-	}
-	if ( ccount < 0 || ( ccount > 0 && ( ccount < MIN_GIF_COLORS || ccount > MAX_GIF_COLORS ) ) ) {
-		return GIFIN_ERR_BAD_DES;
+	if ( rheight <= MIN_GIF_HEIGHT || rheight > MAX_GIF_HEIGHT ) {
+		return GIFIN_ERR_BAD_DIM;
 	}
 	return GIFIN_OK;
 }
@@ -264,7 +249,7 @@ static int gifin_open_file( ZFILE* s, bool verbose )
 	gifin_rast_height  = ( buf[3] << 8 ) + buf[2];
 	
 	if ( ( errno = verify_boundaries( gifin_rast_width, gifin_rast_height ) ) != GIFIN_OK ) {
-		fprintf( stderr, "gifin_open_file: %s\n", GIFIN_ERR_BAD_SD_STR );
+		fprintf( stderr, "gifin_open_file: %s\n", GIFIN_ERR_BAD_DIM_STR );
 		return errno;
 	}
 
@@ -292,8 +277,8 @@ static int gifin_open_file( ZFILE* s, bool verbose )
 		gifin_g_ncolors = ( 1 << gifin_g_pixel_bits );
 
 		if ( gifin_g_ncolors < MIN_GIF_COLORS || gifin_g_ncolors > MAX_GIF_COLORS ) {
-			fprintf( stderr, "gifin_open_file: %s\n", GIFIN_ERR_BAD_SD_STR );
-			return GIFIN_ERR_BAD_DES;
+			fprintf( stderr, "gifin_open_file: %s\n", GIFIN_ERR_BAD_NCL_STR );
+			return GIFIN_ERR_BAD_NCL;
 		}
 
 		if ( ( errno = gifin_load_cmap( gifin_g_cmap, gifin_g_ncolors ) ) != GIFIN_OK ) {
@@ -420,7 +405,7 @@ static int gifin_open_image( void )
 	gifin_img_height     = ( buf[7] << 8 ) + buf[6];
 
 	if ( ( errno = verify_boundaries( gifin_img_width, gifin_img_height ) ) != GIFIN_OK ) {
-		fprintf( stderr, "gifin_open_image: %s\n", GIFIN_ERR_BAD_DES_STR );
+		fprintf( stderr, "gifin_open_image: %s\n", GIFIN_ERR_BAD_DIM_STR );
 		return errno;
 	}
 
@@ -433,8 +418,8 @@ static int gifin_open_image( void )
 		gifin_l_ncolors = ( 1 << gifin_l_pixel_bits );
 
 		if ( gifin_l_ncolors < MIN_GIF_COLORS || gifin_l_ncolors > MAX_GIF_COLORS ) {
-			fprintf( stderr, "gifin_open_image: %s\n", GIFIN_ERR_BAD_DES_STR );
-			return GIFIN_ERR_BAD_DES;
+			fprintf( stderr, "gifin_open_image: %s\n", GIFIN_ERR_BAD_NCL_STR );
+			return GIFIN_ERR_BAD_NCL;
 		}
 
 		if ( ( errno = gifin_load_cmap( gifin_l_cmap, gifin_l_ncolors ) ) != GIFIN_OK ) {
@@ -489,12 +474,12 @@ static inline int gifin_add_string( int p, int e )
 
 	if ( ( table_size == code_mask ) && ( code_size < 12 ) ) {
 		code_size = code_size + 1;
-		code_mask  = ( 1 << code_size ) - 1;
+		code_mask = ( 1 << code_size ) - 1;
 	}
 
 	table_size = table_size + 1;
 	if ( table_size > STAB_SIZE ) {
-		fprintf( stderr, "gifin_add_string: %s\n", GIFIN_ERR_TAO_STR );
+		fprintf( stderr, "gifin_add_string: %s, %i\n", GIFIN_ERR_TAO_STR, table_size);
 		return GIFIN_ERR_TAO;
 	}
 	return GIFIN_OK;

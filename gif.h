@@ -27,6 +27,8 @@
 #define GIFIN_ERR_PSO      -10  /* pixel stack overflow */
 #define GIFIN_ERR_TAO      -11  /* table overflow */
 #define GIFIN_ERR_BAD_DES  -12  /* bad image descriptor */
+#define GIFIN_ERR_BAD_DIM  -13  /* image dimensions error */
+#define GIFIN_ERR_BAD_NCL  -14  /* colors count error */
 
 #define GIFIN_ERR_BAD_SD_STR   "Bad screen descriptor"
 #define GIFIN_ERR_BAD_SEP_STR  "Bad image separator"
@@ -40,7 +42,8 @@
 #define GIFIN_ERR_PSO_STR      "Pixel stack overflow"
 #define GIFIN_ERR_TAO_STR      "Table overflow"
 #define GIFIN_ERR_BAD_DES_STR  "Bad image descriptor"
-
+#define GIFIN_ERR_BAD_DIM_STR  "Image dimensions error"
+#define GIFIN_ERR_BAD_NCL_STR  "Number of colors error"
 
 typedef struct {
 	int err_no;
@@ -61,6 +64,8 @@ gif_err_string gif_err_strings[] = {
 	{GIFIN_ERR_PSO, GIFIN_ERR_PSO_STR},
 	{GIFIN_ERR_TAO, GIFIN_ERR_TAO_STR},
 	{GIFIN_ERR_BAD_DES, GIFIN_ERR_BAD_DES_STR},
+	{GIFIN_ERR_BAD_DIM, GIFIN_ERR_BAD_DIM_STR},
+	{GIFIN_ERR_BAD_NCL, GIFIN_ERR_BAD_NCL_STR},
 	{0}
 };
 #endif
@@ -104,11 +109,11 @@ strbyte* gif_version_name[] = {
 
 
 // limits
-#define MIN_GIF_WIDTH 1
-#define MIN_GIF_HEIGHT 1
+#define MIN_GIF_WIDTH 0                // could be used to store palette
+#define MIN_GIF_HEIGHT 0 
 #define MAX_GIF_WIDTH 65535
 #define MAX_GIF_HEIGHT 65535
-#define MIN_GIF_COLORS 2
+#define MIN_GIF_COLORS 1
 #define MAX_GIF_COLORS 256
 #define MIN_GIF_CODESIZE 2
 #define MAX_GIF_CODESIZE 12
