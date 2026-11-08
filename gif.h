@@ -12,7 +12,7 @@
 /*
  * gifin return codes
  */
-#define GIFIN_SUCCESS       0   /* success */
+#define GIFIN_OK            0   /* ok */
 #define GIFIN_DONE          1   /* no more images */
 
 #define GIFIN_ERR_BAD_SD   -1   /* bad screen descriptor */
@@ -40,6 +40,7 @@
 #define GIFIN_ERR_PSO_STR      "Pixel stack overflow"
 #define GIFIN_ERR_TAO_STR      "Table overflow"
 #define GIFIN_ERR_BAD_DES_STR  "Bad image descriptor"
+
 
 typedef struct {
 	int err_no;
@@ -100,3 +101,15 @@ strbyte* gif_version_name[] = {
 	GIF_SIG_89
 };
 #endif
+
+
+// limits
+#define MIN_GIF_WIDTH 1
+#define MIN_GIF_HEIGHT 1
+#define MAX_GIF_WIDTH 65535
+#define MAX_GIF_HEIGHT 65535
+#define MIN_GIF_COLORS 2
+#define MAX_GIF_COLORS 256
+#define MIN_GIF_CODESIZE 2
+#define MAX_GIF_CODESIZE 12
+#define MAX_GIF_BLOCKSIZE 255
