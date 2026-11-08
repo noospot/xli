@@ -224,7 +224,7 @@ static int gifin_open_file( ZFILE* s, bool verbose )
 
 	/* check GIF signature */
 	if ( zread( ins, buf, GIF_SIG_LEN ) != GIF_SIG_LEN ) {
-		fprintf( stderr, "gifin_open_file: %s\n", GIFIN_ERR_EOF_STR );
+		//fprintf( stderr, "gifin_open_file: %s\n", GIFIN_ERR_EOF_STR );
 		return GIFIN_ERR_EOF;
 	}
 
@@ -234,7 +234,7 @@ static int gifin_open_file( ZFILE* s, bool verbose )
 	} else if( strcmp( ( strbyte* ) buf, GIF_SIG_89 ) == 0 ) {
 		gifin_version = GIF89a;
 	} else {
-		fprintf( stderr, "gifin_open_file: %s\n", GIFIN_ERR_BAD_SIG_STR );
+		//fprintf( stderr, "gifin_open_file: %s\n", GIFIN_ERR_BAD_SIG_STR );
 		return GIFIN_ERR_BAD_SIG;
 	}
 
