@@ -58,10 +58,10 @@ static int  buf_cnt;            /* byte count */
 static int  buf_idx;            /* buffer index */
 
 static int table_size;          /* string table size */
-static int prefix[STAB_SIZE];   /* string table : prefixes */
-static int extnsn[STAB_SIZE];   /* string table : extensions */
+static int prefix[STRING_TABLE_SIZE];   /* string table : prefixes */
+static int extnsn[STRING_TABLE_SIZE];   /* string table : extensions */
 
-static byte pstk[PSTK_SIZE];    /* pixel stack */
+static byte pstk[PIXEL_STACK_SIZE];    /* pixel stack */
 static int  pstk_idx;           /* pixel stack pointer */
 
 
@@ -100,7 +100,7 @@ static byte gifin_interlace_flag;      /* interlace image format flag */
  */
 static inline int push_pixel( int* pstk_idx, byte* pstk, byte p )
 {
-	if ( *pstk_idx == PSTK_SIZE ) {
+	if ( *pstk_idx == PIXEL_STACK_SIZE ) {
 		return GIFIN_ERR_PSO;
 	}
 	pstk[*pstk_idx] = p;
@@ -119,7 +119,7 @@ static inline int gifin_push_string( int code, int* pstk_idx, byte* pstk, int* p
 
 	ps_code = code;
 
-	while ( ((unsigned int)ps_code) < STAB_SIZE && prefix[ps_code] != NULL_CODE ) {
+	while ( ((unsigned int)ps_code) < STRING_TABLE_SIZE && prefix[ps_code] != NULL_CODE ) {
 		push_status = push_pixel( pstk_idx, pstk, (byte)extnsn[ps_code] );
 		if ( push_status != GIFIN_OK ) {
 			return push_status;
@@ -127,7 +127,7 @@ static inline int gifin_push_string( int code, int* pstk_idx, byte* pstk, int* p
 		ps_code = prefix[ps_code];
 	}
 
-	if ( ((unsigned int)ps_code) >= STAB_SIZE ) {
+	if ( ((unsigned int)ps_code) >= STRING_TABLE_SIZE ) {
 		return GIFIN_ERR_TAO;
 	}
 
@@ -137,7 +137,7 @@ static inline int gifin_push_string( int code, int* pstk_idx, byte* pstk, int* p
 	}
 
 	*ps_rslt = extnsn[ps_code];
-	if ( ((unsigned int)*ps_rslt) >= STAB_SIZE ) {
+	if ( ((unsigned int)*ps_rslt) >= STRING_TABLE_SIZE ) {
 		return GIFIN_ERR_TAO;
 	}
 
@@ -449,7 +449,7 @@ static int gifin_open_image( void )
 
 	/* initialize string table */
 	i = 0;
-	while ( i < STAB_SIZE ) {
+	while ( i < STRING_TABLE_SIZE ) {
 		prefix[i] = NULL_CODE;
 		extnsn[i] = i;
 		i = i + 1;
@@ -478,7 +478,7 @@ static inline int gifin_add_string( int p, int e )
 	}
 
 	table_size = table_size + 1;
-	if ( table_size > STAB_SIZE ) {
+	if ( table_size > STRING_TABLE_SIZE ) {
 		fprintf( stderr, "gifin_add_string: %s, %i\n", GIFIN_ERR_TAO_STR, table_size);
 		return GIFIN_ERR_TAO;
 	}

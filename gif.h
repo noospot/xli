@@ -7,6 +7,9 @@
  *
  * Copyright 1989 Kirk L. Johnson (see the included file
  * "kljcpyrght.h" for complete copyright information)
+ *
+ * TODO
+ *        **FIXME**  fix table overflow, maybe silently ignore new additions 
  */
 
 /*
@@ -95,8 +98,8 @@ gif_err_string gif_err_strings[] = {
 #define GIF_EXTENSION   '!'     /* GIF extension block marker */
 #define GIF_TERMINATOR  ';'     /* GIF terminator */
 
-#define STAB_SIZE  4096         /* string table size */
-#define PSTK_SIZE  4096         /* pixel stack size */
+#define STRING_TABLE_SIZE  4096 /* string table size */
+#define PIXEL_STACK_SIZE  4096         /* pixel stack size */
 
 #define NULL_CODE  -1           /* string table null code */
 
