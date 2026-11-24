@@ -864,29 +864,39 @@ static bool get_bmp_pixels_depth4( ZFILE* zf, Image* image, bmpHeader* hp, bool*
 				return FALSE;
 			}
 			if ( d == 0 ) {
-				memblock = memblock - ( x + src_row_bytelen );
 				x = 0;
 				y = y + 1;
+				if ( y >= hp->abs_height ) {
+					*data_bounds = TRUE;
+					memblock = image->data;
+				} else {
+					memblock = image->data + ( ( hp->abs_height - 1 - y ) * ( unsigned long )src_row_bytelen );
+				}
 				goto skip_iter_rle4;
 			}
 			if ( d == 1 ) {
 				break;
 			}
 			if ( d == 2 ) {
-				d = zgetc( zf );
-				e = zgetc( zf );
-				if ( d == EOF || e == EOF ) {
+				int delta_x;
+				int delta_y;
+				unsigned int next_x;
+				unsigned int next_y;
+				delta_x = zgetc( zf );
+				delta_y = zgetc( zf );
+				if ( delta_x == EOF || delta_y == EOF ) {
 					return FALSE;
 				}
-				x = x + ( unsigned int )d;
-				y = y + ( unsigned int )e;
-				if ( x >= image->width || y >= hp->abs_height ) {
+				next_x = x + ( unsigned int )delta_x;
+				next_y = y + ( unsigned int )delta_y;
+				if ( next_x >= image->width || next_y >= hp->abs_height ) {
 					*data_bounds = TRUE;
-					x = x - ( unsigned int )d;
-					y = y - ( unsigned int )e;
 					goto skip_iter_rle4;
 				}
-				memblock = memblock + d - ( e * src_row_bytelen );
+				x = next_x;
+				y = next_y;
+				memblock = image->data + ( ( hp->abs_height - 1 - y ) * ( unsigned long )src_row_bytelen )
+					+ ( ( unsigned long )x * ( unsigned long )image->pixlen );
 				goto skip_iter_rle4;
 			}
 			{
@@ -1054,9 +1064,15 @@ static bool get_bmp_pixels_depth8( ZFILE* zf, Image* image, bmpHeader* hp, bool*
 				return FALSE;
 			}
 			if ( d == 0 ) {
-				memblock = memblock - ( x + src_row_bytelen );
+				//memblock = memblock - ( x + src_row_bytelen );
 				x = 0;
 				y = y + 1;
+				if ( y >= hp->abs_height ) {
+					*data_bounds = TRUE;
+					memblock = image->data;
+				} else {
+					memblock = image->data + ( ( hp->abs_height - 1 - y ) * ( unsigned long )src_row_bytelen );
+				}
 				goto skip_iter_rle8;
 			}
 			if ( d == 1 ) {
@@ -1065,20 +1081,23 @@ static bool get_bmp_pixels_depth8( ZFILE* zf, Image* image, bmpHeader* hp, bool*
 			if ( d == 2 ) {
 				int delta_x;
 				int delta_y;
+				unsigned int next_x;
+				unsigned int next_y;
 				delta_x = zgetc( zf );
 				delta_y = zgetc( zf );
 				if ( delta_x == EOF || delta_y == EOF ) {
 					return FALSE;
 				}
-				x = x + ( unsigned int )delta_x;
-				y = y + ( unsigned int )delta_y;
-				if ( x >= image->width || y >= hp->abs_height ) {
+				next_x = x + ( unsigned int )delta_x;
+				next_y = y + ( unsigned int )delta_y;
+				if ( next_x >= image->width || next_y >= hp->abs_height ) {
 					*data_bounds = TRUE;
-					x = x - ( unsigned int )delta_x;
-					y = y - ( unsigned int )delta_y;
 					goto skip_iter_rle8;
 				}
-				memblock = memblock + delta_x - ( delta_y * ( int )src_row_bytelen );
+				x = next_x;
+				y = next_y;
+				memblock = image->data + ( ( hp->abs_height - 1 - y ) * ( unsigned long )src_row_bytelen )
+					+ ( ( unsigned long )x * ( unsigned long )image->pixlen );
 				goto skip_iter_rle8;
 			}
 			{
@@ -1304,9 +1323,14 @@ static bool get_bmp_pixels_depth24( ZFILE* zf, Image* image, bmpHeader* hp, bool
 				return FALSE;
 			}
 			if ( d == 0 ) {
-				memblock = memblock - ( ( x * image->pixlen ) + ( unsigned int )src_row_bytelen );
 				x = 0;
 				y = y + 1;
+				if ( y >= hp->abs_height ) {
+					*data_bounds = TRUE;
+					memblock = image->data;
+				} else {
+					memblock = image->data + ( ( hp->abs_height - 1 - y ) * ( unsigned long )src_row_bytelen );
+				}
 				goto skip_iter_rle24;
 			}
 			if ( d == 1 ) {
@@ -1315,20 +1339,23 @@ static bool get_bmp_pixels_depth24( ZFILE* zf, Image* image, bmpHeader* hp, bool
 			if ( d == 2 ) {
 				int delta_x;
 				int delta_y;
+				unsigned int next_x;
+				unsigned int next_y;
 				delta_x = zgetc( zf );
 				delta_y = zgetc( zf );
 				if ( delta_x == EOF || delta_y == EOF ) {
 					return FALSE;
 				}
-				x = x + ( unsigned int )delta_x;
-				y = y + ( unsigned int )delta_y;
-				if ( x >= image->width || y >= hp->abs_height ) {
+				next_x = x + ( unsigned int )delta_x;
+				next_y = y + ( unsigned int )delta_y;
+				if ( next_x >= image->width || next_y >= hp->abs_height ) {
 					*data_bounds = TRUE;
-					x = x - ( unsigned int )delta_x;
-					y = y - ( unsigned int )delta_y;
 					goto skip_iter_rle24;
 				}
-				memblock = memblock + ( delta_x * ( int )image->pixlen ) - ( delta_y * src_row_bytelen );
+				x = next_x;
+				y = next_y;
+				memblock = image->data + ( ( hp->abs_height - 1 - y ) * ( unsigned long )src_row_bytelen )
+					+ ( ( unsigned long )x * ( unsigned long )image->pixlen );
 				goto skip_iter_rle24;
 			}
 			{
@@ -1535,7 +1562,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 
 	if ( !( zf = zopen( fullname ) ) ) {
 		perror( "bmpIdent" );
-		return ( 0 );
+		return NULL;
 	}
 	if ( !read_bmpHeader( zf, &hdr, image_ops->name ) ) {
 		zclose( zf );
@@ -1570,7 +1597,8 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 			image = newRGBImage( hdr.biWidth, hdr.abs_height, hdr.biPixelSize );
 		}
 		image->title = dupString( hdr.name );
-
+		image->gamma = UNSET_GAMMA;
+		
 		i = 0;
 		while ( i < hdr.resolved_clr_used ) {
 			if ( zread( zf, buf, n ) != n ) {
@@ -1597,6 +1625,7 @@ Image* bmpLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	} else {		// else must be a true color image
 		image = newTrueImage( hdr.biWidth, hdr.abs_height );
 		image->title = dupString( hdr.name );
+		image->gamma = UNSET_GAMMA;
 	}
 
 	// Rewind file stream to offset 0 and strictly skip to bfImageOffset (or resolved fallback if 0)
