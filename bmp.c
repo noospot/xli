@@ -411,7 +411,7 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 	
 	// top to bottom images cannot be RLE
 	if ( hp->biHeight < 0 && ( hp->biCompression == BI_RLE8 || hp->biCompression == BI_RLE4  
-	||  (  hp->bfType == C_OS2_V2 && hp->biCompression == BI_RLE24 ) ) {
+	||  (  hp->bfType == C_OS2_V2 && hp->biCompression == BI_RLE24 ) ) ) {
 		fprintf( stderr, "bmpLoad: %s - top to bottom with RLE not supported\n", hp->name );
 		return FALSE;
 	}
@@ -504,10 +504,8 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 			}
 		}
 		
-		bool BMP_HDRFILESIZE_OK = TRUE;
 		if ( hp->bfFileSize > 0 && real_file_size > 0 && hp->bfFileSize != real_file_size ) {
 			fprintf( stderr, "bmpLoad: %s - header file size value (%lu) does not match real file size (%lu)\n", hp->name, hp->bfFileSize, real_file_size );
-			BMP_HDRFILESIZE_OK = FALSE;
 		}
 
 
