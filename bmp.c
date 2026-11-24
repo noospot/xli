@@ -630,7 +630,7 @@ static void print_bmp_hdr( bmpHeader* hp )
 	}
 
 	const strbyte* complabel = "";
-	if ( hp->biCompression == BI_RLE8 || hp->biCompression == BI_RLE4 ) {
+	if ( hp->biCompression == BI_RLE4 ) {
 		complabel = "RLE4 ";
 	} else if ( hp->biCompression == BI_RLE8 ) {
 		complabel = "RLE8 ";
