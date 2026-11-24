@@ -410,7 +410,8 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 	}	
 	
 	// top to bottom images cannot be RLE
-	if ( hp->biHeight < 0 && ( hp->biCompression == BI_RLE8 || hp->biCompression == BI_RLE4 ) ) {
+	if ( hp->biHeight < 0 && ( hp->biCompression == BI_RLE8 || hp->biCompression == BI_RLE4  
+	||  (  hp->bfType == C_OS2_V2 && hp->biCompression == BI_RLE24 ) ) {
 		fprintf( stderr, "bmpLoad: %s - top to bottom with RLE not supported\n", hp->name );
 		return FALSE;
 	}
@@ -438,7 +439,8 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 		} else if ( hp->biCompression == BI_ALPHAFIELDS && hp->biInfoHeaderSize == WIN_INFOHEADER_LEN ) {
 			masks_header_len = 16;
 		}
-
+		
+		// **FIXME**  should depend on type, maybe at other locations
 		all_headers_len = BMP_FILEHEADER_LEN + hp->biInfoHeaderSize + masks_header_len;
 
 		// **FIXME** there could be some other data between headers, palette and image
@@ -520,13 +522,14 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 
 		if ( resolved_offset < all_headers_len ) {
 			fprintf( stderr, "bmpLoad: %s - bfImageOffset (%lu) overlaps header (minimum expected: %lu)\n", hp->name, hp->bfImageOffset, all_headers_len );
+			resolved_offset = all_headers_len;
 		} else if ( resolved_offset < min_pixel_offset ) {
 			if ( hp->bfImageOffset > 0 && hp->bfImageOffset < min_pixel_offset ) {
 				fprintf( stderr, "bmpLoad: %s - bfImageOffset (%lu) overlaps colormap (minimum expected: %lu)\n", hp->name, hp->bfImageOffset, min_pixel_offset );
 			}
 			resolved_offset = min_pixel_offset;
-		} else if ( hp->bfFileSize > 0 && BMP_HDRFILESIZE_OK && resolved_offset > hp->bfFileSize ) {
-			fprintf( stderr, "bmpLoad: %s - resolved image offset (%lu) exceeds file size (%lu)\n", hp->name, resolved_offset, hp->bfFileSize );
+		} else if ( real_file_size > 0  && resolved_offset > real_file_size ) {
+			fprintf( stderr, "bmpLoad: %s - resolved image offset (%lu) exceeds file size (%lu)\n", hp->name, resolved_offset, real_file_size );
 			return FALSE;
 		}
 
