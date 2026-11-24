@@ -761,10 +761,12 @@ static bool get_bmp_pixels_depth2( ZFILE* zf, Image* image, bmpHeader* hp )
 	while ( rowcount > 0 ) {
 		i = 0;
 		while ( i < image->width ) {
-			packedbyte = ( unsigned int )zgetc( zf );
-			if ( packedbyte == ( unsigned int )EOF ) {
+			const int b = zgetc( zf );
+			if ( b == EOF ) {
 				return FALSE;
 			}
+			packedbyte = ( unsigned int )b;
+
 			if ( i < image->width ) {
 				memblock[i] = ( byte )( ( packedbyte >> 6 ) & 0x3 );
 				i = i + 1;
@@ -825,7 +827,7 @@ static bool get_bmp_pixels_depth4( ZFILE* zf, Image* image, bmpHeader* hp, bool*
 				unsigned int start_x = x;
 				unsigned int run_len = ( unsigned int )d;
 				x = x + run_len;
-				if ( y > hp->abs_height ) {
+				if ( y >= hp->abs_height ) {
 					*data_bounds = TRUE;
 					goto skip_iter_rle4;
 				}
@@ -878,7 +880,7 @@ static bool get_bmp_pixels_depth4( ZFILE* zf, Image* image, bmpHeader* hp, bool*
 				}
 				x = x + ( unsigned int )d;
 				y = y + ( unsigned int )e;
-				if ( x > image->width || y > hp->abs_height ) {
+				if ( x >= image->width || y >= hp->abs_height ) {
 					*data_bounds = TRUE;
 					x = x - ( unsigned int )d;
 					y = y - ( unsigned int )e;
@@ -894,7 +896,7 @@ static bool get_bmp_pixels_depth4( ZFILE* zf, Image* image, bmpHeader* hp, bool*
 				int bytes_read = 0;
 
 				x = x + run_len;
-				if ( y > hp->abs_height ) {
+				if ( y >= hp->abs_height ) {
 					*data_bounds = TRUE;
 					goto skip_iter_rle4;
 				}
@@ -1027,7 +1029,7 @@ static bool get_bmp_pixels_depth8( ZFILE* zf, Image* image, bmpHeader* hp, bool*
 				unsigned int start_x = x;
 				unsigned int run_len = ( unsigned int )d;
 				x = x + run_len;
-				if ( y > hp->abs_height ) {
+				if ( y >= hp->abs_height ) {
 					*data_bounds = TRUE;
 					goto skip_iter_rle8;
 				}
@@ -1070,7 +1072,7 @@ static bool get_bmp_pixels_depth8( ZFILE* zf, Image* image, bmpHeader* hp, bool*
 				}
 				x = x + ( unsigned int )delta_x;
 				y = y + ( unsigned int )delta_y;
-				if ( x > image->width || y > hp->abs_height ) {
+				if ( x >= image->width || y >= hp->abs_height ) {
 					*data_bounds = TRUE;
 					x = x - ( unsigned int )delta_x;
 					y = y - ( unsigned int )delta_y;
@@ -1086,7 +1088,7 @@ static bool get_bmp_pixels_depth8( ZFILE* zf, Image* image, bmpHeader* hp, bool*
 				int bytes_read = 0;
 
 				x = x + run_len;
-				if ( y > hp->abs_height ) {
+				if ( y >= hp->abs_height ) {
 					*data_bounds = TRUE;
 					goto skip_iter_rle8;
 				}
@@ -1272,7 +1274,7 @@ static bool get_bmp_pixels_depth24( ZFILE* zf, Image* image, bmpHeader* hp, bool
 				unsigned int start_x = x;
 				unsigned int run_len = ( unsigned int )d;
 				x = x + run_len;
-				if ( y > hp->abs_height ) {
+				if ( y >= hp->abs_height ) {
 					*data_bounds = TRUE;
 					goto skip_iter_rle24;
 				}
@@ -1320,7 +1322,7 @@ static bool get_bmp_pixels_depth24( ZFILE* zf, Image* image, bmpHeader* hp, bool
 				}
 				x = x + ( unsigned int )delta_x;
 				y = y + ( unsigned int )delta_y;
-				if ( x > image->width || y > hp->abs_height ) {
+				if ( x >= image->width || y >= hp->abs_height ) {
 					*data_bounds = TRUE;
 					x = x - ( unsigned int )delta_x;
 					y = y - ( unsigned int )delta_y;
@@ -1337,7 +1339,7 @@ static bool get_bmp_pixels_depth24( ZFILE* zf, Image* image, bmpHeader* hp, bool
 				int bytes_read = 0;
 
 				x = x + run_len;
-				if ( y > hp->abs_height ) {
+				if ( y >= hp->abs_height ) {
 					*data_bounds = TRUE;
 					goto skip_iter_rle24;
 				}
