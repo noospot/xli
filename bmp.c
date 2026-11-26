@@ -10,12 +10,12 @@
 // 20261019-20261125 rno/noospot
 //
 //  TODO
-//   - find and report if any data found between header,palette and image
-//   - rgb32 with alpha, images with invisible pixels, colors with 0x00 alpha
+//   - find and report if any data found between header, palette and image
 //   - use fixed width types
 //   - cleanup and optimise 
 //   - support OS/2 files with magics BA CI CP IC PT
 //   - support bmp v4 v5 and OS/2 extra fields, load gamma value
+//
 //
 
 #include <sys/stat.h>
@@ -63,7 +63,7 @@ static inline int32_t GSINT4( const uint8_t* bp )
 	return ( int32_t )value;
 }
 
-// d: extract signed 2-byte little-endian integer into int32_t
+// d: extract signed 2-byte LE integer into int32_t
 static inline int32_t GSINT2( const uint8_t* bp )
 {
 	uint16_t value = ( uint16_t )bp[0]
@@ -71,7 +71,7 @@ static inline int32_t GSINT2( const uint8_t* bp )
 	return ( int32_t )( int16_t )value;
 }
 
-// d: get bit shift from bitmask
+// d: get mask shift
 static inline unsigned int get_mask_shift( unsigned long mask )
 {
 	unsigned int shift = 0;
@@ -85,7 +85,7 @@ static inline unsigned int get_mask_shift( unsigned long mask )
 	return shift;
 }
 
-// d: get bit width from bitmask
+// d: get mask width
 static inline unsigned int get_mask_factors( unsigned long mask )
 {
 	unsigned int factor = 0;
@@ -106,7 +106,7 @@ static inline unsigned int get_mask_factors( unsigned long mask )
 static inline byte colorreg_applyalpha( byte colorreg, byte alpha )
 {
 	if ( alpha == 0x00 ) {
-		return colorreg;
+		return 0x00;
 	}
 	if ( alpha == 0xff ) {
 		return colorreg;
@@ -121,29 +121,40 @@ static inline byte colorreg_applyalpha( byte colorreg, byte alpha )
 	return ( byte )round( tmp );
 }
 
-// d: resolve effective channel masks from raw file masks and format defaults
+// d: resolve effective channel masks with raw file masks
 static void resolve_bmp_masks( bmpHeader* hp )
 {
-	if ( ( hp->biCompression == BI_FIELDS || hp->biCompression == BI_ALPHAFIELDS )
-	     && hp->bfType != C_OS2
-	     && hp->bfType != C_OS2_V2 ) {
+	if (  hp->biCompression == BI_FIELDS && hp->bfType != C_OS2_V2 ) {
 		hp->resolved_redMask = hp->redMask;
 		hp->resolved_greenMask = hp->greenMask;
-		hp->resolved_blueMask = hp->blueMask;
+		hp->resolved_blueMask = hp->blueMask;	
+		if ( hp->biInfoHeaderSize >= BMP_V3INFOHEADER_LEN ) {
+			hp->resolved_alphaMask = hp->alphaMask;
+		} else {
+			hp->resolved_alphaMask = 0x0;
+		}		
+	
+		return;
+	} 	
+	if (  hp->biCompression == BI_ALPHAFIELDS ) {
+		hp->resolved_redMask = hp->redMask;
+		hp->resolved_greenMask = hp->greenMask;
+		hp->resolved_blueMask = hp->blueMask;	
 		hp->resolved_alphaMask = hp->alphaMask;
 		return;
 	} 
 
 	if ( hp->biPixelSize == 16 ) {
-		hp->resolved_redMask = 0x7c00;
-		hp->resolved_greenMask = 0x03e0;
-		hp->resolved_blueMask = 0x001f;
-		hp->resolved_alphaMask = 0;
+		// a0r5g5b5
+		hp->resolved_redMask = 0x7c00;       // 0b0111110000000000
+		hp->resolved_greenMask = 0x03e0;     // 0b0000001111100000
+		hp->resolved_blueMask = 0x001f;      // 0b0000000000011111
+		hp->resolved_alphaMask = 0x0;          // 0b1000000000000000  0x8000, or 0x0
 	} else if ( hp->biPixelSize == 32 ) {
 		hp->resolved_redMask = 0x00ff0000;
 		hp->resolved_greenMask = 0x0000ff00;
 		hp->resolved_blueMask = 0x000000ff;
-		hp->resolved_alphaMask = 0xff000000;
+		hp->resolved_alphaMask = 0x0;        // 0xff000000 or 0x0
 	} else {
 		hp->resolved_redMask = 0;
 		hp->resolved_greenMask = 0;
@@ -152,7 +163,7 @@ static void resolve_bmp_masks( bmpHeader* hp )
 	}
 }
 
-// d: read raw masks from header/stream and populate resolved masks
+// d: read header/stream raw masks and populate resolved masks
 static bool load_bmp_masks( ZFILE* zf, bmpHeader* hp, const byte* infobuf )
 {
 	hp->redMask = 0;
@@ -160,9 +171,8 @@ static bool load_bmp_masks( ZFILE* zf, bmpHeader* hp, const byte* infobuf )
 	hp->blueMask = 0;
 	hp->alphaMask = 0;
 
-	if ( ( hp->biCompression == BI_FIELDS || hp->biCompression == BI_ALPHAFIELDS )
-	     && hp->bfType != C_OS2
-	     && hp->bfType != C_OS2_V2 ) {
+	if ( ( hp->biCompression == BI_FIELDS && hp->bfType != C_OS2_V2 ) 
+	|| hp->biCompression == BI_ALPHAFIELDS ) {
 		if ( hp->biInfoHeaderSize == WIN_INFOHEADER_LEN ) {
 			unsigned int mask_bytes = 12;
 			byte maskbuf[16];
@@ -178,14 +188,19 @@ static bool load_bmp_masks( ZFILE* zf, bmpHeader* hp, const byte* infobuf )
 			if ( hp->biCompression == BI_ALPHAFIELDS ) {
 				hp->alphaMask = GULONG4( &maskbuf[12] );
 			}
-		} else {
+		} else if ( hp->biInfoHeaderSize >= BMP_V2INFOHEADER_LEN ) {
 			hp->redMask = GULONG4( &infobuf[40] );
 			hp->greenMask = GULONG4( &infobuf[44] );
 			hp->blueMask = GULONG4( &infobuf[48] );
-			if ( hp->biInfoHeaderSize >= BMP_V3INFOHEADER_LEN
-			     || hp->biCompression == BI_ALPHAFIELDS ) {
+			if ( hp->biInfoHeaderSize >= BMP_V3INFOHEADER_LEN ) {
 				hp->alphaMask = GULONG4( &infobuf[52] );
+			} else if ( hp->biCompression == BI_ALPHAFIELDS ) {
+				// Reject malformed 52-byte header claiming 4 masks
+				return FALSE;
 			}
+		} else {
+			// Reject malformed header < 52 bytes (other than 40) using fields
+			return FALSE;
 		}
 	}
 
@@ -705,10 +720,10 @@ static void print_bmp_hdr( bmpHeader* hp )
 	printf( " resolved colormap entries:           %lu      \n", hp->resolved_clr_used );	
 	printf( " resolved palette length:             %lu bytes\n", hp->palette_len );
 	printf( " resolved color entry length:         %lu bytes\n", hp->color_entry_len );
-	printf( " resolved red channel mask:           		0x%08lx)\n", hp->resolved_redMask );
-	printf( " resolved green Channel mask:         		0x%08lx)\n", hp->resolved_greenMask );
-	printf( " resolved blue channel mask:          		0x%08lx)\n", hp->resolved_blueMask );
-	printf( " resolved alpha channel mask:         		0x%08lx)\n", hp->resolved_alphaMask );
+	printf( " resolved red channel mask:           0x%08lx  \n", hp->resolved_redMask );
+	printf( " resolved green Channel mask:         0x%08lx  \n", hp->resolved_greenMask );
+	printf( " resolved blue channel mask:          0x%08lx  \n", hp->resolved_blueMask );
+	printf( " resolved alpha channel mask:         0x%08lx  \n", hp->resolved_alphaMask );
 }
 
 int bmpIdent( strbyte* fullname, strbyte* name )
@@ -1233,7 +1248,11 @@ static bool get_bmp_pixels_depth16( ZFILE* zf, Image* image, bmpHeader* hp )
 	if ( pixel_row == NULL ) {
 		return FALSE;
 	}
-
+	// d: verify destination row pointer remains within image->data bounds during 16-bit decode
+	size_t total_dst_bytes = ( size_t )image->width * ( size_t )image->pixlen * ( size_t )hp->abs_height;
+	byte* dst_limit = image->data + total_dst_bytes;
+	
+	
 	while ( y > 0 ) {
 		if ( zread( zf, pixel_row, src_row_bytelen ) != src_row_bytelen
 		|| ( src_padlen > 0 && zread( zf, pad_bytes, src_padlen ) != src_padlen ) ) {
@@ -1273,14 +1292,23 @@ static bool get_bmp_pixels_depth16( ZFILE* zf, Image* image, bmpHeader* hp )
 					a = ( byte )( ( a_v * 255 ) / ( ( 1 << alpha_flags ) - 1 ) );
 				}
 
-				if ( alpha_flags == 0 || a == 0x00 ) {
-					a = 0xff;
+				// d: guard destination row write address against image->data range
+				if ( dst_madress < image->data || ( dst_madress + dest_row_bytelen ) > dst_limit ) {
+					fprintf(stderr,"read outside image data");
+					free( pixel_row );
+					return FALSE;
 				}
-
-				dest_row_madress[0] = colorreg_applyalpha( r, a );
-				dest_row_madress[1] = colorreg_applyalpha( g, a );
-				dest_row_madress[2] = colorreg_applyalpha( b, a );
-
+				
+				if ( alpha_flags == 0  ) {	
+					dest_row_madress[0] = r;
+					dest_row_madress[1] = g;
+					dest_row_madress[2] = b;				
+				} else {
+					dest_row_madress[0] = colorreg_applyalpha( r, a );
+					dest_row_madress[1] = colorreg_applyalpha( g, a );
+					dest_row_madress[2] = colorreg_applyalpha( b, a );
+				}
+				
 				src_madress = src_madress + 2;
 				dest_row_madress = dest_row_madress + 3;
 				x = x + 1;
@@ -1289,6 +1317,7 @@ static bool get_bmp_pixels_depth16( ZFILE* zf, Image* image, bmpHeader* hp )
 		y = y - 1;
 		dst_madress = dst_madress + dest_row_bytelen_signed;
 	}
+	
 	free( pixel_row );
 	return TRUE;
 }
@@ -1563,14 +1592,17 @@ static bool get_bmp_pixels_depth32( ZFILE* zf, Image* image, bmpHeader* hp )
 				}
 
 
-				if ( alpha_flags == 0 || a == 0x00 ) {
-					a = 0xff;
+				//if ( alpha_flags == 0 && a == 0x00 ) {
+				if ( alpha_flags == 0 ) {	
+					dst_madress[0] = r;
+					dst_madress[1] = g;
+					dst_madress[2] = b;				
+				} else {
+					dst_madress[0] = colorreg_applyalpha( r, a );
+					dst_madress[1] = colorreg_applyalpha( g, a );
+					dst_madress[2] = colorreg_applyalpha( b, a );
 				}
-
-				dst_madress[0] = colorreg_applyalpha( r, a );
-				dst_madress[1] = colorreg_applyalpha( g, a );
-				dst_madress[2] = colorreg_applyalpha( b, a );
-
+				
 				src_madress = src_madress + 4;
 				dst_madress = dst_madress + 3;
 				x = x + 1;
