@@ -1,3 +1,19 @@
+20261125
+fixed/improved BMP rgb16 and rgb32 alpha handling
+BMP rle boundaries fixes
+
+
+20261108
+xli docs updates
+GIF limits, macros as functions, error message on stderr
+BMP add OS/2 magics
+
+
+20261106
+XBM a few images variants now accepted, limits
+PBM align terminology with manual page
+
+
 20261031
 improved pcx identification
 identify GEM as GEM Raster Images, so it's obvious it's not a vector .GEM 
@@ -8,9 +24,9 @@ rle.c identify as Utah RLE image
 20261029
 command line options also can be used with two hyphens as --help
 accept -h -v and -q cli options
-fixed out of memory error while loading some bmp
-improved bmp identification
-support recent bmp images: top-to-bottom, depth 2, 16 and 32, rle24
+fixed out of memory error while loading some BMP
+improved BMP identification
+support recent BMP images: top-to-bottom, depth 2, 16 and 32, rle24
 
 
 20260505
