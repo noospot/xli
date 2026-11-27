@@ -643,16 +643,16 @@ static void bmp_masks_layout( const bmpHeader* hp, char* printout, size_t printo
 
 	while ( cidx > 0 ) {
 		unsigned int shift_pos = cidx - 1;
-		unsigned long bit_test = 1UL << shift_pos;
+		unsigned long t = 1UL << shift_pos;
 		char tag = 'x';
 
-		if ( ( r_mask & bit_test ) != 0 ) {
+		if ( ( r_mask & t ) != 0 ) {
 			tag = 'r';
-		} else if ( ( g_mask & bit_test ) != 0 ) {
+		} else if ( ( g_mask & t ) != 0 ) {
 			tag = 'g';
-		} else if ( ( b_mask & bit_test ) != 0 ) {
+		} else if ( ( b_mask & t ) != 0 ) {
 			tag = 'b';
-		} else if ( ( a_mask & bit_test ) != 0 ) {
+		} else if ( ( a_mask & t ) != 0 ) {
 			tag = 'a';
 		}
 
