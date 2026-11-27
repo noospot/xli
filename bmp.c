@@ -149,7 +149,7 @@ static void resolve_bmp_masks( bmpHeader* hp )
 		hp->resolved_redMask = 0x7c00;       // 0b0111110000000000
 		hp->resolved_greenMask = 0x03e0;     // 0b0000001111100000
 		hp->resolved_blueMask = 0x001f;      // 0b0000000000011111
-		hp->resolved_alphaMask = 0x0;          // 0b1000000000000000  0x8000, or 0x0
+		hp->resolved_alphaMask = 0x0;        // 0b1000000000000000  0x8000, or 0x0
 	} else if ( hp->biPixelSize == 32 ) {
 		hp->resolved_redMask = 0x00ff0000;
 		hp->resolved_greenMask = 0x0000ff00;
@@ -578,6 +578,127 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 	return TRUE;
 }
 
+
+// d: build mask layout string using palette index defaults and TrueColor channel fallbacks
+static void bmp_masks_layout( const bmpHeader* hp, char* printout, size_t printout_len )
+{
+	unsigned int clen;
+	unsigned int cidx;
+	char _ch = '\0';
+	unsigned int _len = 0;
+	size_t pos = 0;
+	unsigned long r_mask = 0;
+	unsigned long g_mask = 0;
+	unsigned long b_mask = 0;
+	unsigned long a_mask = 0;
+
+	if ( printout == NULL || printout_len == 0 ) {
+		return;
+	}
+	printout[0] = '\0';
+
+	if ( hp == NULL || hp->biPixelSize == 0 ) {
+		return;
+	}
+
+	if ( hp->biPixelSize <= PAL_MAX_DEPTH ) {
+		int written = 0;
+		switch ( hp->color_entry_len ) {
+			case 3:
+				written = snprintf( printout, printout_len, "r8g8b8" );
+				break;
+			case 4:
+				written = snprintf( printout, printout_len, "x8r8g8b8" );
+				break;
+			default:
+				written = snprintf( printout, printout_len, "x%lu", hp->color_entry_len * 8 );
+				break;
+		}
+		if ( written < 0 ) {
+			printout[0] = '\0';
+		}
+		return;
+	}
+
+	r_mask = hp->redMask;
+	g_mask = hp->greenMask;
+	b_mask = hp->blueMask;
+	a_mask = hp->alphaMask;
+
+	if ( r_mask == 0 && g_mask == 0 && b_mask == 0 && a_mask == 0
+	     && hp->biCompression == BI_RGB ) {
+		if ( hp->biPixelSize == 16 ) {
+			r_mask = 0x7c00UL;
+			g_mask = 0x03e0UL;
+			b_mask = 0x001fUL;
+		} else if ( hp->biPixelSize == 24 || hp->biPixelSize == 32 ) {
+			r_mask = 0x00ff0000UL;
+			g_mask = 0x0000ff00UL;
+			b_mask = 0x000000ffUL;
+		}
+	}
+
+	clen = hp->biPixelSize;
+	cidx = clen;
+
+	while ( cidx > 0 ) {
+		unsigned int shift_pos = cidx - 1;
+		unsigned long bit_test = 1UL << shift_pos;
+		char tag = 'x';
+
+		if ( ( r_mask & bit_test ) != 0 ) {
+			tag = 'r';
+		} else if ( ( g_mask & bit_test ) != 0 ) {
+			tag = 'g';
+		} else if ( ( b_mask & bit_test ) != 0 ) {
+			tag = 'b';
+		} else if ( ( a_mask & bit_test ) != 0 ) {
+			tag = 'a';
+		}
+
+		if ( _len == 0 ) {
+			_ch = tag;
+			_len = 1;
+		} else if ( tag == _ch ) {
+			_len = _len + 1;
+		} else {
+			int written;
+			if ( pos + 1 < printout_len ) {
+				written = snprintf( printout + pos, printout_len - pos, "%c%u", _ch, _len );
+				if ( written < 0 ) {
+					printout[0] = '\0';
+					return;
+				}
+				if ( ( size_t )written >= printout_len - pos ) {
+					pos = printout_len - 1;
+					printout[pos] = '\0';
+					return;
+				}
+				pos = pos + ( size_t )written;
+			}
+			_ch = tag;
+			_len = 1;
+		}
+
+		cidx = cidx - 1;
+	}
+
+	if ( _len > 0 && pos + 1 < printout_len ) {
+		int written = snprintf( printout + pos, printout_len - pos, "%c%u", _ch, _len );
+		if ( written < 0 ) {
+			printout[0] = '\0';
+			return;
+		}
+		if ( ( size_t )written >= printout_len - pos ) {
+			pos = printout_len - 1;
+		} else {
+			pos = pos + ( size_t )written;
+		}
+	}
+	printout[pos] = '\0';
+}
+
+
 // Print a brief description of the image
 static void tell_about_bmp( bmpHeader* hp )
 {
@@ -629,8 +750,11 @@ static void tell_about_bmp( bmpHeader* hp )
 		complabel = "";
 	}
 
-	printf( "%s is a %lux%lu BMP image, depth %d, %s%s%s %s\n", hp->name,
-	        hp->biWidth, hp->abs_height, hp->biPixelSize, topbot, complabel, colormode,
+	strbyte layout_str[32];
+	bmp_masks_layout( hp, layout_str, sizeof( layout_str ) );
+	
+	printf( "%s is a %lux%lu BMP image, depth %d, %s%s%s %s %s\n", hp->name,
+	        hp->biWidth, hp->abs_height, hp->biPixelSize, topbot, complabel,layout_str, colormode,
 	        typelabel );
 }
 
