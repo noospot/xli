@@ -28,7 +28,7 @@ Description: command line tool for viewing images in X11
   WEBP Images
   Targa Images (TGA)
   BMP Images Windows, OS/2
-  Portable Bit Map (PNM, PBM, PGM, PPM)
+  Portable Any Map (PBM, PGM, PPM)
   PC Paintbrush Images (PCX)
   X Pixmap XPM
   X Bitmap XBM
