@@ -28,14 +28,14 @@ static struct {
 #endif
 	{gifIdent,	gifLoad,	"GIF Image"},
 #ifdef HAS_JPEG
-	{jpegIdent,	jpegLoad,	"JFIF style jpeg Image"},
+	{jpegIdent,	jpegLoad,	"JPEG Image JPEG, JFIF"},
 #endif
 #ifdef HAS_WEBP
 	{webpIdent,	webpLoad,	"WEBP Image"},
 #endif
 	{tgaIdent,	tgaLoad,	"Targa Image (TGA)"},
 	{bmpIdent,	bmpLoad,	"BMP Image Windows, OS/2"},
-	{pbmIdent,	pbmLoad,	"Portable Bit Map (PNM, PBM, PGM, PPM)"},
+	{pbmIdent,	pbmLoad,	"Portable Any Map (PBM, PGM, PPM)"},
 	{pcxIdent,	pcxLoad,	"PC Paintbrush Image (PCX)"},
 	{xpixmapIdent,	xpixmapLoad,	"X Pixmap XPM"},
 	{xbitmapIdent,	xbitmapLoad,	"X Bitmap XBM"},

@@ -24,7 +24,7 @@ or even monochrome servers displays.
 version 1.18.0 supports:
   Portable Network Graphics (PNG)
   GIF Image
-  JFIF style jpeg Image
+  JPEG Image JPEG, JFIF
   WEBP Image
   Targa Image (TGA)
   BMP Image  Windows, OS/2

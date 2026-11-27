@@ -521,11 +521,11 @@ system\-wide file if a personal configuration file exists.
 
   Portable Network Graphics (PNG)
   GIF Image
-  JFIF style jpeg Image
+  JPEG Image JPEG, JFIF
   WEBP Image
   Targa Image (TGA)
   BMP Image Windows, OS/2
-  Portable Bit Map (PNM, PBM, PGM, PPM)
+  Portable Any Map (PBM, PGM, PPM)
   PC Paintbrush Image (PCX)
   X Pixmap XPM
   X Bitmap XBM
@@ -578,7 +578,7 @@ xli	                    \- the image loader and viewer
 .in -5
 .fi
 .SH COPYRIGHT
-Copyright (c) 1989, 1990, 1991, 1992, 1993 Jim Frost, Graeme Gill and others.
+Copyright (c) 1989-2026 the xli developers
 .PP
 \fIXli\fR is copyrighted material with a very loose license
 allowing unlimited modification and distribution if the copyright
