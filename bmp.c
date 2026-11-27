@@ -580,11 +580,11 @@ static bool read_bmpHeader( ZFILE* zf, bmpHeader* hp, strbyte* name )
 
 
 // d: build mask layout string using palette index defaults and TrueColor channel fallbacks
-static void bmp_masks_layout( const bmpHeader* hp, char* printout, size_t printout_len )
+static void bmp_masks_layout( const bmpHeader* hp, strbyte* printout, size_t printout_len )
 {
 	unsigned int clen;
 	unsigned int cidx;
-	char _ch = '\0';
+	strbyte _ch = '\0';
 	unsigned int _len = 0;
 	size_t pos = 0;
 	unsigned long r_mask = 0;
@@ -644,7 +644,7 @@ static void bmp_masks_layout( const bmpHeader* hp, char* printout, size_t printo
 	while ( cidx > 0 ) {
 		unsigned int shift_pos = cidx - 1;
 		unsigned long t = 1UL << shift_pos;
-		char tag = 'x';
+		strbyte tag = 'x';
 
 		if ( ( r_mask & t ) != 0 ) {
 			tag = 'r';
@@ -702,114 +702,26 @@ static void bmp_masks_layout( const bmpHeader* hp, char* printout, size_t printo
 // Print a brief description of the image
 static void tell_about_bmp( bmpHeader* hp )
 {
-	const strbyte* typelabel = "Windows";
-	if ( hp->bfType == C_OS2 ) {
-		typelabel = "OS/2";
-	} else if ( hp->bfType == C_OS2_V2 ) {
-		typelabel = "OS/2 V2";
-	} else if ( hp->bfType == C_WIN_V2 ) {
-		typelabel = "Windows V2";
-	} else if ( hp->bfType == C_WIN_V3 ) {
-		typelabel = "Windows V3";
-	} else if ( hp->bfType == C_WIN_V4 ) {
-		typelabel = "Windows V4";
-	} else if ( hp->bfType == C_WIN_V5 ) {
-		typelabel = "Windows V5";
-	}
-
-	const strbyte* colormode;
-	if ( hp->biPixelSize <= PAL_MAX_DEPTH ) {
-		colormode = "palette";
-	} else {
-		colormode = "TrueColor";
-	}
-
-	const strbyte* topbot;
-	if ( hp->biHeight < 0 ) {
-		topbot = "top-bot, ";
-	} else {
-		topbot = "";
-	}
-
-	const strbyte* complabel = "";
-	if ( hp->biCompression == BI_RLE8 || hp->biCompression == BI_RLE4 ) {
-		complabel = "RLE, ";
-	} else if ( ( hp->bfType != C_OS2 && hp->bfType != C_OS2_V2 ) && hp->biCompression == BI_JPEG ) {
-		complabel = "includes JPEG, ";
-	} else if ( ( hp->bfType == C_OS2 || hp->bfType == C_OS2_V2 ) && hp->biCompression == BI_RLE24 ) {
-		complabel = "RLE24, ";
-	} else if ( hp->biCompression == BI_PNG ) {
-		complabel = "includes PNG, ";
-	} else if ( ( hp->bfType != C_OS2 && hp->bfType != C_OS2_V2 ) && hp->biCompression == BI_FIELDS ) {
-		complabel = "fields masks, ";
-	} else if ( ( hp->bfType == C_OS2 || hp->bfType == C_OS2_V2 ) && hp->biCompression == BI_HUFF1D ) {
-		complabel = "Huff1d, ";
-	} else if (  hp->biCompression == BI_ALPHAFIELDS ) {
-		complabel = "fields masks with alpha, ";
-	} else if ( hp->biCompression == BI_RGB ) {
-		complabel = "";
-	}
+	const strbyte* typelabel = bmp_type_label( hp );
+	const strbyte* colormode = bmp_color_mode_label(hp );
+	const strbyte* topbot = bmp_vertical_order_label( hp );
+	const strbyte* complabel = bmp_comp_label( hp );
 
 	strbyte layout_str[32];
 	bmp_masks_layout( hp, layout_str, sizeof( layout_str ) );
 	
-	printf( "%s is a %lux%lu BMP image, depth %d, %s%s%s %s %s\n", hp->name,
-	        hp->biWidth, hp->abs_height, hp->biPixelSize, topbot, complabel,layout_str, colormode,
-	        typelabel );
+	printf( "%s is a %lux%lu BMP image, depth %d, %s, %s, %s %s, %s\n", hp->name,
+	        hp->biWidth, hp->abs_height, hp->biPixelSize, topbot, complabel, layout_str, colormode, typelabel );
 }
 
 // d: print detailed developer header information including decoded labels and flags
 static void print_bmp_hdr( bmpHeader* hp )
-{
-	const strbyte* typelabel = "Windows";
-	if ( hp->bfType == C_OS2 ) {
-		typelabel = "OS/2";
-	} else if ( hp->bfType == C_OS2_V2 ) {
-		typelabel = "OS/2 V2";
-	} else if ( hp->bfType == C_WIN_V2 ) {
-		typelabel = "Windows V2";
-	} else if ( hp->bfType == C_WIN_V3 ) {
-		typelabel = "Windows V3";
-	} else if ( hp->bfType == C_WIN_V4 ) {
-		typelabel = "Windows V4";
-	} else if ( hp->bfType == C_WIN_V5 ) {
-		typelabel = "Windows V5";
-	}
+{	
+	const strbyte* typelabel = bmp_type_label( hp );
+	const strbyte* colormode = bmp_color_mode_label(hp );
+	const strbyte* topbot = bmp_vertical_order_label( hp );
+	const strbyte* complabel = bmp_comp_label( hp );
 
-	const strbyte* colormode;
-	if ( hp->biPixelSize <= PAL_MAX_DEPTH ) {
-		colormode = "palette";
-	} else {
-		colormode = "TrueColor";
-	}
-
-	const strbyte* topbot;
-	if ( hp->biHeight < 0 ) {
-		topbot = "top-bot";
-	} else {
-		topbot = "bot-top";
-	}
-
-	const strbyte* complabel = "";
-	if ( hp->biCompression == BI_RLE4 ) {
-		complabel = "RLE4 ";
-	} else if ( hp->biCompression == BI_RLE8 ) {
-		complabel = "RLE8 ";
-	} else if ( ( hp->bfType != C_OS2 && hp->bfType != C_OS2_V2 ) && hp->biCompression == BI_JPEG ) {
-		complabel = "JPEG ";
-	} else if ( ( hp->bfType == C_OS2 || hp->bfType == C_OS2_V2 ) && hp->biCompression == BI_RLE24 ) {
-		complabel = "RLE24 ";
-	} else if ( hp->biCompression == BI_PNG ) {
-		complabel = "PNG ";
-	} else if ( ( hp->bfType != C_OS2 && hp->bfType != C_OS2_V2 ) && hp->biCompression == BI_FIELDS ) {
-		complabel = "fields masks ";
-	} else if ( ( hp->bfType == C_OS2 || hp->bfType == C_OS2_V2 ) && hp->biCompression == BI_HUFF1D ) {
-		complabel = "Huff1d ";
-	} else if (  hp->biCompression == BI_ALPHAFIELDS ) {
-		complabel = "fields masks with alpha";
-	} else if ( hp->biCompression == BI_RGB ) {
-		complabel = "None ";
-	}
 
 	printf( " file name:                           %s\n", hp->name );
 	printf( " ==============================================\n" );
@@ -823,7 +735,7 @@ static void print_bmp_hdr( bmpHeader* hp )
 	printf( " info header:\n" );
 	printf( " info header size biInfoHeaderSize:   %lu bytes\n", hp->biInfoHeaderSize );
 	printf( " image width biWidth:                 %lu pixels\n", hp->biWidth );
-	printf( " image height biHeight:               %i pixels (abs: %lu, orientation: %s)\n", hp->biHeight, hp->abs_height, topbot );
+	printf( " image height biHeight:               %i pixels, abs: %lu, orientation: %s\n", hp->biHeight, hp->abs_height, topbot );
 	printf( " color planes biPlanes:               %u\n", hp->biPlanes );
 	printf( " depth biPixelSize:                   %u  [%s]\n", hp->biPixelSize, colormode );
 	printf( " compression type biCompression:      %lu [%s]\n", hp->biCompression, complabel );

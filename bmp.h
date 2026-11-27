@@ -81,3 +81,70 @@ typedef struct {
 	unsigned long resolved_alphaMask;	// alpha channel mask 	
 	
 } bmpHeader;
+
+
+// d: header type enum as a printable label string
+static inline const strbyte* bmp_type_label( const bmpHeader* hp )
+{
+	if ( hp->bfType == C_OS2 ) {
+		return "OS/2 V1";
+	} else if ( hp->bfType == C_OS2_V2 ) {
+		return "OS/2 V2";
+	} else if ( hp->bfType == C_WIN_V2 ) {
+		return "Windows V2";
+	} else if ( hp->bfType == C_WIN_V3 ) {
+		return "Windows V3";
+	} else if ( hp->bfType == C_WIN_V4 ) {
+		return "Windows V4";
+	} else if ( hp->bfType == C_WIN_V5 ) {
+		return "Windows V5";
+	}
+	return "Windows V1";
+}
+
+
+// d:  palette or truecolor mode string
+static inline const strbyte* bmp_color_mode_label( const bmpHeader* hp )
+{
+	if ( hp->biPixelSize <= PAL_MAX_DEPTH ) {
+		return "palette";
+	}
+	return "truecolor";
+}
+
+// d: vertical order string
+static inline const strbyte* bmp_vertical_order_label( const bmpHeader* hp )
+{
+	if ( hp->biHeight < 0 ) {
+		return "top-bot";
+	} else {
+		return "bot-top";
+	}
+}
+
+// d: compression type string
+static inline const strbyte* bmp_comp_label( const bmpHeader* hp )
+{
+	if ( hp->biCompression == BI_RLE8 ) {
+		return "RLE8";
+	} else if ( hp->biCompression == BI_RLE4 ) {	
+		return "RLE4";
+	} else if ( ( hp->bfType != C_OS2 && hp->bfType != C_OS2_V2 ) && hp->biCompression == BI_JPEG ) {
+		return "includes JPEG";
+	} else if ( ( hp->bfType == C_OS2 || hp->bfType == C_OS2_V2 ) && hp->biCompression == BI_RLE24 ) {
+		return "RLE24";
+	} else if ( hp->biCompression == BI_PNG ) {
+		return "includes PNG";
+	} else if ( ( hp->bfType != C_OS2 && hp->bfType != C_OS2_V2 ) && hp->biCompression == BI_FIELDS ) {
+		return "fields masks";
+	} else if ( ( hp->bfType == C_OS2 || hp->bfType == C_OS2_V2 ) && hp->biCompression == BI_HUFF1D ) {
+		return "Huff1d";
+	} else if ( hp->biCompression == BI_ALPHAFIELDS ) {
+		return "fields masks with alpha";
+	} else if ( hp->biCompression == BI_RGB ) {
+		return "literal";
+	}else {
+		return "non-standard comp.";
+	}
+
+}
