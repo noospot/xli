@@ -1417,8 +1417,8 @@ static bool get_bmp_pixels_depth16( ZFILE* zf, Image* image, bmpHeader* hp )
 				}
 
 				// d: guard destination row write address against image->data range
-				if ( dst_madress < image->data || ( dst_madress + dest_row_bytelen ) > dst_limit ) {
-					fprintf(stderr,"read outside image data");
+				if ( dest_row_madress < image->data || ( dest_row_madress + 3 ) > dst_limit ) {
+					fprintf(stderr,"BMP get_bmp_pixels_depth16: read outside image data\n");
 					free( pixel_row );
 					return FALSE;
 				}
