@@ -60,12 +60,14 @@ static byte root_weave_bits[] = {
     istr.bg = (strbyte *) 0;	\
     istr.xpmkeyc = 0;		\
     istr.iscale = 0;		\
-    istr.iscale_auto = 0;}
+    istr.iscale_auto = 0;       \
+    istr.zoom_auto= 0; }
 
 /* deal with unsigned arithmetic problems */
 static int scentre( unsigned tspan, unsigned sspan )
 {
-	return ( ( int ) tspan - ( int ) sspan ) / 2;
+	return ( int ) ( ( ( long ) tspan - ( long ) sspan ) / 2 );
+	//return ( ( int ) tspan - ( int ) sspan ) / 2;
 }
 
 int main( int argc, strbyte* argv[] )
@@ -556,13 +558,15 @@ int main( int argc, strbyte* argv[] )
 				while ( io->rotate < 0 ) {
 					io->rotate += 360;
 				}
-				if ( globals.forall && ( ( globals.onroot && globals.fullscreen ) || globals.fillscreen ) && !io->center ) {
+				if ( globals.forall 
+				&& ( ( globals.onroot && globals.fullscreen ) || globals.fillscreen ) 
+				&& !io->center ) {
 					double wr, hr,f;
 					wr = ( double ) globals.dinfo.width / inew->height;
 					hr = ( double ) globals.dinfo.height / inew->width;
 					f = ( ( ( wr < hr ) ^ ( globals.onroot && globals.fillscreen ) ) ?  wr : hr ) * 100;
-					io->xzoom *= f/100.0;
-					io->yzoom *= f/100.0;
+					io->xzoom = io->xzoom * ( f / 100.0 );
+					io->yzoom = io->yzoom * ( f / 100.0 );
 				}
 				if ( globals.verbose )
 					printf( "Image rotation is now %d\n",
@@ -584,7 +588,9 @@ int main( int argc, strbyte* argv[] )
 
 					case '>':
 						io->iscale = io->iscale - 1;
-
+						if ( io->iscale < -6 ) {
+							io->iscale = -6;
+						}
 						break;
 
 					case '=':
