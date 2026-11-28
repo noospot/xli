@@ -19,6 +19,8 @@
 #include "xli.h"
 #include <ctype.h>
 #include <string.h>
+#include <stddef.h>
+#include <limits.h>
 
 #ifdef VMS
 	#define NO_UNCOMPRESS		/* VMS doesn't have uncompress */
@@ -273,7 +275,7 @@ void _zclear( ZFILE* zf )
 	while ( zf->data ) {
 		old = zf->data;
 		zf->data = zf->data->next;
-		free( old );
+		lfree( ( byte* ) old );
 	}
 	zf->auxb = NULL;
 	zf->bufptr = NULL;
@@ -399,7 +401,22 @@ _zopen( ZFILE* zf )
 
 		if ( cmd ) {
 			strbyte* buf, *s, *t;
+			
+			int i;
 
+			i = 0;
+			if ( name == NULL || name[0] == '\0' ) {
+				fprintf( stderr, "_zopen: empty filename\n" );
+				return ( FALSE );
+			}
+			while ( name[i] != '\0' ) {
+				if ( name[i] == '\n' || name[i] == '\r' ) {
+					fprintf( stderr, "_zopen: invalid control character in %s\n", name );
+					return ( FALSE );
+				}
+				i = i + 1;
+			}
+			
 			/* protect in single quotes, replacing single quotes
 			 * with '"'"', so worst-case expansion is 5x
 			 */
@@ -407,13 +424,15 @@ _zopen( ZFILE* zf )
 			strcpy( buf, cmd );
 			s = buf + strlen( buf );
 			*s++ = '\'';
-			for ( t = name; *t; ++t ) {
+			t = name;
+			while ( *t ) {
 				if ( '\'' == *t ) {
 					strcpy( s, "'\"'\"'" );
 					s += strlen( s );
 				} else {
 					*s++ = *t;
 				}
+				t=t+1;
 			}
 			*s++ = '\'';
 			*s = '\0';
@@ -458,20 +477,33 @@ int _zgetc( ZFILE* zf )
 // get string line ending with \n
 strbyte* zgets( strbyte* buf, unsigned int size, ZFILE* zf )
 {
-	if ( ( --size ) <= 0 ) {
+	if ( buf == NULL || zf == NULL ) {
+		fprintf( stderr, "zgets: null buf or stream\n" );
 		return NULL;
 	}
-	{
-		int ssize = zf->endptr - zf->bufptr;
+	size = size - 1;
+	if ( ( size ) <= 0 ) {
+		return NULL;
+	}
+	{	
+		if ( !(zf->endptr >=  zf->bufptr) ) {
+			fprintf( stderr, "zgets: end address below address\n" );
+			return NULL;
+		}
+		unsigned int ssize = zf->endptr - zf->bufptr;
 		if ( ssize > 0 ) {	/* can do this fast */
 			register byte* bp = zf->bufptr, *be;
-			be = zf->bufptr + ( size < ( unsigned int )ssize ? size : ( unsigned int )ssize );
+			if ( size < ssize ) {
+				be = zf->bufptr + size ;
+			} else {
+				be = zf->bufptr + ssize ;
+			}
 			while ( bp < be ) {
 				if ( *bp++ == '\n' ) {
 					break;
 				}
 			}
-			if ( bp < be || size < ( unsigned int )ssize ) {
+			if ( bp < be || size < ssize ) {
 				memcpy( buf, zf->bufptr,  bp - zf->bufptr );
 				buf[bp - zf->bufptr] = '\000';
 				zf->bufptr = bp;
@@ -508,7 +540,7 @@ void zunread( ZFILE* zf, byte const* buf, int len )
 	int noinaxb;		/* number unread in aux buffer */
 	int nofraxb;		/* number free in aux buffer */
 
-	if ( len == 0 ) {
+	if ( len <= 0 ) {
 		return;
 	}
 	if ( zf->auxb != NULL ) {
