@@ -239,27 +239,38 @@ Image* fbmLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	if ( verbose ) {
 		tellAboutImage( name );
 	}
+
+/* d: diagnostic fprintf block for tracing cmap8 short read at row 127 */
+	fprintf( stderr, "dbg fbmLoad: file=%s w=%d h=%d depth=%d bits=%d rowlen=%d plnlen=%d clrlen=%d\n",
+	         fullname, fbmin_img_width, fbmin_img_height, fbmin_img_depth,
+	         fbmin_img_bits, fbmin_img_rowlen, fbmin_img_plnlen, fbmin_img_clrlen );
+	fprintf( stderr, "dbg fbmLoad: pre-znocache zf=%p type=%d eof=%d bufptr=%p endptr=%p\n",
+	         ( void* ) zf, ( int ) zf->type, ( int ) zf->eof,
+	         ( void* ) zf->bufptr, ( void* ) zf->endptr );
 	znocache( zf );
+	fprintf( stderr, "dbg fbmLoad: post-znocache zf=%p type=%d eof=%d bufptr=%p endptr=%p\n",
+	         ( void* ) zf, ( int ) zf->type, ( int ) zf->eof,
+	         ( void* ) zf->bufptr, ( void* ) zf->endptr );
 
-	
-	
 
-	
-	
-	
-	
-	if( fbmin_img_depth==1 )
+
+
+
+
+	if( fbmin_img_depth==1 ) {
 		if( fbmin_img_bits==1 ) {
 			image= newBitImage( fbmin_img_width, fbmin_img_height );
 		} else {
 			image = newRGBImage( fbmin_img_width, fbmin_img_height, fbmin_img_bits );
-		} else {	/* must be 3 */
+		}
+	} else {	/* must be 3 */
 		image = newTrueImage( fbmin_img_width, fbmin_img_height );
 	}
+
 	image->title= dupString( name );
 
-	
-	/* d: populate default linear grayscale ramp when 8-bit FBM imager is without a colormap */
+
+	/* default linear grayscale ramp when 8-bit FBM imager is without a colormap */
 	if ( fbmin_img_depth == 1 && fbmin_img_clrlen > 0 ) {
 		cm = ( byte* ) lmalloc( fbmin_img_clrlen );
 
@@ -285,6 +296,7 @@ Image* fbmLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		image->rgb.used = y;
 
 		cm = NULL;
+	// else if has a colormap
 	} else if ( fbmin_img_depth == 1 && fbmin_img_bits > 1 ) {
 		unsigned int cmap_entries;
 		unsigned int ramp_step;
@@ -311,37 +323,7 @@ Image* fbmLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	} else {
 		cm = NULL;
 	}
-	
 
-	/* if image has a local colormap, override global colormap
-	 */
-	if ( fbmin_img_depth==1 && fbmin_img_clrlen > 0 ) {
-		cm = ( byte* ) lmalloc( fbmin_img_clrlen );
-
-		if ( zread( ins, cm, fbmin_img_clrlen ) != fbmin_img_clrlen ) {
-			fprintf ( stderr, "fbmLoad: %s - can't read colormap (%d bytes)\n", name, fbmin_img_clrlen );
-			fbmin_close_file();
-			lfree( cm );
-			zclose( zf );
-			freeImage( image );
-			return( NULL );
-		}
-		/*
-		 * fbm color map is organized as
-		 * buf[3][16]
-		 */
-		y = fbmin_img_clrlen / 3;
-		r = &cm[0], g = &cm[y], b = &cm[2 * y];
-		for ( x = 0; x < y; x++, r++, g++, b++ ) {
-			image->rgb.red[x]   = *r << 8;
-			image->rgb.green[x] = *g << 8;
-			image->rgb.blue[x]  = *b << 8;
-		}
-		image->rgb.used = y;
-
-	} else {
-		cm = NULL;
-	}
 
 	width = fbmin_img_width;
 	rowpad = fbmin_img_rowlen - width;
@@ -355,7 +337,7 @@ Image* fbmLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 			pixptr = image->data;
 			for ( j = 0; j < fbmin_img_height; j++, pixptr += ( ( width+7 )/8 ) ) {
 				if ( zread( ins, rb, width ) != width ) {
-					fprintf( stderr, "fbmLoad: %s - Short read within image data\n", name );
+					fprintf( stderr, "fbmLoad: %s -mono- Short read within image data\n", name );
 					if ( cm != NULL ) {
 						lfree( cm );
 					}
@@ -420,7 +402,7 @@ Image* fbmLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 			pixptr = image->data + k;
 			for ( j = 0; j < fbmin_img_height; j++ ) {
 				if ( zread( ins, rb, width ) != width ) {
-					fprintf( stderr, "fbmLoad: %s - Short read within image data\n", name );
+					fprintf( stderr, "fbmLoad: %s -depth 3- Short read within image data at row %d\n", name, j );
 					if ( cm != NULL ) {
 						lfree( cm );
 					}
