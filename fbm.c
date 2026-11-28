@@ -53,13 +53,14 @@ static strbyte* fbmin_img_credit;	       /* credit for image */
 
 static int fbmin_image_test( void );
 
-static strbyte* get_err_string( int errno )
+static strbyte* get_err_string( int errcode )
 {
-	int i;
-	for ( i=0; fbm_err_strings[i].err_no != 0; i++ ) {
-		if ( fbm_err_strings[i].err_no == errno ) {
+	int i = 0;
+	while ( fbm_err_strings[i].err_no != 0 ) {
+		if ( fbm_err_strings[i].err_no == errcode ) {
 			return fbm_err_strings[i].name;
 		}
+		i = i + 1;
 	}
 	return "";
 }
@@ -130,8 +131,11 @@ static int fbmin_close_file( void )
 	return FBMIN_SUCCESS;
 }
 
+/* d: validate row length against width and plane length without overflow */
 static int fbmin_image_test( void )
 {
+	long plane_min;
+
 	if ( fbmin_img_width < 1 || fbmin_img_width > 32767 ) {
 		fprintf ( stderr, "Invalid width (%d) on input\n", fbmin_img_width );
 		return FBMIN_ERR_BAD_SD;
@@ -139,7 +143,7 @@ static int fbmin_image_test( void )
 
 	if ( fbmin_img_height < 1 || fbmin_img_height > 32767 ) {
 		fprintf ( stderr, "Invalid height (%d) on input\n", fbmin_img_height );
-		return ( 0 );
+		return FBMIN_ERR_BAD_SD;
 	}
 
 	if ( fbmin_img_depth != 1 && fbmin_img_depth != 3 ) {
@@ -166,15 +170,23 @@ static int fbmin_image_test( void )
 		return FBMIN_ERR_BAD_SD;
 	}
 
+	if ( fbmin_img_rowlen < fbmin_img_width ) {
+		fprintf ( stderr, "Invalid row length (%d) < width (%d) on input\n",
+		          fbmin_img_rowlen, fbmin_img_width );
+		return FBMIN_ERR_BAD_SD;
+	}
+
+	plane_min = ( long ) fbmin_img_height * ( long ) fbmin_img_rowlen;
+
 	if ( fbmin_img_depth > 1 && fbmin_img_plnlen < 1 ) {
 		fprintf ( stderr, "Invalid plane length (%d) on input\n",
 		          fbmin_img_plnlen );
 		return FBMIN_ERR_BAD_SD;
 	}
 
-	if ( fbmin_img_plnlen < ( fbmin_img_height * fbmin_img_rowlen ) ) {
+	if ( ( long ) fbmin_img_plnlen < plane_min ) {
 		fprintf ( stderr, "Invalid plane length (%d) < (%d) * (%d) on input\n",
-		          fbmin_img_plnlen,fbmin_img_height,fbmin_img_rowlen );
+		          fbmin_img_plnlen, fbmin_img_height, fbmin_img_rowlen );
 		return FBMIN_ERR_BAD_SD;
 	}
 
