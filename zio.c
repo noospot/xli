@@ -564,9 +564,9 @@ void zunread( ZFILE* zf, byte const* buf, int len )
 		memcpy( new + extra, buf, len );	/* copy new aux data */
 		if ( noinaxb != 0 ) {	/* copy old data */
 			memcpy( new + extra + len, zf->bufptr, noinaxb );
-			if ( zf->auxb != NULL && zf->auxb != zf->buf ) {
-				lfree( zf->auxb );
-			}
+		}
+		if ( zf->auxb != NULL && zf->auxb != zf->buf ) {
+			lfree( zf->auxb );
 		}
 		zf->auxb = new;
 		zf->bufptr = new + extra;
