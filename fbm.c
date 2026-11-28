@@ -241,6 +241,13 @@ Image* fbmLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 	}
 	znocache( zf );
 
+	
+	
+
+	
+	
+	
+	
 	if( fbmin_img_depth==1 )
 		if( fbmin_img_bits==1 ) {
 			image= newBitImage( fbmin_img_width, fbmin_img_height );
@@ -250,6 +257,61 @@ Image* fbmLoad( strbyte* fullname, ImageOptions* image_ops, bool verbose )
 		image = newTrueImage( fbmin_img_width, fbmin_img_height );
 	}
 	image->title= dupString( name );
+
+	
+	/* d: populate default linear grayscale ramp when 8-bit FBM imager is without a colormap */
+	if ( fbmin_img_depth == 1 && fbmin_img_clrlen > 0 ) {
+		cm = ( byte* ) lmalloc( fbmin_img_clrlen );
+
+		if ( zread( ins, cm, fbmin_img_clrlen ) != fbmin_img_clrlen ) {
+			fprintf ( stderr, "fbmLoad: %s - can't read colormap (%d bytes)\n", name, fbmin_img_clrlen );
+			fbmin_close_file();
+			lfree( cm );
+			zclose( zf );
+			freeImage( image );
+			return( NULL );
+		}
+		/*
+		 * fbm color map is organized as
+		 * buf[3][16]
+		 */
+		y = fbmin_img_clrlen / 3;
+		r = &cm[0], g = &cm[y], b = &cm[2 * y];
+		for ( x = 0; x < y; x++, r++, g++, b++ ) {
+			image->rgb.red[x]   = *r << 8;
+			image->rgb.green[x] = *g << 8;
+			image->rgb.blue[x]  = *b << 8;
+		}
+		image->rgb.used = y;
+
+		cm = NULL;
+	} else if ( fbmin_img_depth == 1 && fbmin_img_bits > 1 ) {
+		unsigned int cmap_entries;
+		unsigned int ramp_step;
+		unsigned int channel_val;
+
+		cmap_entries = 1U << ( unsigned int ) fbmin_img_bits;
+		if ( cmap_entries > image->rgb.size ) {
+			cmap_entries = image->rgb.size;
+		}
+		ramp_step = 0U;
+		while ( ramp_step < cmap_entries ) {
+			if ( cmap_entries > 1U ) {
+				channel_val = ( ramp_step * 65535U ) / ( cmap_entries - 1U );
+			} else {
+				channel_val = 0U;
+			}
+			image->rgb.red[ramp_step] = ( Intensity ) channel_val;
+			image->rgb.green[ramp_step] = ( Intensity ) channel_val;
+			image->rgb.blue[ramp_step] = ( Intensity ) channel_val;
+			ramp_step = ramp_step + 1U;
+		}
+		image->rgb.used = cmap_entries;
+		cm = NULL;
+	} else {
+		cm = NULL;
+	}
+	
 
 	/* if image has a local colormap, override global colormap
 	 */
