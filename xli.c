@@ -442,17 +442,15 @@ int main( int argc, strbyte* argv[] )
 						fprintf( stderr, "Deleted %s\n",	io->fullname );
 					}
 				} else {
-					i--;
-					break;
+					i=i-1;
 				}
+				break;
 			/* toggle fullscreen */
 			case '#':
-
 				globals.fullscreen=1-globals.fullscreen;
-
 				winwidth=inew->width;
 				winheight=inew->height;
-				i--;
+				i=i-1;
 				break;
 			/* next image */
 			case ' ':
@@ -483,7 +481,7 @@ int main( int argc, strbyte* argv[] )
 
 			case '.':
 				/* go re-load current image */
-				i--;
+				i=i-1;
 				break;
 
 			case '0':
@@ -538,7 +536,7 @@ int main( int argc, strbyte* argv[] )
 					printf( "Image Gamma now %f\n", io->gamma );
 				}
 				/* go re-load current image */
-				i--;
+				i=i-1;
 				break;
 
 			/* rotations */
@@ -570,7 +568,7 @@ int main( int argc, strbyte* argv[] )
 					printf( "Image rotation is now %d\n",
 					        io->rotate );
 				/* go re-load current image */
-				i--;
+				i=i-1;
 				break;
 
 			case '<':
@@ -602,7 +600,7 @@ int main( int argc, strbyte* argv[] )
 					        io->iscale );
 				}
 				/* go re-load current image */
-				i--;
+				i=i-1;
 				break;
 		}
 		lfree( ( byte* )io->fullname );
